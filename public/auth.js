@@ -78,6 +78,10 @@ function showLoginForm() {
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('resend-verification-modal').style.display = 'none';
     document.getElementById('forgot-password-modal').style.display = 'none';
+    
+    // Show footer on login page
+    const footer = document.getElementById('auth-footer');
+    if (footer) footer.style.display = 'block';
 }
 
 // Show register form
@@ -86,6 +90,10 @@ function showRegisterForm() {
     document.getElementById('register-form').style.display = 'block';
     document.getElementById('resend-verification-modal').style.display = 'none';
     document.getElementById('forgot-password-modal').style.display = 'none';
+    
+    // Show footer on register page
+    const footer = document.getElementById('auth-footer');
+    if (footer) footer.style.display = 'block';
 }
 
 // Show resend verification
@@ -94,6 +102,10 @@ function showResendVerification() {
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('resend-verification-modal').style.display = 'block';
     document.getElementById('forgot-password-modal').style.display = 'none';
+    
+    // HIDE footer on resend verification page
+    const footer = document.getElementById('auth-footer');
+    if (footer) footer.style.display = 'none';
 }
 
 // Hide resend verification
@@ -109,6 +121,10 @@ function showForgotPasswordForm() {
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('resend-verification-modal').style.display = 'none';
     document.getElementById('forgot-password-modal').style.display = 'block';
+    
+    // HIDE footer on forgot password page
+    const footer = document.getElementById('auth-footer');
+    if (footer) footer.style.display = 'none';
 }
 
 // Hide forgot password form
