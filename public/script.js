@@ -29,33 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     showLoadingState();
     
     try {
-        // Get all UI elements
-        const hamburgerButton = document.getElementById('hamburger-button');
-        const searchBooksSection = document.getElementById('search-books');
-        const manageUsersLink = document.getElementById('manage-users-link');
-        const addBookLink = document.getElementById('add-book-link');
-        const adminButton = document.getElementById('admin-button');
-        const adminSection = document.getElementById('admin-section');
-        const profileSection = document.getElementById('profile-section');
-        const newsletterSection = document.getElementById('newsletter-section');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const mainContent = document.getElementById('main-content');
-        const footer = document.getElementById('footer');
-        const chatIcon = document.getElementById('chat-icon');
-
-        // Hide all sections initially
-        const allSections = [
-            hamburgerButton, searchBooksSection, manageUsersLink, addBookLink, 
-            adminButton, adminSection, profileSection, newsletterSection, 
-            loginForm, registerForm, mainContent, footer, chatIcon
-        ];
-        
-        allSections.forEach(element => {
-            if (element) element.style.display = 'none';
-        });
-
-        // Add timeout to prevent infinite loading
+        // Check authentication status
         const authCheckPromise = checkAuthStatus();
         const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Auth check timeout')), 10000)
@@ -72,47 +46,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Hide loading state
         hideLoadingState();
         
-        if (isAuthenticated) {
-            // User is authenticated - show main app
-            if (hamburgerButton) hamburgerButton.style.display = 'block';
-            if (searchBooksSection) searchBooksSection.style.display = 'block';
-            if (newsletterSection) newsletterSection.style.display = 'block';
-            if (mainContent) mainContent.style.display = 'block';
-            if (footer) footer.style.display = 'block';
-            if (chatIcon) chatIcon.style.display = 'block';
-            
-            // Only fetch data if we're on the main page with required elements
-            const titleInput = document.getElementById('search-title');
-            if (titleInput) {
-                try {
-                    await fetchBooks();
-                } catch (error) {
-                    console.error('Error fetching books:', error);
-                }
+        if (!isAuthenticated) {
+            // User is not authenticated - redirect to auth page
+            window.location.href = 'auth.html';
+            return;
+        }
+        
+        // User is authenticated - show main app
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const searchBooksSection = document.getElementById('search-books');
+        const newsletterSection = document.getElementById('newsletter-section');
+        const mainContent = document.getElementById('main-content');
+        const footer = document.getElementById('footer');
+        const chatIcon = document.getElementById('chat-icon');
+        
+        if (hamburgerButton) hamburgerButton.style.display = 'block';
+        if (searchBooksSection) searchBooksSection.style.display = 'block';
+        if (newsletterSection) newsletterSection.style.display = 'block';
+        if (mainContent) mainContent.style.display = 'block';
+        if (footer) footer.style.display = 'block';
+        if (chatIcon) chatIcon.style.display = 'block';
+        
+        // Fetch books if on main page
+        const titleInput = document.getElementById('search-title');
+        if (titleInput) {
+            try {
+                await fetchBooks();
+            } catch (error) {
+                console.error('Error fetching books:', error);
             }
-            
-        } else {
-            // User is not authenticated - show login form
-            if (loginForm) {
-                loginForm.style.display = 'block';
-            } else {
-                console.error('Login form element not found!');
-            }
-            
-            // Ensure other elements are hidden
-            if (registerForm) registerForm.style.display = 'none';
-            if (chatIcon) chatIcon.style.display = 'none';
         }
         
     } catch (error) {
         console.error('Critical error during initialization:', error);
         hideLoadingState();
-        
-        // Fallback: show login form
-        const loginForm = document.getElementById('login-form');
-        if (loginForm) {
-            loginForm.style.display = 'block';
-        }
+        // Redirect to auth page on error
+        window.location.href = 'auth.html';
+        return;
     }
 
     // Set up the outside click listener for the sidebar
@@ -468,8 +438,8 @@ async function logout() {
             // Reset global variables
             userRole = "";
 
-            // Redirect to ensure clean state
-            window.location.href = "index.html";
+            // Redirect to auth page
+            window.location.href = "auth.html";
         } else {
             alert('Failed to log out');
         }
@@ -1576,14 +1546,13 @@ async function checkAuthStatus() {
             
             return true;
         } else {
-            showLoginForm();
+            // Not authenticated
             const chatIcon = document.getElementById('chat-icon');
             if (chatIcon) chatIcon.style.display = 'none';
             return false;
         }
     } catch (error) {
         console.error('Error checking auth status:', error);
-        showLoginForm();
         const chatIcon = document.getElementById('chat-icon');
         if (chatIcon) chatIcon.style.display = 'none';
         return false;
