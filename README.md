@@ -34,6 +34,10 @@ A modern, full-stack library management application with AI-powered recommendati
 - **Cloud Storage** - Automatic file upload to Cloudinary
 
 ### Developer Features
+- **Separated Authentication** - Dedicated auth pages for clean user experience
+  - Separate login/register page (`auth.html`) with smart footer visibility
+  - Protected routes - automatic redirect for unauthenticated users
+  - Clean separation between public and authenticated content
 - **Automated Testing** - Comprehensive test suite with Jest
   - 8 middleware authentication tests
   - 23 file validation utility tests
@@ -153,8 +157,9 @@ npm run dev
 ```
 
 6. **Access the application**
-- Frontend: http://localhost:3000
-- Admin Dashboard: http://localhost:3000/admin-dashboard.html
+- Authentication: http://localhost:3000/auth.html (login/register)
+- Main App: http://localhost:3000/index.html (after login)
+- Admin Dashboard: http://localhost:3000/admin-dashboard.html (admin only)
 
 ---
 
@@ -219,7 +224,9 @@ Library_Project/
 │   │   └── __tests__/           # Utility tests
 │   └── app.js                   # Express app configuration
 ├── public/
-│   ├── index.html               # Main application
+│   ├── auth.html                # Authentication page (login/register)
+│   ├── auth.js                  # Authentication logic
+│   ├── index.html               # Main application (authenticated users)
 │   ├── admin-dashboard.html     # Analytics dashboard
 │   ├── book-details.html        # Book details page
 │   ├── reset-password.html      # Password reset page
@@ -359,21 +366,51 @@ LOG_SQL_QUERIES=true              # Log database queries (debug only)
 
 ## Key Features Explained
 
-### 1. Admin Analytics Dashboard
+### 1. Authentication & Page Separation
+Clean, secure authentication flow with separated pages:
+- **Dedicated Auth Page** (`auth.html`)
+  - Login form with email/username support
+  - Registration with email verification
+  - Forgot password functionality
+  - Resend verification email option
+  - Smart footer visibility (shown on login/register, hidden on password reset)
+- **Protected Routes**
+  - Unauthenticated users automatically redirected to `auth.html`
+  - Authenticated users cannot access `auth.html` (redirected to `index.html`)
+  - Session-based authentication with automatic checks
+- **Clean User Experience**
+  - No mixed content when site is down or during navigation
+  - Separate concerns: authentication vs. application
+  - Professional, production-ready flow
+
+**Authentication Flow:**
+```
+User visits site → Not logged in? → auth.html (Login/Register)
+                                        ↓
+                                    Login Success
+                                        ↓
+                  Logged in? → Yes → index.html (Main App)
+                                        ↓
+                                    Logout Click
+                                        ↓
+                                  auth.html (Login)
+```
+
+### 2. Admin Analytics Dashboard
 Real-time insights with interactive visualizations:
 - **Statistics Cards**: Total users, books, reviews, downloads
 - **Charts**: Genre distribution (doughnut), user growth (line)
 - **Data Tables**: Popular books, recent activity, top reviewers
 - **Auto-refresh**: Updates every 5 minutes
 
-### 2. AI-Powered Recommendations
+### 3. AI-Powered Recommendations
 Multiple recommendation strategies:
 - **Content-based filtering**: Based on genres and authors
 - **Collaborative filtering**: Based on user behavior
 - **HuggingFace integration**: Advanced ML recommendations
 - **Python fallback**: Local recommendation script
 
-### 3. Email System
+### 4. Email System
 Flexible email service with multiple provider options:
 - **Verification emails**: Secure account activation
 - **Password reset**: Token-based recovery
