@@ -13,21 +13,51 @@ const API_BASE_URL = (() => {
   }
 })();
 
+// ─── JWT Auto-Inject ───────────────────────────────────────────────────────
+// Intercept every fetch() call on this page. If the request targets the
+// Render backend, automatically attach the stored JWT.
+(function injectJwtOnBackendRequests() {
+  const _fetch = window.fetch;
+  window.fetch = function(input, init = {}) {
+    const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : String(input));
+    const isBackendCall = API_BASE_URL && url.startsWith(API_BASE_URL);
+    if (isBackendCall) {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        init.headers = Object.assign({ 'Authorization': `Bearer ${token}` }, init.headers || {});
+      }
+    }
+    return _fetch.call(this, input, init);
+  };
+})();
+
 // Check if user is already authenticated on page load
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🔍 auth.html loaded - checking if user is already authenticated...');
+    
     // If user is already logged in, redirect to main app
     try {
-        const response = await fetch(`${API_BASE_URL}/check-auth`, {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/current-user`, {
             method: 'GET',
             credentials: 'include'
         });
         
+        console.log('🔍 Auth check response status:', response.status);
+        
         if (response.ok) {
+            const user = await response.json();
+            console.log('✅ User is authenticated:', user);
             // User is authenticated, redirect to main app
             window.location.href = 'index.html';
+        } else {
+            console.log('❌ User is NOT authenticated');
+            // Clear any stale token
+            localStorage.removeItem('authToken');
         }
     } catch (error) {
-        console.log('Not authenticated, staying on auth page');
+        console.log('❌ Auth check error:', error);
+        console.log('Staying on auth page');
     }
 });
 
@@ -161,8 +191,44 @@ async function login() {
         });
 
         if (response.ok) {
-            // Login successful - redirect to main app
-            window.location.href = 'index.html';
+            // Login successful
+            const user = await response.json();
+            console.log('Login successful:', user);
+
+            // Store JWT token for cross-origin requests (Netlify → Render)
+            if (user.token) {
+                localStorage.setItem('authToken', user.token);
+            }
+
+            // Verify the token works before redirecting
+            let retries = 0;
+            const maxRetries = 8;
+            const verifyAndRedirect = async () => {
+                try {
+                    const check = await fetch(`${API_BASE_URL}/current-user`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    if (check.ok) {
+                        window.location.replace('index.html');
+                    } else if (retries < maxRetries) {
+                        retries++;
+                        setTimeout(verifyAndRedirect, 400);
+                    } else {
+                        hideButtonSpinner(loginButton);
+                        displayMessage('login-messages', 'Session could not be established. Please try again.', 'error');
+                    }
+                } catch (e) {
+                    if (retries < maxRetries) {
+                        retries++;
+                        setTimeout(verifyAndRedirect, 400);
+                    } else {
+                        hideButtonSpinner(loginButton);
+                        displayMessage('login-messages', 'Network error verifying session. Please try again.', 'error');
+                    }
+                }
+            };
+            setTimeout(verifyAndRedirect, 300);
         } else {
             const data = await response.json();
             let errorMessage = data.error || data.message || 'Login failed';
@@ -176,9 +242,11 @@ async function login() {
     } catch (error) {
         console.error('Login error:', error);
         displayMessage('login-messages', 'Network error. Please try again.', 'error');
-    } finally {
+        // Only re-enable button on outer catch (login request itself failed)
         hideButtonSpinner(loginButton);
     }
+    // Note: no finally here - on success the verify loop manages button state
+    // to keep the spinner going while we confirm the session is saved.
 }
 
 // Handle Registration

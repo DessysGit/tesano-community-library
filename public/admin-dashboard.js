@@ -3,9 +3,37 @@
  * Handles data fetching and chart rendering with advanced analytics
  */
 
-const API_BASE_URL = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : 'https://library-backend-j90e.onrender.com';
+const API_BASE_URL = (() => {
+    const h = window.location.hostname;
+    return (h === 'localhost' || h === '127.0.0.1')
+        ? ''
+        : 'https://library-backend-j90e.onrender.com';
+})();
+
+// ─── JWT Auto-Inject ───────────────────────────────────────────────────────
+// Same interceptor as script.js — automatically attaches the stored JWT to
+// every fetch that targets the Render backend, so no individual call needs
+// to worry about auth headers.
+(function injectJwtOnBackendRequests() {
+    const _fetch = window.fetch;
+    window.fetch = function(input, init = {}) {
+        const url = typeof input === 'string' ? input
+            : (input instanceof Request ? input.url : String(input));
+        const isBackendCall = API_BASE_URL
+            ? url.startsWith(API_BASE_URL)
+            : url.startsWith('/');
+        if (isBackendCall) {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                init.headers = Object.assign(
+                    { 'Authorization': `Bearer ${token}` },
+                    init.headers || {}
+                );
+            }
+        }
+        return _fetch.call(this, input, init);
+    };
+})();
 
 // Chart instances
 let genreChart = null;

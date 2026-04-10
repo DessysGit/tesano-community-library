@@ -93,7 +93,7 @@ app.use((req, res, next) => {
     "style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
     "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
     "img-src 'self' data: https:; " +
-    "connect-src 'self' https://stackpath.bootstrapcdn.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net"
+    "connect-src 'self' https://library-backend-j90e.onrender.com https://stackpath.bootstrapcdn.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net"
   );
   next();
 });
@@ -120,9 +120,11 @@ app.use(session({
     secure: isProduction,        // HTTPS only in production
     httpOnly: true,              // Prevent client-side JS from reading cookie
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: isProduction ? 'none' : 'lax' // CSRF protection
+    sameSite: isProduction ? 'none' : 'lax', // IMPORTANT: 'none' allows cross-origin cookies in production
+    domain: isProduction ? undefined : undefined // Don't set domain, let browser handle it
   },
-  name: 'sessionId'              // Cookie name
+  name: 'sessionId',             // Cookie name
+  proxy: isProduction            // Trust proxy in production (important for Render)
 }));
 
 // ============================================

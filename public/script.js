@@ -16,6 +16,25 @@ const API_BASE_URL = (() => {
   }
 })();
 
+// ─── JWT Auto-Inject ───────────────────────────────────────────────────────
+// Intercept every fetch() call. If the request targets our Render backend,
+// automatically attach the stored JWT as an Authorization header.
+// This means we never have to remember to add headers in individual calls.
+(function injectJwtOnBackendRequests() {
+  const _fetch = window.fetch;
+  window.fetch = function(input, init = {}) {
+    const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : String(input));
+    const isBackendCall = API_BASE_URL && url.startsWith(API_BASE_URL);
+    if (isBackendCall) {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        init.headers = Object.assign({ 'Authorization': `Bearer ${token}` }, init.headers || {});
+      }
+    }
+    return _fetch.call(this, input, init);
+  };
+})();
+
 
 // Define the seed admin username
 const seedAdminUsername = 'admin';
@@ -27,6 +46,12 @@ let userRole = "";
 document.addEventListener('DOMContentLoaded', async () => {    
     // Show loading state initially
     showLoadingState();
+    
+    // Hide all content initially to prevent flash
+    const allSections = document.querySelectorAll('#search-books, #newsletter-section, #footer, #main-content, #hamburger-button, #chat-icon');
+    allSections.forEach(el => {
+        if (el) el.style.display = 'none';
+    });
     
     try {
         // Check authentication status
@@ -47,8 +72,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         hideLoadingState();
         
         if (!isAuthenticated) {
-            // User is not authenticated - redirect to auth page
-            window.location.href = 'auth.html';
+            // User is not authenticated - redirect to auth page immediately
+            window.location.replace('auth.html');
             return;
         }
         
@@ -81,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Critical error during initialization:', error);
         hideLoadingState();
         // Redirect to auth page on error
-        window.location.href = 'auth.html';
+        window.location.replace('auth.html');
         return;
     }
 
@@ -135,9 +160,16 @@ function hideLoadingState() {
     }
 }
 
+// Helper: get auth headers with JWT token if available
+function getAuthHeaders(extra = {}) {
+    const token = localStorage.getItem('authToken');
+    const headers = { 'Content-Type': 'application/json', ...extra };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+}
+
 // Function to check if the user is logged in
 function isUserLoggedIn() {
-    // Check if a token is present in localStorage
     return localStorage.getItem('authToken') !== null;
 }
 
@@ -348,21 +380,11 @@ async function resendVerification() {
 }
 
 // Check if we're on the email verification page
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if this is a verification page load
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
-    if (token && window.location.pathname.includes('verify-email')) {
-        // This is handled by the server route /verify-email
-        // No additional JavaScript needed
-        return;
-    }
-    
-    // Continue with normal page initialization
-    checkAuthStatus();
-    setupOutsideClickListener();
-});
+// This code runs separately from the main DOMContentLoaded
+if (window.location.search.includes('token') && window.location.pathname.includes('verify-email')) {
+    // Email verification is handled by the server route /verify-email
+    // No additional JavaScript needed
+}
 
 // Function to handle logout
 async function logout() {
@@ -379,7 +401,8 @@ async function logout() {
             if (loginUsername) loginUsername.value = "";
             if (loginPassword) loginPassword.value = "";
 
-            // Clear only auth-related localStorage items - DON'T use localStorage.clear()
+            // Clear auth token and auth-related localStorage items
+            localStorage.removeItem('authToken');
             localStorage.removeItem('authState');
             localStorage.removeItem('userData');
 
@@ -631,10 +654,7 @@ async function fetchBooks(query = "", page = 1) {
         showLoadingSpinner();
         
         const response = await fetch(`${API_BASE_URL}/books?${searchQuery}`, {
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            credentials: 'include'
         });
         
         if (!response.ok) {
@@ -1481,7 +1501,9 @@ function showProfileSection() {
 // Function to check initial auth status
 async function checkAuthStatus() {
     try {
-        const response = await fetch(`${API_BASE_URL}/current-user`, { credentials: 'include' });
+        const response = await fetch(`${API_BASE_URL}/current-user`, { 
+            credentials: 'include'
+        });
         if (response.ok) {
             const user = await response.json();
             userRole = user.role;
@@ -1850,8 +1872,8 @@ async function initializeChatbot() {
 
 // Call the necessary functions on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Check initial auth status and handle burger menu
-    checkAuthStatus();
+    // Setup outside click listener only
+    // checkAuthStatus is already called in the main DOMContentLoaded above
     setupOutsideClickListener();
 });
 
