@@ -3235,6 +3235,99 @@ a:focus,
    RECOMMENDATION IMPROVEMENTS
 ======================================== */
 
+/* Responsive Grid Layout for Recommendations */
+.recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 10px 0;
+}
+
+/* Compact Recommendation Card */
+.recommendation-card-compact {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.recommendation-card-compact:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Recommendation Cover Image */
+.recommendation-cover {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    display: block;
+}
+
+/* Compact Card Body */
+.recommendation-card-compact .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.recommendation-card-compact .btn-block {
+    margin-top: auto;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1400px) {
+    .recommendations-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+    
+    .recommendation-cover {
+        height: 220px;
+    }
+}
+
+@media (max-width: 992px) {
+    .recommendations-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .recommendation-cover {
+        height: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .recommendations-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+    }
+    
+    .recommendation-cover {
+        height: 180px;
+    }
+    
+    .recommendation-badge {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+}
+
+@media (max-width: 576px) {
+    .recommendations-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+    
+    .recommendation-cover {
+        height: 160px;
+    }
+}
+
 /* Skeleton Loading Animation */
 .skeleton-card {
     background: rgba(255, 255, 255, 0.05);
@@ -3358,6 +3451,17 @@ a:focus,
 }
 
 /* Refresh Button Animation */
+#refresh-recommendations-btn {
+    padding: 4px;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 #refresh-recommendations-btn:hover {
     transform: rotate(180deg);
     transition: transform 0.6s ease;
