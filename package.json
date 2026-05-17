@@ -29,7 +29,7 @@
   "dependencies": {
     "@getbrevo/brevo": "^3.0.1",
     "@sendgrid/mail": "^8.1.5",
-    "axios": "^1.13.5",
+    "axios": "^1.16.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.11.0",
