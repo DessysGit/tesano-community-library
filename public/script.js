@@ -591,6 +591,10 @@ async function showSection(sectionId) {
         alert('You do not have access to this section.');
         showSection('search-books');
     }
+
+    // Clear add-book feedback whenever the section is shown or left
+    const addBookMessages = document.getElementById('add-book-messages');
+    if (addBookMessages) addBookMessages.innerHTML = '';
 }
 
 
@@ -914,42 +918,112 @@ function confirmDeleteUser(userId, username) {
 
 // Function to add a book
 async function addBook() {
-    const title = document.getElementById('title').value;
-    const author = document.getElementById('author').value;
-    const description = document.getElementById('description').value;
-    const genres = document.getElementById('genres').value.split(",").map(genre => genre.trim());
-    const bookCover = document.getElementById('book-cover').files[0];
-    const bookFile = document.getElementById('book-file').files[0];
+    const title       = document.getElementById('title').value.trim();
+    const author      = document.getElementById('author').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const genresRaw   = document.getElementById('genres').value.trim();
+    const bookCover   = document.getElementById('book-cover').files[0];
+    const bookFile    = document.getElementById('book-file').files[0];
+    const addBtn      = document.getElementById('add-book-btn');
+    const msgBox      = 'add-book-messages';
+
+    // ── Client-side validation ──────────────────────────────────────────────────
+    const errors = [];
+    if (!title)    errors.push('Book title is required.');
+    if (!author)   errors.push('Author name is required.');
+    if (!bookFile) errors.push('A PDF book file is required.');
+    else if (bookFile.type !== 'application/pdf' && !bookFile.name.endsWith('.pdf')) {
+        errors.push('Book file must be a PDF.');
+    }
+    if (bookCover && !bookCover.type.startsWith('image/')) {
+        errors.push('Cover must be an image file (JPG, PNG, etc.).');
+    }
+
+    if (errors.length > 0) {
+        displayMessage(msgBox, errors.join('<br>'), 'error');
+        return;
+    }
+    // ───────────────────────────────────────────────────────────────────────
+
+    // Clear previous messages and show spinner
+    document.getElementById(msgBox).innerHTML = '';
+    showButtonSpinner(addBtn, '<i class="fas fa-plus-circle mr-2"></i>Add Book');
+
+    // Show an inline uploading notice (PDFs can be large and Cloudinary takes time)
+    displayMessage(msgBox,
+        '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading… Please wait. Large files may take a moment.',
+        'info'
+    );
+
+    const genres = genresRaw
+        ? genresRaw.split(',').map(g => g.trim()).filter(Boolean)
+        : [];
 
     const formData = new FormData();
     formData.append('title', title);
     formData.append('author', author);
     formData.append('description', description);
     formData.append('genres', JSON.stringify(genres));
-
-    if (bookCover) formData.append('cover', bookCover); 
-    if (bookFile) formData.append('bookFile', bookFile);
+    if (bookCover) formData.append('cover', bookCover);
+    formData.append('bookFile', bookFile);
 
     try {
-        const response = await fetch(`${API_BASE_URL}/books`, { 
-            method: 'POST', 
-            body: formData, 
-            credentials: 'include' 
+        const response = await fetch(`${API_BASE_URL}/books`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
         });
+
+        const data = await response.json().catch(() => null);
+
         if (response.ok) {
-            alert('Book added successfully');
-            clearAddBookFields(); // Clear fields after successful addition
-            showSection('search-books');
+            // Show success inline, then redirect after a short pause
+            displayMessage(msgBox,
+                `✅ <strong>"${data?.book?.title || title}"</strong> added successfully!`,
+                'success'
+            );
+            clearAddBookFields();
+            setTimeout(() => showSection('search-books'), 1800);
         } else {
-            const errorMessage = await response.text();
-            alert('Failed to add book: ' + errorMessage);
+            const errorText = data?.error || 'Failed to add book. Please try again.';
+            displayMessage(msgBox, errorText, 'error');
         }
     } catch (error) {
         console.error('Error adding book:', error);
-        alert('Failed to add book: ' + error.message);
+        displayMessage(msgBox, 'Network error. Check your connection and try again.', 'error');
+    } finally {
+        hideButtonSpinner(addBtn);
     }
 }
 
+
+// Updates the visible filename label inside a custom upload area.
+// Called by the onchange handlers on both file inputs in the Add Book form.
+function updateUploadLabel(inputId, labelId, areaId) {
+    const input = document.getElementById(inputId);
+    const labelText = document.getElementById(labelId);
+    const area = document.getElementById(areaId);
+    if (!input || !labelText) return;
+
+    if (input.files && input.files[0]) {
+        const name = input.files[0].name;
+        labelText.textContent = name;
+        labelText.style.color = '#fff';
+        if (area) {
+            area.style.borderColor = '#1DB954';
+            area.style.background = 'rgba(29,185,84,0.08)';
+        }
+    } else {
+        // Reset to placeholder text
+        const isImage = inputId === 'book-cover';
+        labelText.textContent = isImage ? 'Click to choose an image…' : 'Click to choose a PDF…';
+        labelText.style.color = '';
+        if (area) {
+            area.style.borderColor = '';
+            area.style.background = '';
+        }
+    }
+}
 
 // Function to clear add book fields
 function clearAddBookFields() {
@@ -959,6 +1033,9 @@ function clearAddBookFields() {
     document.getElementById('genres').value = "";
     document.getElementById('book-cover').value = "";
     document.getElementById('book-file').value = "";
+    // Reset the custom upload area labels
+    updateUploadLabel('book-cover', 'cover-label-text', 'cover-upload-area');
+    updateUploadLabel('book-file',  'pdf-label-text',   'pdf-upload-area');
 }
 
 // Function to edit a book

@@ -3495,8 +3495,95 @@ a:focus,
    END OF RECOMMENDATION IMPROVEMENTS
 ======================================== */
 
-/* 
-   Des2 Library
+/* ========================================
+   ADD BOOK SECTION - FILE UPLOAD INPUTS
+======================================== */
+#add-book-section .upload-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+#add-book-section .upload-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+#add-book-section .upload-box label {
+    font-weight: 600;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+#add-book-section .upload-box label small {
+    font-weight: 400;
+    color: #888;
+    display: block;
+    margin-top: 2px;
+}
+
+#add-book-section .upload-box label .text-danger {
+    color: #dc3545;
+    font-weight: normal;
+}
+
+#add-book-section .upload-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(29, 185, 84, 0.3);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    min-height: 52px;
+}
+
+#add-book-section .upload-area:hover,
+#add-book-section .upload-area:focus-within {
+    border-color: #1DB954;
+    background: rgba(29, 185, 84, 0.07);
+}
+
+#add-book-section .upload-area .upload-icon {
+    font-size: 1.3rem;
+    color: #1DB954;
+    flex-shrink: 0;
+}
+
+#add-book-section .upload-area .upload-label-text {
+    flex: 1;
+    font-size: 0.875rem;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#add-book-section .upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+#add-book-section .upload-box .upload-area-wrapper {
+    position: relative;
+}
+
+@media (max-width: 600px) {
+    #add-book-section .upload-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ======================================== */
    
    Structure:
    1. Global Styles & Fonts
