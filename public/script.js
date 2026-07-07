@@ -1000,27 +1000,44 @@ async function addBook() {
 // Updates the visible filename label inside a custom upload area.
 // Called by the onchange handlers on both file inputs in the Add Book form.
 function updateUploadLabel(inputId, labelId, areaId) {
-    const input = document.getElementById(inputId);
+    const input     = document.getElementById(inputId);
     const labelText = document.getElementById(labelId);
-    const area = document.getElementById(areaId);
+    const area      = document.getElementById(areaId);
     if (!input || !labelText) return;
 
     if (input.files && input.files[0]) {
-        const name = input.files[0].name;
-        labelText.textContent = name;
+        const file    = input.files[0];
+        const sizeMB  = (file.size / (1024 * 1024)).toFixed(1);
+        const sizeStr = sizeMB >= 1 ? `${sizeMB} MB` : `${(file.size / 1024).toFixed(0)} KB`;
+
+        labelText.innerHTML = `${file.name} <span style="color:#888;font-size:.8em;">(${sizeStr})</span>`;
         labelText.style.color = '#fff';
+
         if (area) {
             area.style.borderColor = '#1DB954';
-            area.style.background = 'rgba(29,185,84,0.08)';
+            area.style.background  = 'rgba(29,185,84,0.08)';
+        }
+
+        // Warn if PDF is large — Cloudinary now handles it with chunked upload,
+        // but it will take longer so we set expectations.
+        const msgBox = document.getElementById('add-book-messages');
+        if (msgBox && inputId === 'book-file' && file.size > 10 * 1024 * 1024) {
+            displayMessage('add-book-messages',
+                `⚠️ Large file detected (${sizeMB} MB). Upload will take longer — please be patient and don't close the tab.`,
+                'info'
+            );
+        } else if (msgBox && inputId === 'book-file') {
+            // Clear any previous size warning when a smaller file is chosen
+            msgBox.innerHTML = '';
         }
     } else {
-        // Reset to placeholder text
+        // Reset to placeholder
         const isImage = inputId === 'book-cover';
-        labelText.textContent = isImage ? 'Click to choose an image…' : 'Click to choose a PDF…';
-        labelText.style.color = '';
+        labelText.textContent  = isImage ? 'Click to choose an image…' : 'Click to choose a PDF…';
+        labelText.style.color  = '';
         if (area) {
             area.style.borderColor = '';
-            area.style.background = '';
+            area.style.background  = '';
         }
     }
 }
