@@ -56,9 +56,10 @@
           <div class="book-cover-container">
             <img id="book-details-cover" src="" alt="Book Cover" class="img-fluid rounded shadow book-cover">
             <div class="book-actions mt-3">
-              <a id="book-details-download" href="#" class="btn btn-success btn-lg w-100 mb-2" download>
+              <button id="book-details-download" class="btn btn-success btn-lg w-100 mb-2" onclick="handleDownload()">
                 <i class="fas fa-download"></i> Download
-              </a>
+              </button>
+
               
             </div>
           </div>
@@ -361,7 +362,6 @@
         document.getElementById('book-details-genres').innerText = book.genres;
         document.getElementById('book-details-description').innerHTML = book.description || 'No description provided.';
         document.getElementById('book-details-cover').src = coverUrl;
-        document.getElementById('book-details-download').href = `${API_BASE_URL}/download/${currentBookId}`;
         document.getElementById('book-details-average-rating').innerText = (book.averageRating || 0).toFixed(1);
 
         // Display like/dislike counts
@@ -616,6 +616,42 @@
         saveButton.innerHTML = originalButtonText;
       }
     }
+
+    async function handleDownload() {
+  const btn = document.getElementById('book-details-download');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+  btn.disabled = true;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/download/${currentBookId}`, {
+      credentials: 'include'
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.url) {
+      throw new Error(data.error || 'Download failed');
+    }
+
+    // Open in new tab — avoids CORS issues caused by the HTML5 download
+    // attribute on cross-origin URLs (Cloudinary, GCS). The PDF opens in
+    // the browser and the user can save it from there.
+    const a = document.createElement('a');
+    a.href = data.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+  } catch (err) {
+    console.error('Download error:', err);
+    alert('Failed to download: ' + err.message);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+}
 
     // Function to update like/dislike UI
     function updateLikeUI(likes, dislikes, activeAction) {
