@@ -370,22 +370,21 @@
         updateLikeUI(likes, dislikes, getUserAction(currentBookId));
 
         // Single call: check admin role + store currentUserProfile for review fallback
-        try {
-          const userRes = await fetch(`${API_BASE_URL}/current-user`, { credentials: 'include' });
-          if (userRes.ok) {
-            const user = await userRes.json();
-            currentUserProfile = user; // Store for review fallback
-            if (user.role === 'admin') {
-              // Show admin controls
-              document.getElementById('sidebar-admin-controls').style.display = 'block';
-              // Pre-fill edit form
-              populateEditForm(book);
-            }
+        const userRes = await fetch(`${API_BASE_URL}/current-user`, { credentials: 'include' });
+        if (userRes.ok) {
+          const user = await userRes.json();
+          currentUserProfile = user; // Store for review fallback
+          if (user.role === 'admin') {
+            // Show admin controls
+            document.getElementById('sidebar-admin-controls').style.display = 'block';
+            
+            // Pre-fill edit form
+            populateEditForm(book);
           }
-        } catch (err) {
-          console.error('Failed to load book details:', err);
-          currentUserProfile = null;
         }
+      } catch (err) {
+        console.error('Failed to load book details:', err);
+      }
 
       fetchRecommendations();
       fetchReviews();
