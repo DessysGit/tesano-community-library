@@ -189,8 +189,6 @@ ADMIN_PASSWORD=your_secure_password
 ADMIN_EMAIL=admin@yourlibrary.com
 ```
 
-> **Note:** `JWT_SECRET` is required for cross-origin authentication in production but is not yet in `.env.example`. Add it manually.
-
 ### Cloudinary (cover images)
 ```env
 CLOUDINARY_CLOUD_NAME=your_cloud_name
