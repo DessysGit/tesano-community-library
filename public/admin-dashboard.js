@@ -73,7 +73,7 @@ async function checkAdminAccess() {
         const user = await response.json();
         
         if (user.role !== 'admin') {
-            alert('Access denied. Admin privileges required.');
+            // No alert() — just redirect; the main page will show the correct UI
             window.location.href = 'index.html';
             return false;
         }
@@ -833,11 +833,9 @@ function showError(message) {
 }
 
 // Initialize dashboard
-async function initDashboard() {
-    const isAdmin = await checkAdminAccess();
-    if (!isAdmin) return;
-    
-    // Load all data
+// Loads all dashboard data without re-running the auth check.
+// Used by the auto-refresh interval so we don't hit /current-user every 5 minutes.
+async function refreshDashboardData() {
     await Promise.all([
         loadStats(),
         loadGenreChart(),
@@ -851,8 +849,14 @@ async function initDashboard() {
     ]);
 }
 
+async function initDashboard() {
+    const isAdmin = await checkAdminAccess();
+    if (!isAdmin) return;
+    await refreshDashboardData();
+}
+
 // Load dashboard on page load
 document.addEventListener('DOMContentLoaded', initDashboard);
 
-// Refresh data every 5 minutes
-setInterval(initDashboard, 5 * 60 * 1000);
+// Refresh data every 5 minutes — data only, no repeated auth check
+setInterval(refreshDashboardData, 5 * 60 * 1000);
