@@ -21,6 +21,7 @@ const API_BASE_URL = (() => {
 // automatically attach the stored JWT as an Authorization header.
 // Also handles 401 responses globally — if the token is expired/invalid,
 // clear it and redirect to auth page.
+let _sessionExpiredRedirecting = false; // prevents parallel 401s from each triggering a redirect
 (function injectJwtOnBackendRequests() {
   const _fetch = window.fetch;
   window.fetch = function(input, init = {}) {
@@ -33,15 +34,23 @@ const API_BASE_URL = (() => {
       }
     }
     return _fetch.call(this, input, init).then(response => {
-      // Global 401 handling: expired/invalid JWT → redirect to auth
-      if (isBackendCall && response.status === 401) {
+      if (isBackendCall && response.status === 401 && !_sessionExpiredRedirecting) {
         const currentPage = window.location.pathname.split('/').pop();
-        // Don't redirect if already on auth page or if this IS the login/register endpoint
-        if (currentPage !== 'auth.html' && !url.endsWith('/login') && !url.endsWith('/register')) {
+        // Skip redirect when already on auth page or when the endpoint itself
+        // legitimately returns 401 (wrong password, unverified email, etc.)
+        const isAuthEndpoint = url.endsWith('/login') || url.endsWith('/register') ||
+                               url.endsWith('/resend-verification');
+        if (currentPage !== 'auth.html' && !isAuthEndpoint) {
+          _sessionExpiredRedirecting = true;
           localStorage.removeItem('authToken');
           localStorage.removeItem('authState');
           localStorage.removeItem('userData');
-          window.location.replace('auth.html');
+          // showToast is defined later in this file so guard with typeof
+          if (typeof showToast === 'function') {
+            showToast('Your session has expired. Please sign in again.', 'info', 2500);
+          }
+          // Short delay so the user sees the message before the redirect fires
+          setTimeout(() => window.location.replace('auth.html'), 2000);
         }
       }
       return response;
