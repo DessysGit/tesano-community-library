@@ -513,16 +513,35 @@ All endpoints are relative to `BACKEND_URL`. Protected routes accept either a se
 | `GET` | `/download/:bookId` | — | Get PDF download URL (JSON) |
 | `GET` | `/recommendations` | User | AI book recommendations |
 | `POST` | `/subscribe` | User | Newsletter subscription |
-| `POST` | `/api/chat` | — | Chatbot message |
+| `POST` | `/api/chat` | — | Chatbot message (accepts optional JWT for personalized responses) |
 | `POST` | `/api/chat/reset` | — | Reset chatbot session |
 | `GET` | `/api/chat/health` | — | Chatbot health check |
-| `GET` | `/health` | — | Server health check |
-| `GET` | `/email-health` | — | Email service health check |
+
+### Chatbot Capabilities
+
+The LibBot chatbot is a **context-aware assistant** built specifically for Des2 Library:
+
+| Category | What it knows |
+|---|---|
+| **Books** | Real-time book counts, genre listings, searching by title/author/genre |
+| **Account** | Login flow, registration, password reset, email verification |
+| **Profile** | How to access/edit profile, favorites, password changes |
+| **Downloads** | Download instructions with login context awareness |
+| **Reviews** | Rating system (1-5 stars), review submission |
+| **Recommendations** | Personalized book suggestions (requires login) |
+
+The chatbot:
+- Provides **personalized responses** when you're logged in (uses your username)
+- Queries the database for **real-time book information**
+- Has **security guardrails** to prevent revealing credentials, env vars, or admin backend details
+- Offers **multi-line formatted responses** with bold text for better readability
 
 ### Analytics (Admin)
 
 | Method | Endpoint | Description |
 |---|---|---|
+| `GET` | `/health` | Server health check |
+| `GET` | `/email-health` | Email service health check |
 | `GET` | `/analytics/stats` | Overview statistics |
 | `GET` | `/analytics/popular-books` | Most popular books |
 | `GET` | `/analytics/genre-stats` | Genre distribution |

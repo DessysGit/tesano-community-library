@@ -1,12 +1,21 @@
 // Chatbot functionality with proper API integration
+// Generates a unique conversation ID for session tracking
+let conversationId = localStorage.getItem('chat-conversation-id') || ('chat-' + Date.now());
+localStorage.setItem('chat-conversation-id', conversationId);
 
 function toggleChatbox() {
   const chatbox = document.getElementById('chatbox');
+  const wasHidden = chatbox.classList.contains('hidden');
   chatbox.classList.toggle('hidden');
   
-  // Auto-focus input when opening
+  // If we're opening the chat, focus the input
   if (!chatbox.classList.contains('hidden')) {
     document.getElementById('user-input').focus();
+  }
+  
+  // If we're closing the chat, reset the conversation
+  if (wasHidden === false && chatbox.classList.contains('hidden')) {
+    resetConversation();
   }
 }
 
@@ -29,11 +38,19 @@ async function sendMessage() {
     // Use the same API_BASE_URL as defined in script.js
     const apiUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
     
+    // Get JWT token from localStorage if available (set during login)
+    const token = localStorage.getItem('token');
+    const headers = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(`${apiUrl}/api/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       credentials: 'include',
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ message, conversationId })
     });
 
     // Remove typing indicator
@@ -65,13 +82,24 @@ function appendMessage(sender, text, isError = false) {
   const msgDiv = document.createElement('div');
   msgDiv.className = `chat-message ${sender === 'LibBot' ? 'bot-message' : 'user-message'} ${isError ? 'error-message' : ''}`;
   
+  // Convert markdown-like formatting to HTML for better display
+  const formattedText = formatBotResponse(text);
+  
   msgDiv.innerHTML = `
     <div class="message-header"><strong>${sender}</strong></div>
-    <div class="message-text">${escapeHtml(text)}</div>
+    <div class="message-text">${formattedText}</div>
   `;
   
   messages.appendChild(msgDiv);
   messages.scrollTop = messages.scrollHeight;
+}
+
+// Convert markdown formatting to HTML for bot responses
+function formatBotResponse(text) {
+  // Escape HTML first to prevent XSS
+  const escaped = escapeHtml(text);
+  // Convert **bold** to <strong>
+  return escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 }
 
 function showTypingIndicator() {
@@ -125,5 +153,31 @@ function initializeUsername() {
   const burgerUsername = document.getElementById('burger-username');
   if (burgerUsername && burgerUsername.textContent !== 'Username') {
     window.currentUsername = burgerUsername.textContent;
+  }
+}
+
+// Reset the conversation when chat is closed
+async function resetConversation() {
+  const apiUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  try {
+    await fetch(`${apiUrl}/api/chat/reset`, {
+      method: 'POST',
+      headers: headers,
+      credentials: 'include',
+      body: JSON.stringify({ conversationId })
+    });
+    // Clear stored conversation ID for fresh start next time
+    localStorage.removeItem('chat-conversation-id');
+    conversationId = 'chat-' + Date.now();
+    localStorage.setItem('chat-conversation-id', conversationId);
+  } catch (err) {
+    console.log('Could not reset conversation');
   }
 }

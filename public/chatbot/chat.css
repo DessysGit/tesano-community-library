@@ -292,6 +292,37 @@
     transform: translateY(0);
 }
 
+/* Formatted Bot Responses */
+.message-text strong {
+    color: #fff;
+    font-weight: 600;
+}
+
+.message-text em {
+    color: #1DB954;
+    font-style: italic;
+}
+
+/* Lists in bot messages - using emoji bullets */
+.message-text {
+    white-space: pre-wrap;
+}
+
+.message-text br + br {
+    display: none;
+}
+
+/* Multi-line formatting for better readability */
+.bot-message .message-text {
+    line-height: 1.6;
+}
+
+/* Emoji styling in messages */
+.message-text .emoji {
+    font-size: 1.1em;
+    margin-right: 2px;
+}
+
 /* Mobile Responsive */
 @media (max-width: 480px) {
     #chatbox {
