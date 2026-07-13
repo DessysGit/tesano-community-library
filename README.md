@@ -74,6 +74,7 @@ A modern, full-stack library management application with JWT-based cross-origin 
 - **Separated Auth Pages** — Dedicated `auth.html` / `auth.js` with smart redirect logic
 - **Toast Notification System** — Replaces all `alert()` / `confirm()` / `prompt()` dialogs
 - **Confirm Modal** — Styled dark-theme modal for all destructive actions
+- **Recommendation Caching** — In-memory cache (10 min TTL) reduces HuggingFace API calls
 - **Automated Testing** — 44 tests across 3 suites (Jest + Supertest)
 - **Structured Logging** — Winston with file rotation and configurable log levels
 - **Secure File Uploads** — MIME + extension validation, size limits, filename sanitisation
@@ -230,11 +231,13 @@ SENDGRID_FROM_EMAIL=noreply@yourdomain.com
 
 ### Optional
 ```env
-HUGGINGFACE_API_KEY=your_key    # AI recommendations
+HUGGINGFACE_API_KEY=your_key    # AI recommendations (optional)
 LOG_LEVEL=info                  # debug | info | warn | error
 ENABLE_FILE_LOGGING=true        # Write logs to file in dev
 LOG_SQL_QUERIES=true            # Log DB queries (debug only)
 FORCE_CLOUDINARY=true           # Force Cloudinary even in development
+RATE_LIMIT_MAX=100              # Max requests per window (default: 100)
+RATE_LIMIT_WINDOW=15            # Rate limit window in minutes
 ```
 
 Generate a secure secret:
@@ -326,11 +329,12 @@ Library_Project/
 │   │   ├── newsletter.js            # Email subscriptions
 │   │   └── __tests__/
 │   ├── services/
-│   │   ├── emailService.js
-│   │   └── databaseService.js
+│   │   ├── emailService.js          # Multi-provider email (Resend, Gmail, SendGrid, Brevo)
+│   │   └── databaseService.js       # DB seeding, admin creation, rating recalculation
 │   ├── utils/
-│   │   ├── fileValidation.js
-│   │   ├── testHelpers.js
+│   │   ├── fileValidation.js        # MIME/extension validation, size limits
+│   │   ├── testHelpers.js           # Jest mocks for request/response/user
+│   │   ├── helpers.js               # General utility functions (formatDate, truncate, etc.)
 │   │   └── __tests__/
 │   └── app.js                       # Express app, CORS, sessions, CSP middleware
 ├── public/
@@ -340,16 +344,30 @@ Library_Project/
 │   ├── book-details.html            # Book details + download + reviews
 │   ├── reset-password.html          # Password reset landing page
 │   ├── style.css                    # Global dark-theme styles
-│   └── chatbot/                     # Chatbot widget
+│   └── chatbot/                     # Chatbot widget (chat.js, chat.css)
 ├── logs/                            # Winston log files (auto-generated)
 ├── uploads/                         # Local file storage (dev only)
+├── subscribers.txt                  # Newsletter subscription list
 ├── server.js                        # Application entry point
 ├── recommend.py                     # Python recommendation script
-├── requirements.txt
-├── .env.example
-├── jest.setup.js
-└── package.json
+├── requirements.txt                 # Python dependencies
+├── .env.example                     # Environment template
+├── jest.setup.js                    # Jest test configuration
+├── check-database.js                # DB connection test script
+├── verify-production.js             # Production config verification
+├── package.json
+└── LICENSE
 ```
+
+### Supporting Scripts
+
+| Script | Purpose |
+|---|---|
+| `check-database.js` | Test database connectivity |
+| `verify-production.js` | Verify production environment config |
+| `fix-cloudinary-urls.js` | Migrate/fix Cloudinary URLs in database |
+| `migrations/` | Database migration scripts (auto-created) |
+| `switch-email.bat` | Quick email provider toggle (Windows) |
 
 ---
 
@@ -528,9 +546,16 @@ npm run test:watch                 # Tests in watch mode
 npm run test:coverage              # Coverage report
 npm run test:connection            # Test DB connection
 npm run diagnose                   # Connection diagnostics
-npm run test-email your@email.com  # Test email service
-npm run test-deployment            # Test deployment connectivity
-npm run verify-production          # Verify production configuration
+npm run connection-guide             # Display connection setup guide
+npm run fix-database                 # Run connection guide and diagnose
+npm run test-email your@email.com    # Test email service
+npm run test-deployment              # Test deployment connectivity
+npm run verify-production            # Verify production configuration
+npm run fix-cloudinary               # Fix Cloudinary URLs in database
+npm run test-dashboard               # Test dashboard functionality
+npm run add-timestamps               # Add created_at timestamps to users
+npm run migrate                      # Run database migrations
+npm run add-indexes                    # Add database indexes
 ```
 
 ---
