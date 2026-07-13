@@ -238,11 +238,11 @@ async function login() {
             }
             
             displayMessage('login-messages', errorMessage, 'error');
+            hideButtonSpinner(loginButton);
         }
     } catch (error) {
         console.error('Login error:', error);
         displayMessage('login-messages', 'Network error. Please try again.', 'error');
-        // Only re-enable button on outer catch (login request itself failed)
         hideButtonSpinner(loginButton);
     }
     // Note: no finally here - on success the verify loop manages button state
@@ -457,16 +457,31 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     const loginEmailUsername = document.getElementById('login-email-username');
     const loginPassword = document.getElementById('login-password');
+    const loginButton = document.querySelector('#login-form .btn-primary');
     
     if (loginEmailUsername) {
         loginEmailUsername.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') login();
+        });
+        // Clear messages when user starts typing (for better UX after errors)
+        loginEmailUsername.addEventListener('input', () => {
+            document.getElementById('login-messages').innerHTML = '';
+            if (loginButton && loginButton.disabled) {
+                hideButtonSpinner(loginButton);
+            }
         });
     }
     
     if (loginPassword) {
         loginPassword.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') login();
+        });
+        // Clear messages when user starts typing (for better UX after errors)
+        loginPassword.addEventListener('input', () => {
+            document.getElementById('login-messages').innerHTML = '';
+            if (loginButton && loginButton.disabled) {
+                hideButtonSpinner(loginButton);
+            }
         });
     }
 });
