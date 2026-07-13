@@ -609,40 +609,67 @@
     }
 
     async function handleDownload() {
-  const btn = document.getElementById('book-details-download');
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
-  btn.disabled = true;
+    const btn = document.getElementById('book-details-download');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+    btn.disabled = true;
 
-  try {
+    try {
     const response = await fetch(`${API_BASE_URL}/download/${currentBookId}`, {
-      credentials: 'include'
+    credentials: 'include'
     });
     const data = await response.json();
 
     if (!response.ok || !data.url) {
-      throw new Error(data.error || 'Download failed');
+    throw new Error(data.error || 'Download failed');
     }
 
-    // Open in new tab — avoids CORS issues caused by the HTML5 download
-    // attribute on cross-origin URLs (Cloudinary, GCS). The PDF opens in
-    // the browser and the user can save it from there.
-    const a = document.createElement('a');
-    a.href = data.url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if (data.useBlob) {
+      // Cloudinary files: proxy through Render so we get proper binary
+      // with Content-Disposition, then wrap in a blob URL.
+      // blob: URLs are same-origin so a.download works and gives the correct
+      // filename including the .pdf extension.
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
 
-  } catch (err) {
-    console.error('Download error:', err);
-    alert('Failed to download: ' + err.message);
-  } finally {
-    btn.innerHTML = originalHtml;
-    btn.disabled = false;
-  }
-}
+      const fileResponse = await fetch(data.url, { credentials: 'include' });
+      if (!fileResponse.ok) throw new Error('Failed to fetch file from server.');
+
+          const blob    = await fileResponse.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+        a.href     = blobUrl;
+      a.download = data.filename;   // works for blob: URLs regardless of browser
+      document.body.appendChild(a);
+        a.click();
+          document.body.removeChild(a);
+
+          // Revoke after a short delay to let the download begin
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+
+        } else {
+          // GCS or direct URL — open in new tab
+          const a = document.createElement('a');
+          a.href   = data.url;
+          a.target = '_blank';
+          a.rel    = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+      } catch (err) {
+        console.error('Download error:', err);
+        if (typeof showToast === 'function') {
+          showToast('Failed to download: ' + err.message, 'error');
+        } else {
+          alert('Failed to download: ' + err.message);
+        }
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled  = false;
+      }
+    }
 
     // Function to update like/dislike UI
     function updateLikeUI(likes, dislikes, activeAction) {
