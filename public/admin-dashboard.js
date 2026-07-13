@@ -745,7 +745,7 @@ async function loadTopReviewers() {
                     </div>
                     <div>
                         <h6 class="mb-0" style="color: #1DB954;">${reviewer.username}</h6>
-                        <small class="text-muted">${reviewer.email}</small>
+                        <small class="text-muted reviewer-email">${reviewer.email}</small>
                     </div>
                 </div>
                 <div class="text-right">

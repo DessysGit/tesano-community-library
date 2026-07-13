@@ -28,91 +28,70 @@
             box-shadow: 0 12px 30px rgba(29, 185, 84, 0.3);
         }
         
+        /* ── Stat cards: dark + left accent (replaces bright gradients) ────── */
         .stat-card {
-            padding: 20px;
-            text-align: center;
-            background: linear-gradient(135deg, #1DB954 0%, #17a647 100%);
+            padding: 22px 20px;
+            text-align: left;
+            background: #141414;
             color: white;
-            border: none;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-left: 4px solid #1DB954;
             position: relative;
             overflow: hidden;
         }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
-        
-        .stat-card.users {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-        }
-        
-        .stat-card.books {
-            background: linear-gradient(135deg, #d946a6 0%, #db2777 100%);
-        }
-        
-        .stat-card.reviews {
-            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-        }
-        
-        .stat-card.downloads {
-            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin: 10px 0;
-            position: relative;
-            z-index: 1;
-        }
-        
+        /* Remove the distracting animated pulse */
+        .stat-card::before { display: none; }
+
+        .stat-card.users     { border-left-color: #7c6deb; }
+        .stat-card.books     { border-left-color: #1DB954; }
+        .stat-card.reviews   { border-left-color: #3b82f6; }
+        .stat-card.downloads { border-left-color: #10b981; }
+
         .stat-label {
-            font-size: 0.85rem;
-            opacity: 0.9;
+            font-size: 0.72rem;
+            color: #888;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
             position: relative;
             z-index: 1;
         }
-        
+
+        .stat-number {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.1;
+            margin: 6px 0 12px;
+            position: relative;
+            z-index: 1;
+        }
+
         .stat-icon {
             font-size: 2rem;
-            opacity: 0.15;
             position: absolute;
-            bottom: 10px;
-            right: 15px;
+            bottom: 14px;
+            right: 16px;
+            opacity: 0.12;
         }
-        
+        .stat-card.users     .stat-icon { color: #7c6deb; opacity: .18; }
+        .stat-card.books     .stat-icon { color: #1DB954; opacity: .18; }
+        .stat-card.reviews   .stat-icon { color: #3b82f6; opacity: .18; }
+        .stat-card.downloads .stat-icon { color: #10b981; opacity: .18; }
+
         .stat-change {
-            font-size: 0.75rem;
-            margin-top: 8px;
-            display: inline-block;
+            font-size: 0.73rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             padding: 3px 10px;
-            border-radius: 15px;
-            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
             position: relative;
             z-index: 1;
         }
-        
-        .stat-change.positive {
-            background: rgba(76, 175, 80, 0.3);
-        }
-        
-        .stat-change.negative {
-            background: rgba(244, 67, 54, 0.3);
-        }
+        .stat-change.positive { background: rgba(29,185,84,0.15); color: #1DB954; }
+        .stat-change.negative { background: rgba(239,68,68,0.15);  color: #f87171; }
         
         .chart-container {
             position: relative;
@@ -123,8 +102,8 @@
         .dashboard-header {
             background: linear-gradient(135deg, #1DB954 0%, #17a647 100%);
             color: white;
-            padding: 50px 0;
-            margin-bottom: 40px;
+            padding: 28px 30px;
+            margin-bottom: 32px;
             border-radius: 15px;
             position: relative;
             overflow: hidden;
@@ -211,34 +190,6 @@
             height: 200px;
         }
         
-        .time-filter-inline {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .time-filter-inline .btn {
-            border-radius: 20px;
-            font-size: 0.8rem;
-            padding: 6px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-        
-        .time-filter-inline .btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        
-        .time-filter-inline .btn.active {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            font-weight: 600;
-        }
-        
         .metric-badge {
             padding: 5px 15px;
             border-radius: 20px;
@@ -247,27 +198,98 @@
         }
         
         @media (max-width: 768px) {
-            .stat-number {
-                font-size: 2rem;
+            .stat-number { font-size: 2rem; }
+
+            /* Header: allow overflow so the filter row can scroll horizontally */
+            .dashboard-header {
+                padding: 20px 16px;
+                overflow: visible;
             }
-            
-            .time-filter-inline {
-                margin-top: 15px;
-                width: 100%;
-            }
-            
             .dashboard-header .d-flex {
                 flex-direction: column;
+                align-items: flex-start !important;
+                gap: 14px;
             }
-            
-            .chart-container {
-                height: 250px;
+            .dashboard-header .flex-grow-1 {
+                width: 100%;
             }
-            
-            .dashboard-header {
-                padding: 30px 0;
+
+            /* Filter row: horizontal scroll, buttons never wrap or stretch */
+            .time-filter-inline {
+                width: 100%;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+                justify-content: flex-start;
             }
+            .time-filter-inline::-webkit-scrollbar { display: none; }
+            .time-filter-inline .btn {
+                flex-shrink: 0;
+                white-space: nowrap;
+            }
+
+            .chart-container { height: 250px; }
         }
+
+        /* ── Unified section card header ─────────────────────────────────────── */
+        /* Replaces the inconsistent rainbow gradients on every section.         */
+        /* One clean dark style with a green left accent — professional & calm.  */
+        .section-header {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-left: 3px solid #1DB954;
+            color: #e0e0e0 !important;
+            padding: 14px 18px !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-header h5 {
+            margin: 0;
+            font-size: .95rem;
+            font-weight: 600;
+            letter-spacing: .3px;
+            color: #e0e0e0;
+        }
+        .section-header .section-icon {
+            color: #1DB954;
+            font-size: 1rem;
+        }
+
+        /* ── Time filter pill tabs ───────────────────────────────────────────── */
+        .time-filter-inline {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .time-filter-inline .btn {
+            border-radius: 20px;
+            font-size: 0.8rem;
+            padding: 5px 16px;
+            border: 1px solid rgba(255,255,255,.25);
+            background: rgba(255,255,255,.08);
+            color: rgba(255,255,255,.8);
+            backdrop-filter: blur(10px);
+            transition: all .2s ease;
+            font-weight: 500;
+        }
+        .time-filter-inline .btn:hover {
+            background: rgba(255,255,255,.18);
+            color: #fff;
+        }
+        .time-filter-inline .btn.active {
+            background: #fff;
+            color: #1DB954;
+            border-color: #fff;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,.2);
+        }
+
+        /* ── Reviewer card — no email shown ─────────────────────────────────── */
+        .reviewer-email { display: none; }
     </style>
 </head>
 <body>
@@ -362,8 +384,9 @@
         <div class="row mb-4">
             <div class="col-lg-8 mb-4">
                 <div class="card dashboard-card">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #1DB954, #17a647);">
-                        <h5 class="mb-0"><i class="fas fa-chart-area"></i> User Growth & Book Uploads</h5>
+                    <div class="card-header section-header">
+                        <i class="fas fa-chart-area section-icon"></i>
+                        <h5>User Growth &amp; Book Uploads</h5>
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
@@ -375,8 +398,9 @@
             
             <div class="col-lg-4 mb-4">
                 <div class="card dashboard-card">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
-                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Genre Distribution</h5>
+                    <div class="card-header section-header">
+                        <i class="fas fa-chart-pie section-icon"></i>
+                        <h5>Genre Distribution</h5>
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
@@ -391,8 +415,9 @@
         <div class="row mb-4">
             <div class="col-lg-6 mb-4">
                 <div class="card dashboard-card">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
-                        <h5 class="mb-0"><i class="fas fa-star-half-alt"></i> Rating Distribution</h5>
+                    <div class="card-header section-header">
+                        <i class="fas fa-star-half-alt section-icon"></i>
+                        <h5>Rating Distribution</h5>
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
@@ -404,8 +429,9 @@
             
             <div class="col-lg-6 mb-4">
                 <div class="card dashboard-card">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
-                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Review Trends</h5>
+                    <div class="card-header section-header">
+                        <i class="fas fa-chart-line section-icon"></i>
+                        <h5>Review Trends</h5>
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
@@ -420,8 +446,9 @@
         <div class="row mb-4">
             <div class="col-lg-6 mb-4">
                 <div class="card dashboard-card">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                        <h5 class="mb-0"><i class="fas fa-fire"></i> Top 10 Popular Books</h5>
+                    <div class="card-header section-header">
+                        <i class="fas fa-fire section-icon"></i>
+                        <h5>Top 10 Popular Books</h5>
                     </div>
                     <div class="card-body" style="max-height: 500px; overflow-y: auto;">
                         <div id="popular-books">
@@ -435,8 +462,9 @@
             
             <div class="col-lg-6 mb-4">
                 <div class="card dashboard-card">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #fa709a, #fee140);">
-                        <h5 class="mb-0"><i class="fas fa-trophy"></i> Top Reviewers</h5>
+                    <div class="card-header section-header">
+                        <i class="fas fa-trophy section-icon"></i>
+                        <h5>Top Reviewers</h5>
                     </div>
                     <div class="card-body" style="max-height: 500px; overflow-y: auto;">
                         <div id="top-reviewers">
@@ -453,8 +481,9 @@
         <div class="row mb-4">
             <div class="col-lg-6 mb-4">
                 <div class="card dashboard-card">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #30cfd0, #330867);">
-                        <h5 class="mb-0"><i class="fas fa-history"></i> Recent Activity</h5>
+                    <div class="card-header section-header">
+                        <i class="fas fa-history section-icon"></i>
+                        <h5>Recent Activity</h5>
                     </div>
                     <div class="card-body" style="max-height: 500px; overflow-y: auto;">
                         <div id="recent-activity">
@@ -468,8 +497,9 @@
             
             <div class="col-lg-6 mb-4">
                 <div class="card dashboard-card">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24);">
-                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Books Without Reviews</h5>
+                    <div class="card-header section-header">
+                        <i class="fas fa-exclamation-triangle section-icon" style="color:#f59e0b;"></i>
+                        <h5>Books Without Reviews</h5>
                     </div>
                     <div class="card-body" style="max-height: 500px; overflow-y: auto;">
                         <div id="books-without-reviews">
