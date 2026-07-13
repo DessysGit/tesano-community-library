@@ -46,3 +46,5 @@ FINAL_YEAR_PROJECT_ENHANCEMENTS.md
 
 # Keep example files (don't ignore these)
 !.env.example
+BACKEND_README.md
+FRONTEND_README.md
