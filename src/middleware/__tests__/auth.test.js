@@ -16,21 +16,23 @@ afterAll(() => {
 describe('Authentication Middleware', () => {
   
   describe('isAuthenticated', () => {
-    it('should call next() if user is authenticated', () => {
+    it('should call next() if user is authenticated', async () => {
       const req = {
-        isAuthenticated: () => true
+        isAuthenticated: () => true,
+        headers: {}
       };
       const res = {};
       const next = jest.fn();
       
-      isAuthenticated(req, res, next);
+      await isAuthenticated(req, res, next);
       
       expect(next).toHaveBeenCalled();
     });
     
-    it('should return 401 if user is not authenticated', () => {
+    it('should return 401 if user is not authenticated', async () => {
       const req = {
-        isAuthenticated: () => false
+        isAuthenticated: () => false,
+        headers: {}
       };
       const res = {
         status: jest.fn().mockReturnThis(),
@@ -38,7 +40,7 @@ describe('Authentication Middleware', () => {
       };
       const next = jest.fn();
       
-      isAuthenticated(req, res, next);
+      await isAuthenticated(req, res, next);
       
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.send).toHaveBeenCalledWith('You must be logged in to perform this action.');
@@ -47,23 +49,25 @@ describe('Authentication Middleware', () => {
   });
   
   describe('isAdmin', () => {
-    it('should call next() if user is authenticated and is admin', () => {
+    it('should call next() if user is authenticated and is admin', async () => {
       const req = {
         isAuthenticated: () => true,
-        user: { role: 'admin' }
+        user: { role: 'admin' },
+        headers: {}
       };
       const res = {};
       const next = jest.fn();
       
-      isAdmin(req, res, next);
+      await isAdmin(req, res, next);
       
       expect(next).toHaveBeenCalled();
     });
     
-    it('should return 403 if user is not admin', () => {
+    it('should return 403 if user is not admin', async () => {
       const req = {
         isAuthenticated: () => true,
-        user: { role: 'user' }
+        user: { role: 'user' },
+        headers: {}
       };
       const res = {
         status: jest.fn().mockReturnThis(),
@@ -71,17 +75,18 @@ describe('Authentication Middleware', () => {
       };
       const next = jest.fn();
       
-      isAdmin(req, res, next);
+      await isAdmin(req, res, next);
       
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.send).toHaveBeenCalledWith('Only admin can perform this action.');
       expect(next).not.toHaveBeenCalled();
     });
     
-    it('should return 403 if user is not authenticated', () => {
+    it('should return 403 if user is not authenticated', async () => {
       const req = {
         isAuthenticated: () => false,
-        user: null
+        user: null,
+        headers: {}
       };
       const res = {
         status: jest.fn().mockReturnThis(),
@@ -89,7 +94,7 @@ describe('Authentication Middleware', () => {
       };
       const next = jest.fn();
       
-      isAdmin(req, res, next);
+      await isAdmin(req, res, next);
       
       expect(res.status).toHaveBeenCalledWith(403);
       expect(next).not.toHaveBeenCalled();
@@ -100,10 +105,11 @@ describe('Authentication Middleware', () => {
     // We need to test with the actual ADMIN_USERNAME from environment
     // For testing, we'll use 'admin' which is the default
     
-    it('should call next() if user is the seed admin', () => {
+    it('should call next() if user is the seed admin', async () => {
       const req = {
         isAuthenticated: () => true,
-        user: { username: 'admin' } // Using actual default admin username
+        user: { username: 'admin' }, // Using actual default admin username
+        headers: {}
       };
       const res = {
         status: jest.fn().mockReturnThis(),
@@ -111,16 +117,17 @@ describe('Authentication Middleware', () => {
       };
       const next = jest.fn();
       
-      isSeedAdmin(req, res, next);
+      await isSeedAdmin(req, res, next);
       
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
     });
     
-    it('should return 403 if user is not the seed admin', () => {
+    it('should return 403 if user is not the seed admin', async () => {
       const req = {
         isAuthenticated: () => true,
-        user: { username: 'otheradmin' }
+        user: { username: 'otheradmin' },
+        headers: {}
       };
       const res = {
         status: jest.fn().mockReturnThis(),
@@ -128,16 +135,17 @@ describe('Authentication Middleware', () => {
       };
       const next = jest.fn();
       
-      isSeedAdmin(req, res, next);
+      await isSeedAdmin(req, res, next);
       
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.send).toHaveBeenCalledWith('Only the seeded admin can perform this action.');
       expect(next).not.toHaveBeenCalled();
     });
     
-    it('should return 401 if user is not authenticated', () => {
+    it('should return 401 if user is not authenticated', async () => {
       const req = {
-        isAuthenticated: () => false
+        isAuthenticated: () => false,
+        headers: {}
       };
       const res = {
         status: jest.fn().mockReturnThis(),
@@ -145,7 +153,7 @@ describe('Authentication Middleware', () => {
       };
       const next = jest.fn();
       
-      isSeedAdmin(req, res, next);
+      await isSeedAdmin(req, res, next);
       
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.send).toHaveBeenCalledWith('Authentication required.');
