@@ -1,6 +1,6 @@
-# Des2 Library Management System
+# Tesano Community Library Management System
 
-A modern, full-stack library management application with JWT-based cross-origin authentication, Google Cloud Storage for PDF hosting, AI-powered recommendations, a real-time analytics dashboard, structured logging, and automated testing.
+A modern, full-stack online library management system designed for the **Tesano Community** in Accra, Ghana. This platform enables community members to browse books, borrow physical copies, manage memberships, attend community events, and engage with a digital library experience.
 
 ![Node.js](https://img.shields.io/badge/Node.js-v18+-green)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-blue)
@@ -34,13 +34,16 @@ A modern, full-stack library management application with JWT-based cross-origin 
 
 ## Features
 
-### For Users
+### For Community Members
 - **Browse & Search Books** — Advanced search by title, author, and genre with quick search
 - **Review & Rate** — Share thoughts and rate books 1–5 stars
 - **Like / Dislike** — Quick reactions synced across all pages
 - **AI Recommendations** — Personalised book suggestions powered by HuggingFace
 - **Chatbot Assistant** — Interactive helper for finding books and recommendations
 - **Download Books** — Access PDF versions stored on Google Cloud Storage or Cloudinary
+- **Borrow Physical Books** — Check out physical copies from the Tesano Community Library
+- **Library Membership** — Apply for and manage community library membership
+- **Community Events** — Register for library-hosted events in the Tesano area
 - **User Profile**
   - Real activity feed (reviews, likes, dislikes with relative timestamps)
   - Reviews tab showing all submitted reviews with clickable book links
@@ -63,10 +66,13 @@ A modern, full-stack library management application with JWT-based cross-origin 
   - Client-side and server-side validation before any upload attempt
   - Custom styled file-picker with live filename and size display
 - **User Management** — Grant/revoke admin, delete users with confirmation modal
+- **Membership Management** — Approve/renew library memberships
+- **Borrowing Management** — Track checked-out books, due dates, and fines
+- **Event Management** — Create and manage community events
 - **Delete Books** — Confirmation modal, toast feedback, auto-cleans GCS/Cloudinary storage
 
 ### Developer / Architecture Highlights
-- **JWT Authentication** — Cross-origin auth between Netlify frontend and Render backend
+- **JWT Authentication** — Cross-origin auth between frontend and backend
   - JWT issued at login, stored in `localStorage`
   - Global `fetch` interceptor auto-attaches token to every backend request
   - Session cookie auth retained as same-origin fallback (local dev)
@@ -101,7 +107,7 @@ A modern, full-stack library management application with JWT-based cross-origin 
 - **Styling**: Bootstrap 4, Font Awesome
 - **Charts**: Chart.js
 - **Auth**: JWT in `localStorage`, global fetch interceptor
-- **Design**: Responsive, mobile-first, dark theme
+- **Design**: Responsive, mobile-first, dark theme with Tesano community colors
 
 ### AI / ML
 - **Recommendations**: HuggingFace API
@@ -131,7 +137,7 @@ A modern, full-stack library management application with JWT-based cross-origin 
 **1. Clone the repository**
 ```bash
 git clone https://github.com/DessysGit/Des2_Library.git
-cd Des2_Library
+cd Library_Project
 ```
 
 **2. Install dependencies**
@@ -159,6 +165,7 @@ npm run dev
 | Admin Dashboard | http://localhost:3000/admin-dashboard.html |
 | Book Details | http://localhost:3000/book-details.html |
 | Password Reset | http://localhost:3000/reset-password.html |
+| Community Events | http://localhost:3000/events.html |
 
 Tables are created automatically on first server start. A default admin account is seeded from your environment variables.
 
@@ -187,7 +194,7 @@ BACKEND_URL=http://localhost:3000
 # Admin Account
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your_secure_password
-ADMIN_EMAIL=admin@yourlibrary.com
+ADMIN_EMAIL=admin@tesanolibrary.com
 ```
 
 ### Cloudinary (cover images)
@@ -215,7 +222,7 @@ GOOGLE_STORAGE_BUCKET=your-bucket-name
 ```env
 # Resend (recommended — 3,000 emails/month free)
 RESEND_API_KEY=re_your_api_key
-EMAIL_FROM=noreply@yourdomain.com
+EMAIL_FROM=noreply@tesanolibrary.com
 
 # OR Gmail
 GMAIL_USER=you@gmail.com
@@ -226,7 +233,7 @@ BREVO_API_KEY=your_key
 
 # OR SendGrid
 SENDGRID_API_KEY=your_key
-SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+SENDGRID_FROM_EMAIL=noreply@tesanolibrary.com
 ```
 
 ### Optional
@@ -327,6 +334,9 @@ Library_Project/
 │   │   ├── chatbot.js               # Chatbot responses
 │   │   ├── download.js              # Returns JSON {url, filename} — no proxy
 │   │   ├── newsletter.js            # Email subscriptions
+│   │   ├── membership.js            # Community library membership management
+│   │   ├── borrowing.js             # Physical book borrowing system
+│   │   ├── events.js                # Community events management
 │   │   └── __tests__/
 │   ├── services/
 │   │   ├── emailService.js          # Multi-provider email (Resend, Gmail, SendGrid, Brevo)
@@ -342,6 +352,7 @@ Library_Project/
 │   ├── index.html / script.js       # Main authenticated app
 │   ├── admin-dashboard.html/.js     # Analytics dashboard (admin only)
 │   ├── book-details.html            # Book details + download + reviews
+│   ├── events.html                  # Community events page
 │   ├── reset-password.html          # Password reset landing page
 │   ├── style.css                    # Global dark-theme styles
 │   └── chatbot/                     # Chatbot widget (chat.js, chat.css)
@@ -506,6 +517,35 @@ All endpoints are relative to `BACKEND_URL`. Protected routes accept either a se
 | `POST` | `/users/:id/revoke-admin` | Seed Admin | Revoke admin role |
 | `DELETE` | `/users/:id` | Seed Admin | Delete user |
 
+### Membership
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/membership/apply` | User | Apply for library membership |
+| `GET` | `/membership/status` | User | Check membership status |
+| `POST` | `/membership/renew` | User | Renew membership |
+| `GET` | `/membership/all` | Admin | List all members |
+
+### Borrowing
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/borrow/:bookId` | User | Checkout a physical book |
+| `POST` | `/borrow/return/:borrowId` | User | Return a borrowed book |
+| `GET` | `/borrow/my` | User | View my borrowed books |
+| `GET` | `/borrow/all` | Admin | View all borrows |
+| `POST` | `/borrow/renew/:borrowId` | User | Extend borrowing period |
+
+### Events
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/events` | Admin | Create a community event |
+| `GET` | `/events` | — | List upcoming events |
+| `GET` | `/events/:id` | — | Get event details |
+| `POST` | `/events/:id/register` | User | Register for an event |
+| `DELETE` | `/events/:id` | Admin | Delete an event |
+
 ### Other
 
 | Method | Endpoint | Auth | Description |
@@ -519,7 +559,7 @@ All endpoints are relative to `BACKEND_URL`. Protected routes accept either a se
 
 ### Chatbot Capabilities
 
-The LibBot chatbot is a **context-aware assistant** built specifically for Des2 Library:
+The **Tesano LibBot** chatbot is a **context-aware assistant** built specifically for Tesano Community Library:
 
 | Category | What it knows |
 |---|---|
@@ -529,6 +569,9 @@ The LibBot chatbot is a **context-aware assistant** built specifically for Des2 
 | **Downloads** | Download instructions with login context awareness |
 | **Reviews** | Rating system (1-5 stars), review submission |
 | **Recommendations** | Personalized book suggestions (requires login) |
+| **Membership** | How to apply for library membership |
+| **Borrowing** | How to borrow and return physical books |
+| **Events** | Upcoming community events and registration |
 
 The chatbot:
 - Provides **personalized responses** when you're logged in (uses your username)
@@ -791,6 +834,8 @@ ISC License — see [LICENSE](LICENSE) file for details.
 
 **Hosting:** Render (backend) · Netlify (frontend) · Supabase (database)
 
+**Community:** Built for the Tesano Community, Accra, Ghana
+
 ---
 
-*Built with care for book lovers and developers.*
+*Built with care for the Tesano Community and book lovers everywhere.*

@@ -46,7 +46,7 @@ function showWelcome() {
 
     appendMessage(
         'bot',
-        `Hi${name}! 👋 I'm **LibBot**, your Des2 Library assistant.\n\nI can help you find books, explain features, or answer account questions. What can I help with?`
+        `Hi${name}! 👋 I'm **LibBot**, your Tesano Community Library assistant.\n\nI can help you find books, explain features, or answer account questions. What can I help with?`
     );
 
     // Suggestion chips

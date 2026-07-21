@@ -1,5 +1,5 @@
 {
-  "name": "library_management",
+  "name": "tesano-community-library",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
@@ -58,7 +58,7 @@
     "uid2": "^1.0.0",
     "winston": "^3.18.3"
   },
-  "description": "",
+  "description": "Online Library Management System for the Tesano Community",
   "jest": {
     "testEnvironment": "node",
     "coverageDirectory": "coverage",

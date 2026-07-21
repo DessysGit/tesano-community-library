@@ -1,5 +1,5 @@
 /**
- * Des2 Library - Express Application Configuration
+ * Tesano Community Library - Express Application Configuration
  * 
  * This file configures the Express.js application with:
  * - Middleware (CORS, body parsing, sessions)
@@ -7,6 +7,8 @@
  * - Route registration
  * - Static file serving
  * - Error handling
+ * 
+ * Built for the Tesano Community, Accra, Ghana
  * 
  * This is imported and used by server.js
  */
