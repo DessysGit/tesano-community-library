@@ -1766,6 +1766,19 @@ async function updateChallengeProgress(id) {
     } catch (error) { showToast('Network error.', 'error'); }
 }
 
+function switchChallengeTab(tab) {
+    ['challenges-list', 'my-challenges', 'badges-list', 'leaderboard-list'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    document.querySelectorAll('#challengesTabs .nav-link').forEach(l => l.classList.remove('active'));
+    const activeTab = document.getElementById(tab === 'active' ? 'challenges-list' : tab === 'my' ? 'my-challenges' : tab === 'badges' ? 'badges-list' : 'leaderboard-list');
+    if (activeTab) activeTab.style.display = 'block';
+    const activeLink = document.querySelector(`#challengesTabs .nav-link[onclick*="'${tab}'"]`);
+    if (activeLink) activeLink.classList.add('active');
+    loadChallenges();
+}
+
 // ─── Membership Functions ─────────────────────────────────────────────────
 async function checkMembershipStatus() {
 </parameter>

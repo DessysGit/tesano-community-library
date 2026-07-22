@@ -52,6 +52,15 @@
     <a href="javascript:void(0)" onclick="showSection('borrowing-section')">
         <i class="fas fa-book-reader"></i> My Borrowed Books
     </a>
+    <a href="javascript:void(0)" onclick="showSection('reservations-section')">
+        <i class="fas fa-clock"></i> My Reservations
+    </a>
+    <a href="javascript:void(0)" onclick="showSection('fines-section')">
+        <i class="fas fa-money-bill-wave"></i> Fines
+    </a>
+    <a href="javascript:void(0)" onclick="showSection('challenges-section')">
+        <i class="fas fa-trophy"></i> Challenges
+    </a>
     <a href="javascript:void(0)" onclick="logout()">Logout</a>
 </div>
 
@@ -594,6 +603,42 @@
             </div>
         </div>
   
+    <!-- RESERVATIONS SECTION -->
+    <section id="reservations-section" class="section" style="display:none;">
+        <div class="container mt-4">
+            <h2><i class="fas fa-clock"></i> My Reservations</h2>
+            <p class="text-muted">Books you've reserved while waiting for a copy to become available.</p>
+            <div id="reservations-list" class="mt-3"></div>
+        </div>
+    </section>
+
+    <!-- FINES SECTION -->
+    <section id="fines-section" class="section" style="display:none;">
+        <div class="container mt-4">
+            <h2><i class="fas fa-money-bill-wave"></i> Fines & Payments</h2>
+            <p class="text-muted">Manage overdue fines for late book returns.</p>
+            <div id="fines-summary" class="mt-3"></div>
+            <div id="fines-list" class="mt-3"></div>
+        </div>
+    </section>
+
+    <!-- CHALLENGES SECTION -->
+    <section id="challenges-section" class="section" style="display:none;">
+        <div class="container mt-4">
+            <h2><i class="fas fa-trophy"></i> Reading Challenges</h2>
+            <ul class="nav nav-tabs" id="challengesTabs">
+                <li class="nav-item"><a class="nav-link active" href="#" onclick="switchChallengeTab('active')">Active Challenges</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="switchChallengeTab('my')">My Challenges</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="switchChallengeTab('badges')">Badges</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="switchChallengeTab('leaderboard')">Leaderboard</a></li>
+            </ul>
+            <div id="challenges-list" class="mt-3"></div>
+            <div id="my-challenges" class="mt-3" style="display:none;"></div>
+            <div id="badges-list" class="mt-3" style="display:none;"></div>
+            <div id="leaderboard-list" class="mt-3" style="display:none;"></div>
+        </div>
+    </section>
+
         <!-- Logout Button -->
         <div class="mt-4 text-center">
             <div class="button-wrapper">
