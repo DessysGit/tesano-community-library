@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesano Community Library</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header text-center">
+        <div class="container">
+            <h1 class="stylish-logo">Tesano Community Library</h1>
+            <p class="slogan">Empowering Tesano Through Knowledge & Community</p>
+        </div>
+    </header>
+
+    <!-- Hamburger button for navigation -->
+    <button id="hamburger-button" class="hamburger" aria-label="Open navigation menu" onclick="toggleMenu()" style="display: none;">&#9776;</button>
+
+    <!-- Sidebar menu -->
+<div id="sidebar" class="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="toggleMenu()">&times;</a>
+    <div class="sidebar-header">
+        <img id="burger-profile-picture" src="" alt="Profile Picture" loading="lazy" style="width: 80px; height: 80px; border-radius: 50%;">
+        <p id="burger-username">Username</p>
+    </div>
+    
+    <!-- Admin Edit Controls in Sidebar -->
+    <div id="sidebar-admin-controls" style="display: none;">
+        <hr class="bg-light my-3">
+        <h6 class="text-warning px-3 mb-2">
+            <i class="fas fa-tools"></i> Admin Tools
+        </h6>
+        <a href="admin-dashboard.html" id="dashboard-link">
+            <i class="fas fa-chart-line"></i> Analytics Dashboard
+        </a>
+        <a href="javascript:void(0)" onclick="showSection('admin-section')" id="manage-users-link">
+            <i class="fas fa-users"></i> Manage Users
+        </a>
+        <a href="javascript:void(0)" onclick="showSection('add-book-section')" id="add-book-link">
+            <i class="fas fa-book"></i> Add Book
+        </a>
+    </div>
+    
+    <a href="javascript:void(0)" onclick="showSection('profile-section')">User Profile</a>
+    <a href="javascript:void(0)" onclick="showSection('membership-section')">
+        <i class="fas fa-id-card"></i> My Membership
+    </a>
+    <a href="javascript:void(0)" onclick="showSection('borrowing-section')">
+        <i class="fas fa-book-reader"></i> My Borrowed Books
+    </a>
+    <a href="javascript:void(0)" onclick="logout()">Logout</a>
+</div>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+
+        <!-- Search Books Section - NEW HERO DESIGN -->
+<div id="search-books" class="mt-4" style="display: none;">
+    <!-- Hero Search Section -->
+    <div class="hero-search-section">
+        <div class="hero-search-content">
+            <h2 class="hero-search-title">
+                <i class="fas fa-book-open"></i> Discover Your Next Great Read
+            </h2>
+            <p class="hero-search-subtitle">Search thousands of books instantly</p>
+            
+            <!-- Quick Search Bar -->
+            <div class="quick-search-wrapper">
+                <input 
+                    type="text" 
+                    id="quick-search-input" 
+                    class="quick-search-input" 
+                    placeholder="Search by title, author, or genre..."
+                    onkeypress="if(event.key === 'Enter') quickSearch()"
+                >
+                <button class="quick-search-btn" onclick="quickSearch()" aria-label="Search">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <!-- Advanced Search Toggle -->
+            <div class="advanced-search-toggle">
+                <button class="advanced-toggle-btn" onclick="toggleAdvancedSearch()" id="advanced-toggle">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Advanced Filters</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            
+            <!-- Advanced Filters Panel (Hidden by default) -->
+            <div class="advanced-filters-panel" id="advanced-filters">
+                <div class="advanced-filters-content">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="search-title">Title</label>
+                            <input type="text" id="search-title" placeholder="e.g., The Alchemist">
+                        </div>
+                        <div class="filter-group">
+                            <label for="search-author">Author</label>
+                            <input type="text" id="search-author" placeholder="e.g., Paulo Coelho">
+                        </div>
+                        <div class="filter-group">
+                            <label for="search-genre">Genre</label>
+                            <input type="text" id="search-genre" placeholder="e.g., Fiction">
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="filter-apply-btn" onclick="fetchBooks()">
+                            <i class="fas fa-search"></i> Apply Filters
+                        </button>
+                        <button class="filter-clear-btn" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+    <!-- Book List -->
+    <div class="card mt-4 bg-dark text-white shadow">
+      <div class="card-body text-center">
+        <h2 class="card-title text-success">Book List</h2>
+
+         <p id="searching-msg" class="text-info mt-3" style="display: none;">
+          <i class="fas fa-spinner fa-spin"></i> Loading books...
+        </p>
+  
+        <p id="search-message" class="text-warning mt-2" style="display: none;">
+          Some books are not classified. Try searching by title or author if needed.
+        </p>
+
+        <div id="book-list" class="book-list mt-4"></div>
+        <p id="no-results-message" class="text-danger mt-4" style="display: none;">No books found matching your search criteria.</p>
+        <nav aria-label="Page navigation">
+          <ul id="pagination" class="pagination justify-content-center mt-4"></ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+  
+
+        <!-- Add Book Section -->
+<div id="add-book-section" class="mt-4" style="display: none;">
+    <div class="card shadow-lg border-0 bg-dark text-white p-4">
+      <div class="card-body">
+        <h2 class="card-title text-success mb-4 text-center">📚 Add a New Book</h2>
+  
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="title">Book Title</label>
+              <input type="text" id="title" class="form-control" placeholder="e.g., The Alchemist">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="author">Author</label>
+              <input type="text" id="author" class="form-control" placeholder="e.g., Paulo Coelho">
+            </div>
+          </div>
+        </div>
+  
+        <div class="form-group">
+          <label for="description">Short Description</label>
+          <textarea id="description" class="form-control" rows="3" placeholder="A brief summary of the book..."></textarea>
+        </div>
+  
+        <div class="form-group">
+          <label for="genres">Genres</label>
+          <input type="text" id="genres" class="form-control" placeholder="e.g., Fiction, Philosophy">
+        </div>
+  
+        <div class="upload-row">
+          <!-- Cover upload -->
+          <div class="upload-box">
+            <label for="book-cover">
+              Upload Book Cover
+              <small>(optional &mdash; image)</small>
+            </label>
+            <div class="upload-area-wrapper">
+              <div class="upload-area" id="cover-upload-area">
+                <i class="fas fa-image upload-icon"></i>
+                <span class="upload-label-text" id="cover-label-text">Click to choose an image&hellip;</span>
+                <input type="file" id="book-cover" name="cover" accept="image/*"
+                       onchange="updateUploadLabel('book-cover','cover-label-text','cover-upload-area')">
+              </div>
+            </div>
+          </div>
+
+          <!-- PDF upload -->
+          <div class="upload-box">
+            <label for="book-file">
+              Upload Book File <span class="text-danger">*</span>
+              <small>(PDF &mdash; required)</small>
+            </label>
+            <div class="upload-area-wrapper">
+              <div class="upload-area" id="pdf-upload-area">
+                <i class="fas fa-file-pdf upload-icon"></i>
+                <span class="upload-label-text" id="pdf-label-text">Click to choose a PDF&hellip;</span>
+                <input type="file" id="book-file" name="bookFile" accept=".pdf,application/pdf"
+                       onchange="updateUploadLabel('book-file','pdf-label-text','pdf-upload-area')">
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Feedback message area -->
+        <div id="add-book-messages" class="mt-3"></div>
+
+        <div class="d-flex flex-column align-items-center mt-4">
+          <button id="add-book-btn" onclick="addBook()" class="btn btn-success w-100 mb-2">
+            <i class="fas fa-plus-circle mr-2"></i>Add Book
+          </button>
+          <button onclick="showSection('search-books')" class="btn btn-outline-light">← Back to Main Page</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+        <!-- Admin Section to Manage Users -->
+        <div id="admin-section" class="mt-4" style="display: none;">
+          <div class="card shadow-lg bg-dark text-white p-4 border-0">
+            <div class="card-body">
+              <h2 class="card-title text-success text-center mb-4">👥 Manage Users</h2>
+              <div id="users-messages" class="mt-2"></div>
+              <div class="table-responsive">
+                <table class="table table-dark table-hover text-white">
+                  <thead class="thead-light">
+                    <tr>
+                      <th scope="col">👤 Username</th>
+                      <th scope="col">🔐 Role</th>
+                      <th scope="col" class="text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="user-list">
+                    <!-- Dynamically injected rows here -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="text-center mt-4">
+                <button onclick="showSection('search-books')" class="btn btn-outline-light">
+                  ← Back to Main Page
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Profile Section -->
+<div id="profile-section" style="display: none;">
+    <div class="profile-container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-cover"></div>
+            <div class="profile-avatar-section">
+                <div class="profile-avatar-wrapper">
+                    <img id="profile-picture" class="profile-avatar" src="" alt="Profile Picture" loading="lazy">
+                    <label for="profile-picture-input" class="profile-avatar-edit">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                    <input type="file" id="profile-picture-input" accept="image/*" style="display: none;">
+                </div>
+                <div class="profile-info">
+                    <h2 id="profile-username" class="profile-name">Loading...</h2>
+                    <p id="profile-email-display" class="profile-email">Loading...</p>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" id="books-read-count">0</span>
+                            <span class="stat-label">Books Read</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="reviews-count">0</span>
+                            <span class="stat-label">Reviews</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="favorites-count">0</span>
+                            <span class="stat-label">Favorites</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="profile-content">
+            <!-- Navigation Tabs -->
+            <div class="profile-tabs">
+                <button class="profile-tab active" onclick="switchProfileTab('preferences')">
+                    <i class="fas fa-heart"></i> Preferences
+                </button>
+                <button class="profile-tab" onclick="switchProfileTab('security')">
+                    <i class="fas fa-lock"></i> Security
+                </button>
+                <button class="profile-tab" onclick="switchProfileTab('activity')">
+                    <i class="fas fa-clock"></i> Activity
+                </button>
+            </div>
+
+            <!-- Preferences Tab -->
+            <div id="tab-preferences" class="profile-tab-content active">
+                <div class="profile-section-card">
+                    <div class="section-header-with-action">
+                        <h3><i class="fas fa-book"></i> Reading Preferences</h3>
+                        <button id="edit-preferences-btn" class="btn-edit-small" onclick="enablePreferencesEdit()">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                    </div>
+                    
+                    <div class="preference-grid">
+                        <div class="preference-item">
+                            <label for="profile-genres">
+                                <i class="fas fa-tags"></i> Favorite Genres
+                            </label>
+                            <input type="text" id="profile-genres" class="form-control" 
+                                   placeholder="e.g., Sci-fi, Romance, Mystery" disabled>
+                            <small class="form-text">Separate multiple genres with commas</small>
+                        </div>
+
+                        <div class="preference-item">
+                            <label for="profile-authors">
+                                <i class="fas fa-user-edit"></i> Favorite Authors
+                            </label>
+                            <input type="text" id="profile-authors" class="form-control" 
+                                   placeholder="e.g., Tolkien, Rowling, King" disabled>
+                            <small class="form-text">Separate multiple authors with commas</small>
+                        </div>
+
+                        <div class="preference-item full-width">
+                            <label for="profile-books">
+                                <i class="fas fa-bookmark"></i> Favorite Books
+                            </label>
+                            <textarea id="profile-books" class="form-control" rows="3"
+                                      placeholder="e.g., The Hobbit, Harry Potter, 1984" disabled></textarea>
+                            <small class="form-text">List your all-time favorite books</small>
+                        </div>
+                    </div>
+
+                    <div id="preferences-messages" class="mt-2"></div>
+                    <div id="preferences-actions" class="form-actions" style="display: none;">
+                        <button id="save-preferences-btn" class="btn btn-success" onclick="savePreferences()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button class="btn btn-secondary" onclick="cancelPreferencesEdit()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Tab -->
+            <div id="tab-security" class="profile-tab-content">
+                <div class="profile-section-card">
+                    <h3><i class="fas fa-shield-alt"></i> Change Password</h3>
+                    
+                    <div class="security-form">
+                        <div class="form-group">
+                            <label for="current-password">
+                                <i class="fas fa-key"></i> Current Password
+                            </label>
+                            <input type="password" id="current-password" class="form-control" 
+                                   placeholder="Enter your current password">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new-password">
+                                <i class="fas fa-lock"></i> New Password
+                            </label>
+                            <input type="password" id="new-password" class="form-control" 
+                                   placeholder="Enter new password (min 6 characters)">
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="new-password-strength-bar"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm-new-password">
+                                <i class="fas fa-lock"></i> Confirm New Password
+                            </label>
+                            <input type="password" id="confirm-new-password" class="form-control" 
+                                   placeholder="Confirm your new password">
+                        </div>
+
+                        <button id="change-password-btn" class="btn btn-danger" onclick="changePassword()">
+                            <i class="fas fa-key"></i> Update Password
+                        </button>
+                        <div id="password-messages" class="mt-3"></div>
+                    </div>
+                </div>
+
+                <div class="profile-section-card">
+                    <h3><i class="fas fa-info-circle"></i> Account Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Account Created</span>
+                            <span class="info-value" id="account-created-date">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Login</span>
+                            <span class="info-value" id="last-login-date">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email Status</span>
+                            <span class="info-value verified">
+                                <i class="fas fa-check-circle"></i> Verified
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Tab -->
+            <div id="tab-activity" class="profile-tab-content">
+                <div class="profile-section-card">
+                    <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                    <div id="recent-activity-list" class="activity-list">
+                        <div class="activity-loading">
+                            <i class="fas fa-spinner fa-spin"></i> Loading activity...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section-card">
+                    <h3><i class="fas fa-star"></i> Your Reviews</h3>
+                    <div id="user-reviews-list" class="reviews-list">
+                        <div class="reviews-loading">
+                            <i class="fas fa-spinner fa-spin"></i> Loading reviews...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="profile-back-section">
+            <button onclick="showSection('search-books')" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left"></i> Back to Library
+            </button>
+        </div>
+    </div>
+</div>
+
+        <!-- Membership Section -->
+        <div id="membership-section" style="display: none;">
+            <div class="container mt-4">
+                <div class="card shadow-lg bg-dark text-white border-0">
+                    <div class="card-body p-4">
+                        <h2 class="card-title text-success mb-4 text-center">
+                            <i class="fas fa-id-card"></i> My Library Membership
+                        </h2>
+
+                        <!-- Membership Status -->
+                        <div id="membership-status" class="mb-4">
+                            <div class="text-center">
+                                <div class="spinner-border text-success" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-3">Checking membership status...</p>
+                            </div>
+                        </div>
+
+                        <!-- Membership Details (shown when active) -->
+                        <div id="membership-details" style="display: none;">
+                            <div class="membership-card bg-success text-white p-4 rounded mb-4">
+                                <h3 class="mb-3">
+                                    <i class="fas fa-check-circle"></i> Active Member
+                                </h3>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Card Number:</strong> <span id="membership-card-number"></span></p>
+                                        <p><strong>Type:</strong> <span id="membership-type"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Valid Until:</strong> <span id="membership-end-date"></span></p>
+                                        <p><strong>Status:</strong> <span id="membership-status-text"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button onclick="renewMembership()" class="btn btn-success btn-lg">
+                                    <i class="fas fa-sync-alt"></i> Renew Membership
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Apply for Membership (shown when not a member) -->
+                        <div id="membership-apply" style="display: none;">
+                            <div class="alert alert-info" role="alert">
+                                <h4 class="alert-heading">
+                                    <i class="fas fa-info-circle"></i> Become a Member
+                                </h4>
+                                <p>Join the Tesano Community Library to enjoy exclusive benefits:</p>
+                                <ul class="mb-0">
+                                    <li>Borrow up to 5 physical books at a time</li>
+                                    <li>Access to community events and reading clubs</li>
+                                    <li>Priority access to new arrivals</li>
+                                    <li>Support your local library community</li>
+                                </ul>
+                            </div>
+
+                            <div class="form-group mt-4">
+                                <label for="membership-type-select">Membership Type</label>
+                                <select id="membership-type-select" class="form-control">
+                                    <option value="standard">Standard - Free</option>
+                                    <option value="premium">Premium - GHS 50/year</option>
+                                </select>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button onclick="applyForMembership()" class="btn btn-success btn-lg">
+                                    <i class="fas fa-user-plus"></i> Apply for Membership
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="membership-messages" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrowing Section -->
+        <div id="borrowing-section" style="display: none;">
+            <div class="container mt-4">
+                <div class="card shadow-lg bg-dark text-white border-0">
+                    <div class="card-body p-4">
+                        <h2 class="card-title text-success mb-4 text-center">
+                            <i class="fas fa-book-reader"></i> My Borrowed Books
+                        </h2>
+
+                        <!-- Borrowing Status -->
+                        <div id="borrowing-status" class="mb-4">
+                            <div class="text-center">
+                                <div class="spinner-border text-success" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-3">Loading borrowed books...</p>
+                            </div>
+                        </div>
+
+                        <!-- Borrowed Books List -->
+                        <div id="borrowed-books-list" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Book</th>
+                                            <th>Borrowed Date</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="borrowed-books-tbody">
+                                        <!-- Dynamically filled -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- No Borrowed Books -->
+                        <div id="no-borrowed-books" style="display: none;" class="text-center mt-5">
+                            <i class="fas fa-book-open text-muted" style="font-size: 64px;"></i>
+                            <h3 class="mt-3 text-muted">No borrowed books</h3>
+                            <p class="text-muted">Visit the library to borrow physical books!</p>
+                            <a href="index.html" class="btn btn-primary mt-3">
+                                <i class="fas fa-search"></i> Browse Books
+                            </a>
+                        </div>
+
+                        <!-- Not a Member Message -->
+                        <div id="not-a-member-message" style="display: none;" class="alert alert-warning" role="alert">
+                            <h4 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle"></i> Membership Required
+                            </h4>
+                            <p>You need an active library membership to borrow physical books.</p>
+                            <hr>
+                            <p class="mb-0">
+                                <a href="javascript:void(0)" onclick="showSection('membership-section')" class="btn btn-warning">
+                                    <i class="fas fa-id-card"></i> Apply for Membership
+                                </a>
+                            </p>
+                        </div>
+
+                        <div id="borrowing-messages" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+  
+        <!-- Logout Button -->
+        <div class="mt-4 text-center">
+            <div class="button-wrapper">
+                <button id="logout-button" class="btn btn-danger" style="display: none;" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Newsletter Subscription Section -->
+        <section class="newsletter-section" id="newsletter-section">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 text-center">
+                        <h2>Stay Updated with Our Newsletter</h2>
+                        <p>Subscribe to our newsletter to receive the latest news and updates from our library.</p>
+                        <form id="subscription-form" onsubmit="subscribeNewsletter(event)">
+                            <div class="input-group">
+                                <input type="email" id="subscription-email" class="form-control" placeholder="Enter your email" required>
+                                <div class="input-group-append">
+                                    <button id="subscribe-btn" type="submit" class="btn btn-primary">Subscribe</button>
+                                </div>
+                            </div>
+                            <div id="newsletter-messages" class="mt-2"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer mt-4" id="footer">
+            <div class="container">
+                <div class="row">
+                    <!-- About Section -->
+                    <div class="col-md-4">
+                        <h5>About Us</h5>
+                        <p>Our library provides a rich collection of books, ebooks, and resources to support your reading journey. Whether you're a student, a book lover, or just curious, we're here to help you find what you need.</p>
+                    </div>
+                    <!-- Quick Links Section -->
+                    <div class="col-md-4">
+                        <h5>Quick Links</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="javascript:void(0)" onclick="logout()">Logout</a></li>
+                        </ul>
+                    </div>
+                    <!-- Contact Section -->
+                    <div class="col-md-4">
+                        <h5>Contact Us</h5>
+                        <address>
+                            <strong>Tesano Community Library</strong><br>
+                            Tesano, Accra, Ghana<br>
+                            <abbr title="Phone">Tel:</abbr> 059 7970 791<br>
+                            <a href="mailto:info@tesanolibrary.com">tesanolibrary.com</a>
+                        </address>
+                        <h5>Follow Us</h5>
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-12 text-center">
+                        <p>&copy; 2026 Tesano Community Library. All rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+
+        <!-- Scripts -->
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="script.js"></script>
+
+        <!-- Floating Chat -->
+<div id="chat-icon" onclick="toggleChatbox()" title="Chat with LibBot" style="display: none;">💬</div>
+
+<div id="chatbox" class="hidden">
+  <div id="chat-header">
+    <div class="chat-header-left">
+      <div class="chat-avatar">📚</div>
+      <div class="chat-title">
+        <strong>LibBot</strong>
+        <small>Tesano Library Assistant</small>
+      </div>
+    </div>
+    <div class="chat-header-actions">
+      <button class="chat-header-btn" onclick="clearChat()" title="Clear chat">🗑</button>
+      <button class="chat-header-btn" onclick="toggleChatbox()" title="Close">✕</button>
+    </div>
+  </div>
+  <div id="messages"></div>
+  <div id="input-area">
+    <div class="input-row">
+      <input type="text" id="user-input" placeholder="Ask LibBot something…" />
+      <button id="send-btn" onclick="sendMessage()" title="Send">&#10148;</button>
+    </div>
+    <div class="input-footer">
+      <span id="char-counter">0/500</span>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="chatbot/chat.css" />
+<script src="chatbot/chat.js"></script>
+
+  <!-- Toast notification container -->
+  <div id="toast-container"></div>
+
+  <!-- Confirm modal -->
+  <div id="confirm-modal-overlay">
+    <div id="confirm-modal">
+      <h4><i class="fas fa-exclamation-triangle" style="color:#dc3545;"></i> Confirm Action</h4>
+      <p id="confirm-modal-message"></p>
+      <div class="modal-buttons">
+        <button id="confirm-modal-ok" class="btn btn-danger">Delete</button>
+        <button id="confirm-modal-cancel" class="btn btn-outline-light">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

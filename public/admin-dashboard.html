@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Tesano Community Library</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: #fff;
+        }
+
+        .dashboard-card {
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(29, 185, 84, 0.2);
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(29, 185, 84, 0.3);
+        }
+        
+        /* ── Stat cards: dark + left accent (replaces bright gradients) ────── */
+        .stat-card {
+            padding: 22px 20px;
+            text-align: left;
+            background: #141414;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-left: 4px solid #1DB954;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Remove the distracting animated pulse */
+        .stat-card::before { display: none; }
+
+        .stat-card.users     { border-left-color: #7c6deb; }
+        .stat-card.books     { border-left-color: #1DB954; }
+        .stat-card.reviews   { border-left-color: #3b82f6; }
+        .stat-card.downloads { border-left-color: #10b981; }
+
+        .stat-label {
+            font-size: 0.72rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-number {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.1;
+            margin: 6px 0 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            position: absolute;
+            bottom: 14px;
+            right: 16px;
+            opacity: 0.12;
+        }
+        .stat-card.users     .stat-icon { color: #7c6deb; opacity: .18; }
+        .stat-card.books     .stat-icon { color: #1DB954; opacity: .18; }
+        .stat-card.reviews   .stat-icon { color: #3b82f6; opacity: .18; }
+        .stat-card.downloads .stat-icon { color: #10b981; opacity: .18; }
+
+        .stat-change {
+            font-size: 0.73rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            position: relative;
+            z-index: 1;
+        }
+        .stat-change.positive { background: rgba(29,185,84,0.15); color: #1DB954; }
+        .stat-change.negative { background: rgba(239,68,68,0.15);  color: #f87171; }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #1DB954 0%, #17a647 100%);
+            color: white;
+            padding: 28px 30px;
+            margin-bottom: 32px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0h100v100H0z" fill="none"/%3E%3Cpath d="M20 50L50 20l30 30-30 30z" fill="%23ffffff" opacity="0.05"/%3E%3C/svg%3E');
+            background-size: 100px 100px;
+            opacity: 0.3;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+        
+        .card-header {
+            border-bottom: 2px solid rgba(29, 185, 84, 0.3);
+            font-weight: 600;
+        }
+        
+        .activity-item {
+            padding: 15px;
+            border-left: 4px solid #1DB954;
+            margin-bottom: 15px;
+            background: rgba(40, 40, 40, 0.6);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .activity-item:hover {
+            background: rgba(50, 50, 50, 0.8);
+            transform: translateX(5px);
+            border-left-color: #17a647;
+        }
+        
+        .book-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            background: rgba(40, 40, 40, 0.4);
+        }
+        
+        .book-card:hover {
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.2);
+            transform: translateX(5px);
+            background: rgba(50, 50, 50, 0.6);
+        }
+        
+        .book-card img {
+            width: 60px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+            border: 2px solid rgba(29, 185, 84, 0.3);
+        }
+        
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        
+        .metric-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .stat-number { font-size: 2rem; }
+
+            /* Compact the green title area */
+            .dashboard-header {
+                padding: 20px 16px 0 16px;
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+                margin-bottom: 0;
+                overflow: hidden;  /* keep gradient clipped to rounded top corners */
+            }
+
+            /* Title block inside the green area */
+            .dashboard-header .flex-grow-1 {
+                width: 100%;
+                padding-bottom: 20px;
+            }
+
+            /* Pull the filter OUT of the green box visually —
+               it renders as a dark attached bar below the green header */
+            .dashboard-header .d-flex {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0;
+            }
+            .time-filter-inline {
+                /* detach from green header */
+                width: calc(100% + 32px);
+                margin: 0 -16px;
+                background: #1a1a1a;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-top: 2px solid rgba(29,185,84,0.5);
+                border-radius: 0 0 15px 15px;
+                padding: 10px 16px;
+                margin-bottom: 32px;
+
+                /* horizontal scroll row */
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 8px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .time-filter-inline::-webkit-scrollbar { display: none; }
+
+            /* Lock buttons to their content width — no stretching */
+            .time-filter-inline .btn {
+                flex: 0 0 auto;
+                width: auto;
+                min-width: max-content;
+                white-space: nowrap;
+            }
+
+            .chart-container { height: 250px; }
+        }
+
+        /* ── Unified section card header ─────────────────────────────────────── */
+        /* Replaces the inconsistent rainbow gradients on every section.         */
+        /* One clean dark style with a green left accent — professional & calm.  */
+        .section-header {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-left: 3px solid #1DB954;
+            color: #e0e0e0 !important;
+            padding: 14px 18px !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-header h5 {
+            margin: 0;
+            font-size: .95rem;
+            font-weight: 600;
+            letter-spacing: .3px;
+            color: #e0e0e0;
+        }
+        .section-header .section-icon {
+            color: #1DB954;
+            font-size: 1rem;
+        }
+
+        /* ── Time filter pill tabs ───────────────────────────────────────────── */
+        .time-filter-inline {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .time-filter-inline .btn {
+            border-radius: 20px;
+            font-size: 0.8rem;
+            padding: 5px 16px;
+            border: 1px solid rgba(255,255,255,.25);
+            background: rgba(255,255,255,.08);
+            color: rgba(255,255,255,.8);
+            backdrop-filter: blur(10px);
+            transition: all .2s ease;
+            font-weight: 500;
+        }
+        .time-filter-inline .btn:hover {
+            background: rgba(255,255,255,.18);
+            color: #fff;
+        }
+        .time-filter-inline .btn.active {
+            background: #fff;
+            color: #1DB954;
+            border-color: #fff;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,.2);
+        }
+
+        /* ── Reviewer card — no email shown ─────────────────────────────────── */
+        .reviewer-email { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <a href="index.html" class="btn back-btn">
+        <i class="fas fa-arrow-left"></i> Back to Library
+    </a>
+
+    <div class="container mt-5">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header text-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="flex-grow-1">
+                    <h1><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
+                    <p class="mb-0">Comprehensive insights and real-time statistics</p>
+                    <small id="last-updated" class="d-block mt-2" style="opacity: 0.8;"></small>
+                </div>
+                <!-- Time Filter in Header -->
+                <div class="time-filter-inline">
+                    <button class="btn btn-outline-light btn-sm active" onclick="setTimeFilter('all', this)">All Time</button>
+                    <button class="btn btn-outline-light btn-sm" onclick="setTimeFilter('30', this)">30 Days</button>
+                    <button class="btn btn-outline-light btn-sm" onclick="setTimeFilter('7', this)">7 Days</button>
+                    <button class="btn btn-outline-light btn-sm" onclick="setTimeFilter('1', this)">Today</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card dashboard-card stat-card users">
+                    <div class="position-relative">
+                        <p class="stat-label">Total Users</p>
+                        <h2 class="stat-number" id="total-users">
+                            <div class="spinner-border text-light" role="status"></div>
+                        </h2>
+                        <div class="stat-change positive" id="users-change">
+                            <i class="fas fa-arrow-up"></i> <span id="users-change-text">Loading...</span>
+                        </div>
+                        <i class="fas fa-users stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card dashboard-card stat-card books">
+                    <div class="position-relative">
+                        <p class="stat-label">Total Books</p>
+                        <h2 class="stat-number" id="total-books">
+                            <div class="spinner-border text-light" role="status"></div>
+                        </h2>
+                        <div class="stat-change positive" id="books-change">
+                            <i class="fas fa-arrow-up"></i> <span id="books-change-text">Loading...</span>
+                        </div>
+                        <i class="fas fa-book stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card dashboard-card stat-card reviews">
+                    <div class="position-relative">
+                        <p class="stat-label">Total Reviews</p>
+                        <h2 class="stat-number" id="total-reviews">
+                            <div class="spinner-border text-light" role="status"></div>
+                        </h2>
+                        <div class="stat-change" id="reviews-change">
+                            <i class="fas fa-star"></i> <span id="avg-rating">Avg: 0.0 ⭐</span>
+                        </div>
+                        <i class="fas fa-star stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card dashboard-card stat-card downloads">
+                    <div class="position-relative">
+                        <p class="stat-label">Active Users</p>
+                        <h2 class="stat-number" id="active-users">
+                            <div class="spinner-border text-light" role="status"></div>
+                        </h2>
+                        <div class="stat-change" id="active-change">
+                            <i class="fas fa-users"></i> <span id="active-text">Last 7 days</span>
+                        </div>
+                        <i class="fas fa-user-check stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Charts Row -->
+        <div class="row mb-4">
+            <div class="col-lg-8 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header section-header">
+                        <i class="fas fa-chart-area section-icon"></i>
+                        <h5>User Growth &amp; Book Uploads</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="growthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header section-header">
+                        <i class="fas fa-chart-pie section-icon"></i>
+                        <h5>Genre Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="genreChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating & Reviews Charts -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header section-header">
+                        <i class="fas fa-star-half-alt section-icon"></i>
+                        <h5>Rating Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="ratingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header section-header">
+                        <i class="fas fa-chart-line section-icon"></i>
+                        <h5>Review Trends</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="reviewTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Books & Top Reviewers -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header section-header">
+                        <i class="fas fa-fire section-icon"></i>
+                        <h5>Top 10 Popular Books</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                        <div id="popular-books">
+                            <div class="loading-spinner">
+                                <div class="spinner-border text-success" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header section-header">
+                        <i class="fas fa-trophy section-icon"></i>
+                        <h5>Top Reviewers</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                        <div id="top-reviewers">
+                            <div class="loading-spinner">
+                                <div class="spinner-border text-success" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Books Needing Attention -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header section-header">
+                        <i class="fas fa-history section-icon"></i>
+                        <h5>Recent Activity</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                        <div id="recent-activity">
+                            <div class="loading-spinner">
+                                <div class="spinner-border text-success" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header section-header">
+                        <i class="fas fa-exclamation-triangle section-icon" style="color:#f59e0b;"></i>
+                        <h5>Books Without Reviews</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                        <div id="books-without-reviews">
+                            <div class="loading-spinner">
+                                <div class="spinner-border text-success" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="admin-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const os = require('os');
+const { pool } = require('../config/database');
+const { isAuthenticated, isAdmin, optionalAuth } = require('../middleware/auth');
+const cloudinary = require('../config/cloudinary');
+const { uploadToStorage, deleteFromStorage, isConfigured: gcsConfigured } = require('../config/googleCloudStorage');
+const { isCloudProduction } = require('../config/environment');
+const fs = require('fs');
+const path = require('path');
+const { 
+  combinedFileFilter, 
+  validateFileSize, 
+  sanitizeFilename,
+  ALLOWED_FILE_TYPES 
+} = require('../utils/fileValidation');
+const { deleteCoverFromCloudinary, deletePdfFromCloudinary } = require('../utils/cloudinaryHelpers');
+
+// Configure multer with memory storage, file validation, and size limits
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  fileFilter: combinedFileFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max file size (for PDFs)
+    files: 2 // Maximum 2 files (cover + pdf)
+  }
+});
+
+// Get all books with filters and pagination
+router.get('/', optionalAuth, async (req, res) => {
+  const title = req.query.title || "";
+  const author = req.query.author || "";
+  const genre = req.query.genre || "";
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+  // Works for both session users and JWT users now that optionalAuth resolves req.user
+  const isAdminUser = req.user && req.user.role === 'admin';
+
+  try {
+    let query = 'SELECT * FROM books WHERE title ILIKE $1 AND author ILIKE $2';
+    let params = [`%${title}%`, `%${author}%`];
+
+    if (genre) {
+      params.push(`%${genre}%`);
+      query += ` AND genres ILIKE $${params.length}`;
+    }
+
+    params.push(limit);
+    query += ` ORDER BY title LIMIT $${params.length}`;
+    params.push(offset);
+    query += ` OFFSET $${params.length}`;
+
+    const result = await pool.query(query, params);
+    const rows = result.rows;
+
+    let countQuery = 'SELECT COUNT(*) AS total FROM books WHERE title ILIKE $1 AND author ILIKE $2';
+    let countParams = [`%${title}%`, `%${author}%`];
+    if (genre) {
+      countParams.push(`%${genre}%`);
+      countQuery += ` AND genres ILIKE $${countParams.length}`;
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
+    const count = countResult.rows[0].total;
+
+    const booksWithAdminFlag = rows.map(book => ({
+      ...book,
+      isAdmin: isAdminUser,
+      averageRating: parseFloat(book.averagerating) || 0
+    }));
+
+    // Fetch total ratings for each book
+    const bookIds = booksWithAdminFlag.map(book => book.id);
+    let ratingsMap = {};
+    if (bookIds.length > 0) {
+      const inPlaceholders = bookIds.map((_, i) => `$${i + 1}`).join(', ');
+      const ratingQuery = `SELECT bookId, COUNT(*) AS totalRatings FROM reviews WHERE bookId IN (${inPlaceholders}) GROUP BY bookId`;
+      const ratingsResult = await pool.query(ratingQuery, bookIds);
+      ratingsMap = Object.fromEntries(ratingsResult.rows.map(r => [r.bookid, r.totalratings]));
+    }
+    
+    booksWithAdminFlag.forEach(book => {
+      book.totalRatings = ratingsMap[book.id] || 0;
+    });
+
+    res.json({ books: booksWithAdminFlag, total: count });
+  } catch (err) {
+    console.error('Error fetching books:', err);
+    res.status(500).json({ error: 'Failed to fetch books' });
+  }
+});
+
+// Get book by ID
+router.get('/:id', async (req, res) => {
+  const bookId = req.params.id;
+  try {
+    const result = await pool.query(
+      'SELECT id, title, author, genres, summary, description, cover, file, averagerating, likes, dislikes FROM books WHERE id = $1',
+      [bookId]
+    );
+    if (result.rows.length === 0) return res.status(404).send('Book not found');
+    
+    const book = result.rows[0];
+    book.averageRating = parseFloat(book.averagerating) || 0;
+    delete book.averagerating;
+    
+    res.json(book);
+  } catch (err) {
+    console.error('Error fetching book details:', err);
+    res.status(500).send('Failed to fetch book details');
+  }
+});
+
+// Add book (Admin only)
+router.post('/', isAdmin, upload.fields([{ name: 'cover' }, { name: 'bookFile' }]), async (req, res) => {
+  try {
+    let coverUrl = null;
+    let pdfUrl = null;
+
+    const { title, author, description } = req.body;
+    let genres = req.body.genres;
+
+    // ── Server-side validation ──────────────────────────────────────────────
+    const missing = [];
+    if (!title || !title.trim())  missing.push('Title');
+    if (!author || !author.trim()) missing.push('Author');
+    if (!req.files || !req.files['bookFile']) missing.push('Book file (PDF)');
+    if (missing.length > 0) {
+      return res.status(400).json({ error: `The following fields are required: ${missing.join(', ')}` });
+    }
+    
+    if (genres) {
+      try {
+        genres = JSON.parse(genres);
+        if (Array.isArray(genres)) {
+          genres = genres.join(', ');
+        }
+      } catch (e) {
+        // Keep as is if not JSON
+      }
+    } else {
+      genres = '';
+    }
+
+    if (isCloudProduction) {
+      // Upload cover image (small — single stream is fine)
+      if (req.files['cover']) {
+        const coverBuffer = req.files['cover'][0].buffer;
+        coverUrl = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'book-covers' },
+            (error, result) => error ? reject(error) : resolve(result.secure_url)
+          );
+          stream.end(coverBuffer);
+        });
+      }
+
+      // ── PDF upload ──────────────────────────────────────────────────────
+      // GCS is the primary store (no file-size limits, same service account key).
+      // Falls back to Cloudinary when GCS is not configured (e.g. local dev).
+      if (req.files && req.files['bookFile']) {
+        const pdfFile = req.files['bookFile'][0];
+
+        if (gcsConfigured()) {
+          pdfUrl = await uploadToStorage(pdfFile.buffer, pdfFile.originalname);
+        } else {
+          // Cloudinary fallback — chunked to stay under the 10 MB per-request cap
+          const tempPath = path.join(os.tmpdir(), `${Date.now()}-${pdfFile.originalname}`);
+          fs.writeFileSync(tempPath, pdfFile.buffer);
+          try {
+            const result = await cloudinary.uploader.upload_large(tempPath, {
+              folder:          'book-pdfs',
+              resource_type:   'raw',
+              chunk_size:      6_000_000,
+              use_filename:    true,
+              unique_filename: false
+            });
+            pdfUrl = result.secure_url;
+          } finally {
+            if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+          }
+        }
+      }
+    } else {
+      // Save locally in development
+      const uploadDir = path.join(__dirname, '../../uploads');
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+      if (req.files['cover']) {
+        const coverFile = req.files['cover'][0];
+        const coverPath = path.join(uploadDir, Date.now() + '-' + coverFile.originalname);
+        fs.writeFileSync(coverPath, coverFile.buffer);
+        coverUrl = `/uploads/${path.basename(coverPath)}`;
+      }
+      if (!hasDriveLink && req.files['bookFile']) {
+        const bookFile = req.files['bookFile'][0];
+        const bookPath = path.join(uploadDir, Date.now() + '-' + bookFile.originalname);
+        fs.writeFileSync(bookPath, bookFile.buffer);
+        pdfUrl = `/uploads/${path.basename(bookPath)}`;
+      }
+    }
+
+    const inserted = await pool.query(
+      'INSERT INTO books (title, author, description, genres, cover, file) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, title, author',
+      [title, author, description, genres, coverUrl, pdfUrl]
+    );
+    res.status(200).json({ message: 'Book added successfully', book: inserted.rows[0] });
+  } catch (error) {
+    console.error('Error uploading book:', error);
+    // Always respond with JSON so the frontend can display the message cleanly
+    const message = error.http_code === 400 || (error.message && error.message.toLowerCase().includes('size'))
+      ? `File too large for the current Cloudinary plan. Try a smaller PDF (under 10 MB per chunk) or upgrade your Cloudinary account.`
+      : error.message || 'Unknown error';
+    res.status(500).json({ error: `Failed to upload book: ${message}` });
+  }
+});
+
+// Update book (Admin only) - with file upload and old file deletion
+router.put('/:id', isAdmin, (req, res, next) => {
+  // Use multer conditionally
+  const uploadMiddleware = upload.any();
+  uploadMiddleware(req, res, (err) => {
+    if (err) {
+      console.error('❌ Multer error:', err);
+      return res.status(400).json({ error: 'File upload error', details: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  const bookId = req.params.id;
+  
+  try {
+    // Safely access req.body with defaults
+    const title = (req.body && req.body.title) ? req.body.title.trim() : '';
+    const author = (req.body && req.body.author) ? req.body.author.trim() : '';
+    const description = (req.body && req.body.description) ? req.body.description.trim() : '';
+    let genres = (req.body && req.body.genres) ? req.body.genres.trim() : '';
+    
+    // Validate required fields
+    if (!title || !author) {
+      return res.status(400).json({ error: 'Title and Author are required fields' });
+    }
+    
+    // Get current book data
+    const currentBook = await pool.query('SELECT * FROM books WHERE id = $1', [bookId]);
+    if (currentBook.rows.length === 0) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+    
+    const existingBook = currentBook.rows[0];
+    let coverUrl = existingBook.cover;
+    let pdfUrl = existingBook.file;
+    
+    // Handle genres
+    if (genres) {
+      try {
+        genres = JSON.parse(genres);
+        if (Array.isArray(genres)) {
+          genres = genres.join(', ');
+        }
+      } catch (e) {
+        // Keep as is if not JSON
+      }
+    } else {
+      genres = existingBook.genres;
+    }
+    
+    // Find uploaded files by fieldname
+    const coverFile = req.files ? req.files.find(f => f.fieldname === 'cover') : null;
+    const pdfFile = req.files ? req.files.find(f => f.fieldname === 'bookFile') : null;
+    
+    // Handle file uploads
+    if (isCloudProduction) {
+      // Upload new cover to Cloudinary if provided
+      if (coverFile) {
+        // Delete old cover first
+        if (existingBook.cover) {
+          await deleteCoverFromCloudinary(existingBook.cover);
+        }
+        
+        const coverBuffer = coverFile.buffer;
+        coverUrl = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'book-covers' },
+            (error, result) => error ? reject(error) : resolve(result.secure_url)
+          );
+          stream.end(coverBuffer);
+        });
+      }
+
+      // Upload new PDF to Cloudinary if provided
+      if (pdfFile) {
+        // Delete old PDF first
+        if (existingBook.file) {
+          await deletePdfFromCloudinary(existingBook.file);
+        }
+        
+        const pdfBuffer = pdfFile.buffer;
+        pdfUrl = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { 
+              folder: 'book-pdfs', 
+              resource_type: 'raw', 
+              use_filename: true, 
+              unique_filename: true
+            },
+            (error, result) => error ? reject(error) : resolve(result.secure_url)
+          );
+          stream.end(pdfBuffer);
+        });
+      }
+    } else {
+      // Save locally in development
+      const uploadDir = path.join(__dirname, '../../uploads');
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+      if (coverFile) {
+        // Delete old local cover if exists
+        if (existingBook.cover && existingBook.cover.startsWith('/uploads/')) {
+          const oldPath = path.join(__dirname, '../../', existingBook.cover);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        }
+        
+        const coverPath = path.join(uploadDir, Date.now() + '-' + coverFile.originalname);
+        fs.writeFileSync(coverPath, coverFile.buffer);
+        coverUrl = `/uploads/${path.basename(coverPath)}`;
+      }
+      
+      if (pdfFile) {
+        // Delete old local PDF if exists
+        if (existingBook.file && existingBook.file.startsWith('/uploads/')) {
+          const oldPath = path.join(__dirname, '../../', existingBook.file);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        }
+        
+        const bookPath = path.join(uploadDir, Date.now() + '-' + pdfFile.originalname);
+        fs.writeFileSync(bookPath, pdfFile.buffer);
+        pdfUrl = `/uploads/${path.basename(bookPath)}`;
+      }
+    }
+    
+    // Update book in database
+    await pool.query(
+      'UPDATE books SET title = $1, author = $2, genres = $3, description = $4, cover = $5, file = $6 WHERE id = $7',
+      [title, author, genres, description, coverUrl, pdfUrl, bookId]
+    );
+    
+    const updatedBook = await pool.query('SELECT * FROM books WHERE id = $1', [bookId]);
+    res.json(updatedBook.rows[0]);
+  } catch (err) {
+    console.error('Error editing book:', err);
+    res.status(500).json({ error: 'Failed to edit book', details: err.message });
+  }
+});
+
+// Delete book (Admin only)
+router.delete('/:id', isAdmin, async (req, res) => {
+  const bookId = req.params.id;
+
+  try {
+    const row = await pool.query('SELECT cover, file FROM books WHERE id = $1', [bookId]);
+    if (row.rows.length === 0) return res.status(404).send('Book not found');
+
+    const { cover, file } = row.rows[0];
+
+    // Clean up stored files from Cloudinary and GCS
+    if (cover) await deleteCoverFromCloudinary(cover);
+    if (file) {
+      await deletePdfFromCloudinary(file);
+      await deleteFromStorage(file);  // no-op if not a GCS URL
+    }
+    
+    // Delete from local storage if applicable
+    if (cover && cover.startsWith('/uploads/')) {
+      const coverPath = path.join(__dirname, '../../', cover);
+      if (fs.existsSync(coverPath)) {
+        fs.unlinkSync(coverPath);
+      }
+    }
+    
+    if (file && file.startsWith('/uploads/')) {
+      const filePath = path.join(__dirname, '../../', file);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    await pool.query('DELETE FROM books WHERE id = $1', [bookId]);
+    res.send('Book deleted successfully');
+  } catch (e) {
+    console.error('Error deleting book:', e.message);
+    res.status(500).send('Failed to delete book');
+  }
+});
+
+// Like book
+router.post('/:id/like', isAuthenticated, async (req, res) => {
+  const bookId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const row = await pool.query('SELECT action FROM likes WHERE userId = $1 AND bookId = $2', [userId, bookId]);
+    if (row.rows.length > 0 && row.rows[0].action === 'like') {
+      return res.status(400).send('You have already liked this book');
+    }
+
+    await pool.query('BEGIN');
+
+    if (row.rows.length > 0 && row.rows[0].action === 'dislike') {
+      await pool.query('UPDATE books SET dislikes = GREATEST(dislikes - 1, 0) WHERE id = $1', [bookId]);
+    }
+
+    await pool.query('UPDATE books SET likes = likes + 1 WHERE id = $1', [bookId]);
+    await pool.query(
+      'INSERT INTO likes (userId, bookId, action) VALUES ($1, $2, $3) ON CONFLICT (userId, bookId) DO UPDATE SET action = $3',
+      [userId, bookId, 'like']
+    );
+
+    await pool.query('COMMIT');
+    const bookResult = await pool.query('SELECT likes, dislikes FROM books WHERE id = $1', [bookId]);
+    res.json(bookResult.rows[0]);
+  } catch (e) {
+    await pool.query('ROLLBACK');
+    console.error('Error handling like action:', e);
+    res.status(500).send('Failed to like book');
+  }
+});
+
+// Dislike book
+router.post('/:id/dislike', isAuthenticated, async (req, res) => {
+  const bookId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const row = await pool.query('SELECT action FROM likes WHERE userId = $1 AND bookId = $2', [userId, bookId]);
+    if (row.rows.length > 0 && row.rows[0].action === 'dislike') {
+      return res.status(400).send('You have already disliked this book');
+    }
+
+    await pool.query('BEGIN');
+
+    if (row.rows.length > 0 && row.rows[0].action === 'like') {
+      await pool.query('UPDATE books SET likes = GREATEST(likes - 1, 0) WHERE id = $1', [bookId]);
+    }
+
+    await pool.query('UPDATE books SET dislikes = dislikes + 1 WHERE id = $1', [bookId]);
+    await pool.query(
+      'INSERT INTO likes (userId, bookId, action) VALUES ($1, $2, $3) ON CONFLICT (userId, bookId) DO UPDATE SET action = $3',
+      [userId, bookId, 'dislike']
+    );
+
+    await pool.query('COMMIT');
+    const bookResult = await pool.query('SELECT likes, dislikes FROM books WHERE id = $1', [bookId]);
+    res.json(bookResult.rows[0]);
+  } catch (e) {
+    await pool.query('ROLLBACK');
+    console.error('Error handling dislike action:', e);
+    res.status(500).send('Failed to dislike book');
+  }
+});
+
+module.exports = router;

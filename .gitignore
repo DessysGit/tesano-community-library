@@ -1,0 +1,50 @@
+# Dependencies
+/node_modules
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Database files
+*.db
+*.sqlite
+library.db
+sessions.sqlite
+
+# Logs
+/logs
+*.log
+npm-debug.log*
+
+# Testing
+/coverage
+.nyc_output
+
+# Uploads
+/uploads
+
+# Build files
+/dist
+/build
+
+# IDE
+/.vscode
+.vscode/settings.json
+/.vs
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+eslint-report.txt
+eslint.config.mjs
+FINAL_YEAR_PROJECT_ENHANCEMENTS.md
+/my-library
+
+# Keep example files (don't ignore these)
+!.env.example
+BACKEND_README.md
+FRONTEND_README.md
