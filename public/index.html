@@ -46,6 +46,12 @@
     </div>
     
     <a href="javascript:void(0)" onclick="showSection('profile-section')">User Profile</a>
+    <a href="javascript:void(0)" onclick="showSection('membership-section')">
+        <i class="fas fa-id-card"></i> My Membership
+    </a>
+    <a href="javascript:void(0)" onclick="showSection('borrowing-section')">
+        <i class="fas fa-book-reader"></i> My Borrowed Books
+    </a>
     <a href="javascript:void(0)" onclick="logout()">Logout</a>
 </div>
 
@@ -438,6 +444,155 @@
         </div>
     </div>
 </div>
+
+        <!-- Membership Section -->
+        <div id="membership-section" style="display: none;">
+            <div class="container mt-4">
+                <div class="card shadow-lg bg-dark text-white border-0">
+                    <div class="card-body p-4">
+                        <h2 class="card-title text-success mb-4 text-center">
+                            <i class="fas fa-id-card"></i> My Library Membership
+                        </h2>
+
+                        <!-- Membership Status -->
+                        <div id="membership-status" class="mb-4">
+                            <div class="text-center">
+                                <div class="spinner-border text-success" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-3">Checking membership status...</p>
+                            </div>
+                        </div>
+
+                        <!-- Membership Details (shown when active) -->
+                        <div id="membership-details" style="display: none;">
+                            <div class="membership-card bg-success text-white p-4 rounded mb-4">
+                                <h3 class="mb-3">
+                                    <i class="fas fa-check-circle"></i> Active Member
+                                </h3>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Card Number:</strong> <span id="membership-card-number"></span></p>
+                                        <p><strong>Type:</strong> <span id="membership-type"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Valid Until:</strong> <span id="membership-end-date"></span></p>
+                                        <p><strong>Status:</strong> <span id="membership-status-text"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button onclick="renewMembership()" class="btn btn-success btn-lg">
+                                    <i class="fas fa-sync-alt"></i> Renew Membership
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Apply for Membership (shown when not a member) -->
+                        <div id="membership-apply" style="display: none;">
+                            <div class="alert alert-info" role="alert">
+                                <h4 class="alert-heading">
+                                    <i class="fas fa-info-circle"></i> Become a Member
+                                </h4>
+                                <p>Join the Tesano Community Library to enjoy exclusive benefits:</p>
+                                <ul class="mb-0">
+                                    <li>Borrow up to 5 physical books at a time</li>
+                                    <li>Access to community events and reading clubs</li>
+                                    <li>Priority access to new arrivals</li>
+                                    <li>Support your local library community</li>
+                                </ul>
+                            </div>
+
+                            <div class="form-group mt-4">
+                                <label for="membership-type-select">Membership Type</label>
+                                <select id="membership-type-select" class="form-control">
+                                    <option value="standard">Standard - Free</option>
+                                    <option value="premium">Premium - GHS 50/year</option>
+                                </select>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button onclick="applyForMembership()" class="btn btn-success btn-lg">
+                                    <i class="fas fa-user-plus"></i> Apply for Membership
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="membership-messages" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrowing Section -->
+        <div id="borrowing-section" style="display: none;">
+            <div class="container mt-4">
+                <div class="card shadow-lg bg-dark text-white border-0">
+                    <div class="card-body p-4">
+                        <h2 class="card-title text-success mb-4 text-center">
+                            <i class="fas fa-book-reader"></i> My Borrowed Books
+                        </h2>
+
+                        <!-- Borrowing Status -->
+                        <div id="borrowing-status" class="mb-4">
+                            <div class="text-center">
+                                <div class="spinner-border text-success" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-3">Loading borrowed books...</p>
+                            </div>
+                        </div>
+
+                        <!-- Borrowed Books List -->
+                        <div id="borrowed-books-list" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Book</th>
+                                            <th>Borrowed Date</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="borrowed-books-tbody">
+                                        <!-- Dynamically filled -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- No Borrowed Books -->
+                        <div id="no-borrowed-books" style="display: none;" class="text-center mt-5">
+                            <i class="fas fa-book-open text-muted" style="font-size: 64px;"></i>
+                            <h3 class="mt-3 text-muted">No borrowed books</h3>
+                            <p class="text-muted">Visit the library to borrow physical books!</p>
+                            <a href="index.html" class="btn btn-primary mt-3">
+                                <i class="fas fa-search"></i> Browse Books
+                            </a>
+                        </div>
+
+                        <!-- Not a Member Message -->
+                        <div id="not-a-member-message" style="display: none;" class="alert alert-warning" role="alert">
+                            <h4 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle"></i> Membership Required
+                            </h4>
+                            <p>You need an active library membership to borrow physical books.</p>
+                            <hr>
+                            <p class="mb-0">
+                                <a href="javascript:void(0)" onclick="showSection('membership-section')" class="btn btn-warning">
+                                    <i class="fas fa-id-card"></i> Apply for Membership
+                                </a>
+                            </p>
+                        </div>
+
+                        <div id="borrowing-messages" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
   
         <!-- Logout Button -->
         <div class="mt-4 text-center">

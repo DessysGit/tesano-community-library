@@ -453,7 +453,7 @@ function toggleMenu() {
 }
 
 async function showSection(sectionId) {
-    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, .newsletter-section');
+    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, #membership-section, #borrowing-section, .newsletter-section');
     sections.forEach(section => {
         if (section) section.style.display = section.id === sectionId ? 'block' : 'none';
     });
@@ -497,6 +497,14 @@ async function showSection(sectionId) {
     if (sectionId === 'add-book-section' && userRole !== 'admin') {
         showToast('You do not have access to this section.', 'error');
         showSection('search-books');
+    }
+
+    if (sectionId === 'membership-section') {
+        checkMembershipStatus();
+    }
+
+    if (sectionId === 'borrowing-section') {
+        loadBorrowedBooks();
     }
 
     const addBookMessages = document.getElementById('add-book-messages');
@@ -1534,5 +1542,231 @@ function clearFilters() {
         clearMsg.style.cssText = 'color:#1DB954;font-size:.85rem;margin-top:.5rem;text-align:center;';
         filterActions.appendChild(clearMsg);
         setTimeout(() => clearMsg.remove(), 2000);
+    }
+}
+
+// ─── Membership Functions ─────────────────────────────────────────────────
+async function checkMembershipStatus() {
+    const statusDiv = document.getElementById('membership-status');
+    const detailsDiv = document.getElementById('membership-details');
+    const applyDiv = document.getElementById('membership-apply');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/membership/status`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
+
+        if (!response.ok) {
+            statusDiv.style.display = 'none';
+            applyDiv.style.display = 'block';
+            return;
+        }
+
+        const data = await response.json();
+
+        statusDiv.style.display = 'none';
+
+        if (data.isMember) {
+            document.getElementById('membership-card-number').textContent = data.cardNumber || 'N/A';
+            document.getElementById('membership-type').textContent = data.membershipType || 'Standard';
+            document.getElementById('membership-end-date').textContent = new Date(data.endDate).toLocaleDateString();
+            document.getElementById('membership-status-text').textContent = data.status || 'Active';
+            detailsDiv.style.display = 'block';
+            applyDiv.style.display = 'none';
+        } else {
+            applyDiv.style.display = 'block';
+            detailsDiv.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error checking membership:', error);
+        statusDiv.innerHTML = '<div class="alert alert-danger">Failed to load membership status. Please try again.</div>';
+    }
+}
+
+async function applyForMembership() {
+    const membershipType = document.getElementById('membership-type-select').value;
+    const messagesDiv = document.getElementById('membership-messages');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/membership/apply`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ membershipType })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(data.message, 'success', 3000);
+            checkMembershipStatus();
+        } else {
+            messagesDiv.innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to apply for membership'}</div>`;
+        }
+    } catch (error) {
+        console.error('Error applying for membership:', error);
+        messagesDiv.innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
+    }
+}
+
+async function renewMembership() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/membership/renew`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(data.message, 'success', 3000);
+            checkMembershipStatus();
+        } else {
+            document.getElementById('membership-messages').innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to renew membership'}</div>`;
+        }
+    } catch (error) {
+        console.error('Error renewing membership:', error);
+        document.getElementById('membership-messages').innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
+    }
+}
+
+// ─── Borrowing Functions ──────────────────────────────────────────────────
+async function loadBorrowedBooks() {
+    const statusDiv = document.getElementById('borrowing-status');
+    const listDiv = document.getElementById('borrowed-books-list');
+    const noBooksDiv = document.getElementById('no-borrowed-books');
+    const notMemberDiv = document.getElementById('not-a-member-message');
+
+    try {
+        // First check if user is a member
+        const membershipResponse = await fetch(`${API_BASE_URL}/membership/status`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
+
+        if (!membershipResponse.ok) {
+            statusDiv.style.display = 'none';
+            listDiv.style.display = 'none';
+            noBooksDiv.style.display = 'none';
+            notMemberDiv.style.display = 'block';
+            return;
+        }
+
+        const membershipData = await membershipResponse.json();
+
+        if (!membershipData.isMember) {
+            statusDiv.style.display = 'none';
+            listDiv.style.display = 'none';
+            noBooksDiv.style.display = 'none';
+            notMemberDiv.style.display = 'block';
+            return;
+        }
+
+        // Load borrowed books
+        const booksResponse = await fetch(`${API_BASE_URL}/borrow/my`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
+
+        if (!booksResponse.ok) {
+            throw new Error('Failed to load borrowed books');
+        }
+
+        const borrowedBooks = await booksResponse.json();
+
+        statusDiv.style.display = 'none';
+        notMemberDiv.style.display = 'none';
+
+        if (borrowedBooks.length === 0) {
+            listDiv.style.display = 'none';
+            noBooksDiv.style.display = 'block';
+            return;
+        }
+
+        const tbody = document.getElementById('borrowed-books-tbody');
+        tbody.innerHTML = '';
+
+        borrowedBooks.forEach(borrow => {
+            const borrowDate = new Date(borrow.borrowDate).toLocaleDateString();
+            const dueDate = new Date(borrow.dueDate).toLocaleDateString();
+            const isOverdue = new Date(borrow.dueDate) < new Date() && borrow.status === 'borrowed';
+            const statusBadge = isOverdue ? '<span class="badge badge-danger">Overdue</span>' :
+                               borrow.status === 'borrowed' ? '<span class="badge badge-warning">Borrowed</span>' :
+                               '<span class="badge badge-success">Returned</span>';
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <strong>${borrow.title}</strong><br>
+                    <small class="text-muted">by ${borrow.author}</small>
+                </td>
+                <td>${borrowDate}</td>
+                <td>${dueDate}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    ${borrow.status === 'borrowed' ? `
+                        <button class="btn btn-sm btn-success" onclick="returnBook(${borrow.id})" title="Return Book">
+                            <i class="fas fa-undo"></i> Return
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="renewBook(${borrow.id})" title="Extend Due Date">
+                            <i class="fas fa-sync-alt"></i> Renew
+                        </button>
+                    ` : `<span class="text-muted">Returned on ${new Date(borrow.returnDate).toLocaleDateString()}</span>`}
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        listDiv.style.display = 'block';
+        noBooksDiv.style.display = 'none';
+    } catch (error) {
+        console.error('Error loading borrowed books:', error);
+        statusDiv.innerHTML = '<div class="alert alert-danger">Failed to load borrowed books. Please try again.</div>';
+    }
+}
+
+async function returnBook(borrowId) {
+    if (!confirm('Are you sure you want to return this book?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/borrow/return/${borrowId}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(data.message, 'success', 3000);
+            loadBorrowedBooks();
+        } else {
+            document.getElementById('borrowing-messages').innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to return book'}</div>`;
+        }
+    } catch (error) {
+        console.error('Error returning book:', error);
+        document.getElementById('borrowing-messages').innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
+    }
+}
+
+async function renewBook(borrowId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/borrow/renew/${borrowId}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(data.message, 'success', 3000);
+            loadBorrowedBooks();
+        } else {
+            document.getElementById('borrowing-messages').innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to renew book'}</div>`;
+        }
+    } catch (error) {
+        console.error('Error renewing book:', error);
+        document.getElementById('borrowing-messages').innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
     }
 }
