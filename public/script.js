@@ -1600,9 +1600,183 @@ function clearFilters() {
         setTimeout(() => clearMsg.remove(), 2000);
     }
 }
+// ─── Book Reservation Functions ──────────────────────────────────────────
+async function reserveBook(bookId) {
+    if (!isUserLoggedIn()) { showToast('Please log in to reserve books.', 'error'); return; }
+    try {
+        const response = await fetch(`${API_BASE_URL}/reservations/${bookId}`, { method: 'POST', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (response.ok) { showToast(data.message, 'success', 4000); }
+        else { showToast(data.error || 'Failed to reserve book.', 'error'); }
+    } catch (error) { showToast('Network error. Please try again.', 'error'); }
+}
+
+async function loadMyReservations() {
+    const listDiv = document.getElementById('reservations-list');
+    if (!listDiv) return;
+    listDiv.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/reservations/my`, { headers: getAuthHeaders() });
+        const reservations = await response.json();
+        if (reservations.length === 0) {
+            listDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-clock" style="font-size:2rem;opacity:.3;"></i><p class="mt-2 text-muted">No reservations yet.</p></div>'; return;
+        }
+        listDiv.innerHTML = reservations.map(r => {
+            const badge = r.status === 'waiting' ? '<span class="badge badge-warning">In Queue</span>' : r.status === 'fulfilled' ? '<span class="badge badge-success">Ready</span>' : '<span class="badge badge-secondary">Cancelled</span>';
+            return `<div class="p-3 mb-2 rounded" style="border-left:4px solid #f0ad4e;background:#1e1e1e;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><strong>${r.title}</strong><br><small class="text-muted">by ${r.author}</small><br><small>Position: <strong>#${r.queuePosition}</strong></small></div>
+                    <div class="text-right">${badge}<br>${r.status === 'waiting' ? `<button class="btn btn-danger btn-sm mt-1" onclick="cancelReservation(${r.id})"><i class="fas fa-times"></i> Cancel</button>` : ''}</div>
+                </div>
+                <small class="text-muted">Reserved: ${new Date(r.reservedAt).toLocaleDateString()}</small></div>`;
+        }).join('');
+    } catch (error) { listDiv.innerHTML = '<div class="text-center text-danger">Failed to load.</div>'; }
+}
+
+async function cancelReservation(id) {
+    if (!confirm('Cancel this reservation?')) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/reservations/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (response.ok) { showToast(data.message, 'success'); loadMyReservations(); }
+        else { showToast(data.error || 'Failed.', 'error'); }
+    } catch (error) { showToast('Network error.', 'error'); }
+}
+
+// ─── Fine Management Functions ───────────────────────────────────────────
+async function loadMyFines() {
+    const listDiv = document.getElementById('fines-list');
+    const summaryDiv = document.getElementById('fines-summary');
+    if (!listDiv) return;
+    try {
+        const [finesRes, summaryRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/fines/my`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/fines/summary`, { headers: getAuthHeaders() })
+        ]);
+        const fines = await finesRes.json();
+        const summary = await summaryRes.json();
+        if (summaryDiv) {
+            summaryDiv.innerHTML = summary.count > 0
+                ? `<div class="alert alert-warning"><strong>Total Unpaid:</strong> GHS ${parseFloat(summary.total).toFixed(2)} (${summary.count} fine${summary.count > 1 ? 's' : ''}) <button class="btn btn-success btn-sm float-right" onclick="payAllFines()"><i class="fas fa-credit-card"></i> Pay All</button></div>`
+                : '<div class="alert alert-success">No unpaid fines. Great job!</div>';
+        }
+        if (fines.length === 0) { listDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-check-circle" style="font-size:2rem;color:#1DB954;"></i><p class="mt-2">No fines.</p></div>'; return; }
+        listDiv.innerHTML = fines.map(f => {
+            const sClass = f.status === 'paid' ? 'success' : f.status === 'waived' ? 'info' : 'danger';
+            const sText = f.status === 'paid' ? 'Paid' : f.status === 'waived' ? 'Waived' : 'Unpaid';
+            return `<div class="p-3 mb-2 rounded" style="border-left:4px solid ${f.status === 'unpaid' ? '#dc3545' : '#28a745'};background:#1e1e1e;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><strong>GHS ${parseFloat(f.amount).toFixed(2)}</strong>${f.bookTitle ? `<br><small>Book: ${f.bookTitle}</small>` : ''}<br><small>${f.reason || ''}</small></div>
+                    <div class="text-right"><span class="badge badge-${sClass}">${sText}</span><br>${f.status === 'unpaid' ? `<button class="btn btn-success btn-sm mt-1" onclick="payFine(${f.id})"><i class="fas fa-credit-card"></i> Pay</button>` : ''}</div>
+                </div>
+                <small class="text-muted">Issued: ${new Date(f.issuedAt).toLocaleDateString()}</small>
+                ${f.paidAt ? `<br><small class="text-success">Paid: ${new Date(f.paidAt).toLocaleDateString()}</small>` : ''}</div>`;
+        }).join('');
+    } catch (error) { listDiv.innerHTML = '<div class="text-center text-danger">Failed to load fines.</div>'; }
+}
+
+async function payFine(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/fines/pay/${id}`, { method: 'POST', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (response.ok) { showToast(data.message, 'success'); loadMyFines(); }
+        else { showToast(data.error || 'Failed.', 'error'); }
+    } catch (error) { showToast('Network error.', 'error'); }
+}
+
+async function payAllFines() {
+    if (!confirm('Pay all unpaid fines?')) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/fines/pay-all`, { method: 'POST', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (response.ok) { showToast(data.message, 'success'); loadMyFines(); }
+        else { showToast(data.error || 'Failed.', 'error'); }
+    } catch (error) { showToast('Network error.', 'error'); }
+}
+
+// ─── Reading Challenge Functions ─────────────────────────────────────────
+async function loadChallenges() {
+    const listDiv = document.getElementById('challenges-list');
+    const myDiv = document.getElementById('my-challenges');
+    const badgesDiv = document.getElementById('badges-list');
+    const leaderboardDiv = document.getElementById('leaderboard-list');
+    try {
+        // Active challenges
+        if (listDiv) {
+            const response = await fetch(`${API_BASE_URL}/challenges`, { headers: getAuthHeaders() });
+            const challenges = await response.json();
+            if (challenges.length === 0) { listDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No active challenges.</p></div>'; }
+            else {
+                listDiv.innerHTML = challenges.map(c => `<div class="p-3 mb-2 rounded" style="border-left:4px solid #5bc0de;background:#1e1e1e;">
+                    <div class="d-flex justify-content-between"><div><strong>${c.title}</strong><p class="mb-1"><small>${c.description || ''}</small></p><small class="text-muted">Goal: ${c.goalBooks} books | ${c.participants} participants</small></div>
+                    <div><button class="btn btn-primary btn-sm" onclick="joinChallenge(${c.id})"><i class="fas fa-plus"></i> Join</button></div></div></div>`).join('');
+            }
+        }
+        // My challenges
+        if (myDiv) {
+            const response = await fetch(`${API_BASE_URL}/challenges/my`, { headers: getAuthHeaders() });
+            const my = await response.json();
+            if (my.length === 0) { myDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No challenges joined.</p></div>'; }
+            else {
+                myDiv.innerHTML = my.map(uc => {
+                    const pct = Math.round((uc.booksRead / uc.goalBooks) * 100);
+                    return `<div class="p-3 mb-2 rounded" style="border-left:4px solid ${uc.completedAt ? '#28a745' : '#f0ad4e'};background:#1e1e1e;">
+                        <div class="d-flex justify-content-between"><div><strong>${uc.title}</strong><div class="progress mt-2" style="height:10px;"><div class="progress-bar ${uc.completedAt ? 'bg-success' : 'bg-warning'}" style="width:${Math.min(pct,100)}%">${Math.min(pct,100)}%</div></div><small>${uc.booksRead}/${uc.goalBooks} books read</small></div>
+                        <div>${uc.completedAt ? '<span class="badge badge-success">🎉 Done!</span>' : `<button class="btn btn-sm btn-success" onclick="updateChallengeProgress(${uc.challengeId})"><i class="fas fa-book"></i> Log Book</button>`}</div></div></div>`;
+                }).join('');
+            }
+        }
+        // Badges
+        if (badgesDiv) {
+            const response = await fetch(`${API_BASE_URL}/challenges/badges`, { headers: getAuthHeaders() });
+            const badges = await response.json();
+            if (badges.length === 0) { badgesDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No badges yet. Complete challenges!</p></div>'; }
+            else {
+                badgesDiv.innerHTML = badges.map(b => `<div class="text-center p-2 m-1 d-inline-block" style="background:#2a2a2a;border-radius:8px;min-width:100px;"><div style="font-size:2rem;">${b.icon || '🏆'}</div><strong><small>${b.name}</small></strong></div>`).join('');
+            }
+        }
+        // Leaderboard
+        if (leaderboardDiv) {
+            const response = await fetch(`${API_BASE_URL}/challenges/leaderboard`, { headers: getAuthHeaders() });
+            const leaders = await response.json();
+            const medals = ['🥇','🥈','🥉'];
+            if (leaders.length === 0) { leaderboardDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No data.</p></div>'; }
+            else {
+                leaderboardDiv.innerHTML = leaders.map((l,i) => `<div class="p-2 mb-1 rounded d-flex justify-content-between" style="background:#1e1e1e;"><span>${medals[i] || `${i+1}.`} <strong>${l.username}</strong></span><span>${l.booksBorrowed} books | ${l.badges} badges</span></div>`).join('');
+            }
+        }
+    } catch (error) { console.error('Error:', error); }
+}
+
+async function joinChallenge(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/challenges/${id}/join`, { method: 'POST', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (response.ok) { showToast(data.message, 'success'); loadChallenges(); }
+        else { showToast(data.error || 'Failed.', 'error'); }
+    } catch (error) { showToast('Network error.', 'error'); }
+}
+
+async function updateChallengeProgress(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/challenges/${id}/progress`, { method: 'POST', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (response.ok) { showToast(data.message, 'success', 4000); loadChallenges(); }
+        else { showToast(data.error || 'Failed.', 'error'); }
+    } catch (error) { showToast('Network error.', 'error'); }
+}
 
 // ─── Membership Functions ─────────────────────────────────────────────────
 async function checkMembershipStatus() {
+</parameter>
+<parameter=task_progress>
+- [x] Phase 1-7: Complete all existing work
+- [ ] Feature 1: Book Reservation & Queue System
+- [ ] Feature 2: Fine Management & Payment System
+- [ ] Feature 3: Enhanced Events with Calendar & Notifications
+- [ ] Feature 4: Community Analytics Dashboard
+- [ ] Feature 5: Reading Challenges & Goals
+</parameter>
     const statusDiv = document.getElementById('membership-status');
     const detailsDiv = document.getElementById('membership-details');
     const applyDiv = document.getElementById('membership-apply');
