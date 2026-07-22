@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Email Service using Brevo (formerly Sendinblue) - FREE 300 emails/day
  * 
  * Setup:
  * 1. Sign up at https://www.brevo.com/
- * 2. Go to SMTP & API → API Keys
+ * 2. Go to SMTP & API â†’ API Keys
  * 3. Create new API key
  * 4. npm install @getbrevo/brevo
  * 5. Set BREVO_API_KEY and EMAIL_FROM in .env
@@ -27,7 +27,7 @@ function createVerificationEmailTemplate(verificationUrl, username = 'User') {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Email - Des2 Library</title>
+    <title>Verify Your Email - Tesano Library</title>
     <style>
       body {
         font-family: 'Arial', sans-serif;
@@ -83,11 +83,11 @@ function createVerificationEmailTemplate(verificationUrl, username = 'User') {
   <body>
     <div class="container">
       <div class="header">
-        <h1 class="logo">Des2 Library</h1>
+        <h1 class="logo">Tesano Library</h1>
         <p>Your Gateway to Infinite Knowledge</p>
       </div>
       <div class="content">
-        <h2 style="color: #1DB954;">Welcome to Des2 Library!</h2>
+        <h2 style="color: #1DB954;">Welcome to Tesano Library!</h2>
         <p>Hello ${username},</p>
         <p>Thank you for joining our community! Please verify your email address by clicking the button below:</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -99,7 +99,7 @@ function createVerificationEmailTemplate(verificationUrl, username = 'User') {
       </div>
       <div style="margin-top: 40px; text-align: center; font-size: 14px; color: #666;">
         <p>If you didn't create an account, please ignore this email.</p>
-        <p>&copy; 2025 Des2 Library. All rights reserved.</p>
+        <p>&copy; 2025 Tesano Library. All rights reserved.</p>
       </div>
     </div>
   </body>
@@ -115,7 +115,7 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Your Password - Des2 Library</title>
+    <title>Reset Your Password - Tesano Library</title>
     <style>
       body {
         font-family: 'Arial', sans-serif;
@@ -165,7 +165,7 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
   <body>
     <div class="container">
       <div class="header">
-        <h1 style="color: #dc3545; margin: 0;">Des2 Library</h1>
+        <h1 style="color: #dc3545; margin: 0;">Tesano Library</h1>
         <p>Password Reset Request</p>
       </div>
       <div class="content">
@@ -181,7 +181,7 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
         <p>If you didn't request a password reset, you can safely ignore this email.</p>
       </div>
       <div style="margin-top: 40px; text-align: center; font-size: 14px; color: #666;">
-        <p>&copy; 2025 Des2 Library. All rights reserved.</p>
+        <p>&copy; 2025 Tesano Library. All rights reserved.</p>
       </div>
     </div>
   </body>
@@ -193,25 +193,25 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
 async function sendVerificationEmail(email, token, username = 'User') {
   const verificationUrl = `${BACKEND_URL}/verify-email?token=${token}`;
   
-  console.log(`📧 Sending verification email to ${email} via Brevo`);
-  console.log(`🔗 Verification URL: ${verificationUrl}`);
+  console.log(`ðŸ“§ Sending verification email to ${email} via Brevo`);
+  console.log(`ðŸ”— Verification URL: ${verificationUrl}`);
   
   const sendSmtpEmail = new brevo.SendSmtpEmail();
   sendSmtpEmail.sender = { 
-    name: 'Des2 Library', 
+    name: 'Tesano Library', 
     email: process.env.EMAIL_FROM 
   };
   sendSmtpEmail.to = [{ email }];
-  sendSmtpEmail.subject = 'Verify Your Email - Des2 Library';
+  sendSmtpEmail.subject = 'Verify Your Email - Tesano Library';
   sendSmtpEmail.htmlContent = createVerificationEmailTemplate(verificationUrl, username);
-  sendSmtpEmail.textContent = `Welcome to Des2 Library!\n\nHello ${username},\n\nPlease verify your email: ${verificationUrl}\n\nThis link expires in 24 hours.`;
+  sendSmtpEmail.textContent = `Welcome to Tesano Library!\n\nHello ${username},\n\nPlease verify your email: ${verificationUrl}\n\nThis link expires in 24 hours.`;
 
   try {
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('✅ Verification email sent successfully via Brevo:', data.messageId);
+    console.log('âœ… Verification email sent successfully via Brevo:', data.messageId);
     return true;
   } catch (error) {
-    console.error('❌ Brevo error:', error);
+    console.error('âŒ Brevo error:', error);
     return false;
   }
 }
@@ -220,25 +220,25 @@ async function sendVerificationEmail(email, token, username = 'User') {
 async function sendPasswordResetEmail(email, token, username = 'User') {
   const resetUrl = `${FRONTEND_URL}/reset-password.html?token=${token}`;
   
-  console.log(`📧 Sending password reset email to ${email} via Brevo`);
-  console.log(`🔗 Reset URL: ${resetUrl}`);
+  console.log(`ðŸ“§ Sending password reset email to ${email} via Brevo`);
+  console.log(`ðŸ”— Reset URL: ${resetUrl}`);
   
   const sendSmtpEmail = new brevo.SendSmtpEmail();
   sendSmtpEmail.sender = { 
-    name: 'Des2 Library', 
+    name: 'Tesano Library', 
     email: process.env.EMAIL_FROM 
   };
   sendSmtpEmail.to = [{ email }];
-  sendSmtpEmail.subject = 'Reset Your Password - Des2 Library';
+  sendSmtpEmail.subject = 'Reset Your Password - Tesano Library';
   sendSmtpEmail.htmlContent = createPasswordResetEmailTemplate(resetUrl, username);
   sendSmtpEmail.textContent = `Password Reset Request\n\nHello ${username},\n\nReset your password: ${resetUrl}\n\nThis link expires in 1 hour.`;
 
   try {
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('✅ Password reset email sent successfully via Brevo:', data.messageId);
+    console.log('âœ… Password reset email sent successfully via Brevo:', data.messageId);
     return true;
   } catch (error) {
-    console.error('❌ Brevo error:', error);
+    console.error('âŒ Brevo error:', error);
     return false;
   }
 }

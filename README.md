@@ -137,6 +137,8 @@ A modern, full-stack online library management system designed for the **Tesano 
 **1. Clone the repository**
 ```bash
 git clone https://github.com/DessysGit/Des2_Library.git
+# Then create and checkout the new branch:
+# git checkout -b tesano-community-library
 cd Library_Project
 ```
 

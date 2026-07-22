@@ -53,7 +53,7 @@ function createVerificationEmailTemplate(verificationUrl, username = 'User') {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Email - Des2 Library</title>
+    <title>Verify Your Email - Tesano Community Library</title>
     <style>
       body {
         font-family: 'Arial', sans-serif;
@@ -109,11 +109,11 @@ function createVerificationEmailTemplate(verificationUrl, username = 'User') {
   <body>
     <div class="container">
       <div class="header">
-        <h1 class="logo">Des2 Library</h1>
-        <p>Your Gateway to Infinite Knowledge</p>
+        <h1 class="logo">Tesano Community Library</h1>
+        <p>Empowering Tesano Through Knowledge & Community</p>
       </div>
       <div class="content">
-        <h2 style="color: #1DB954;">Welcome to Des2 Library!</h2>
+        <h2 style="color: #1DB954;">Welcome to Tesano Community Library!</h2>
         <p>Hello ${username},</p>
         <p>Thank you for joining our community! Please verify your email address by clicking the button below:</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -125,7 +125,7 @@ function createVerificationEmailTemplate(verificationUrl, username = 'User') {
       </div>
       <div style="margin-top: 40px; text-align: center; font-size: 14px; color: #666;">
         <p>If you didn't create an account, please ignore this email.</p>
-        <p>&copy; 2025 Des2 Library. All rights reserved.</p>
+        <p>&copy; 2025 Tesano Community Library. All rights reserved.</p>
       </div>
     </div>
   </body>
@@ -141,7 +141,7 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Your Password - Des2 Library</title>
+    <title>Reset Your Password - Tesano Community Library</title>
     <style>
       body {
         font-family: 'Arial', sans-serif;
@@ -191,7 +191,7 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
   <body>
     <div class="container">
       <div class="header">
-        <h1 style="color: #dc3545; margin: 0;">Des2 Library</h1>
+        <h1 style="color: #dc3545; margin: 0;">Tesano Community Library</h1>
         <p>Password Reset Request</p>
       </div>
       <div class="content">
@@ -207,7 +207,7 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
         <p>If you didn't request a password reset, you can safely ignore this email.</p>
       </div>
       <div style="margin-top: 40px; text-align: center; font-size: 14px; color: #666;">
-        <p>&copy; 2025 Des2 Library. All rights reserved.</p>
+        <p>&copy; 2025 Tesano Community Library. All rights reserved.</p>
       </div>
     </div>
   </body>
@@ -223,11 +223,11 @@ async function sendVerificationEmail(email, token, username = 'User') {
   logger.debug('Verification URL generated', { url: verificationUrl });
   
   const mailOptions = {
-    from: `"Des2 Library" <${process.env.GMAIL_USER}>`,
+    from: `"Tesano Community Library" <${process.env.GMAIL_USER}>`,
     to: email,
-    subject: 'Verify Your Email - Des2 Library',
+    subject: 'Verify Your Email - Tesano Community Library',
     html: createVerificationEmailTemplate(verificationUrl, username),
-    text: `Welcome to Des2 Library!\n\nHello ${username},\n\nPlease verify your email: ${verificationUrl}\n\nThis link expires in 24 hours.`
+    text: `Welcome to Tesano Community Library!\n\nHello ${username},\n\nPlease verify your email: ${verificationUrl}\n\nThis link expires in 24 hours.`
   };
 
   try {
@@ -254,9 +254,9 @@ async function sendPasswordResetEmail(email, token, username = 'User') {
   logger.debug('Reset URL generated', { url: resetUrl });
   
   const mailOptions = {
-    from: `"Des2 Library" <${process.env.GMAIL_USER}>`,
+    from: `"Tesano Community Library" <${process.env.GMAIL_USER}>`,
     to: email,
-    subject: 'Reset Your Password - Des2 Library',
+    subject: 'Reset Your Password - Tesano Community Library',
     html: createPasswordResetEmailTemplate(resetUrl, username),
     text: `Password Reset Request\n\nHello ${username},\n\nReset your password: ${resetUrl}\n\nThis link expires in 1 hour.`
   };
