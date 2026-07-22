@@ -587,16 +587,30 @@ async function fetchBooks(query = '', page = 1) {
                                 <p class="description-text" title="${book.description || ''}">${book.description || 'No description available'}</p>
                             </div>
                         </div>
-                        <div class="like-dislike-ratings">
-                            <div class="like-dislike-buttons">
-                                <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">👍 ${book.likes || 0}</button>
-                                <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">👎 ${book.dislikes || 0}</button>
-                            </div>
-                            <button class="btn btn-secondary btn-sm" onclick="showBookDetails(${book.id})">Download</button>
-                            <div class="ratings">
-                                <span><i class="fas fa-star text-warning"></i> ${book.averageRating ? book.averageRating.toFixed(1) : 'N/A'} (${book.totalRatings || 0} ratings)</span>
-                            </div>
+                    <div class="like-dislike-ratings">
+                        <div class="like-dislike-buttons">
+                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">👍 ${book.likes || 0}</button>
+                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">👎 ${book.dislikes || 0}</button>
                         </div>
+                        ${book.hasPhysicalCopy ? `
+                            <button class="btn btn-success btn-sm borrow-btn" onclick="borrowBook(${book.id})" title="Borrow physical copy from library">
+                                <i class="fas fa-book-reader"></i> Borrow
+                            </button>
+                        ` : ''}
+                        ${book.hasDigitalCopy ? `
+                            <button class="btn btn-info btn-sm download-btn" onclick="showBookDetails(${book.id})" title="Download digital copy">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        ` : ''}
+                        ${!book.hasPhysicalCopy && !book.hasDigitalCopy ? `
+                            <button class="btn btn-secondary btn-sm" onclick="showBookDetails(${book.id})" title="View details">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        ` : ''}
+                        <div class="ratings">
+                            <span><i class="fas fa-star text-warning"></i> ${book.averageRating ? book.averageRating.toFixed(1) : 'N/A'} (${book.totalRatings || 0} ratings)</span>
+                        </div>
+                    </div>
                     </div>
                 `;
                 bookList.appendChild(bookItem);
@@ -1482,7 +1496,12 @@ async function quickSearch() {
         ]);
         const allBooks    = [...titleResults.books, ...authorResults.books, ...genreResults.books];
         const uniqueBooks = Array.from(new Map(allBooks.map(b => [b.id, b])).values());
-        displayQuickSearchResults(uniqueBooks);
+        const booksWithFlags = uniqueBooks.map(book => ({
+            ...book,
+            hasPhysicalCopy: book.hasPhysicalCopy || false,
+            hasDigitalCopy: book.hasDigitalCopy || false
+        }));
+        displayQuickSearchResults(booksWithFlags);
     } catch (error) {
         const bookList = document.getElementById('book-list');
         if (bookList) bookList.innerHTML = '<p class="text-center text-danger">Error loading books. Please try again.</p>';
@@ -1521,7 +1540,21 @@ function displayQuickSearchResults(books) {
                             <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">👍 ${book.likes || 0}</button>
                             <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">👎 ${book.dislikes || 0}</button>
                         </div>
-                        <button class="btn btn-secondary btn-sm" onclick="showBookDetails(${book.id})">Download</button>
+                        ${book.hasPhysicalCopy ? `
+                            <button class="btn btn-success btn-sm borrow-btn" onclick="borrowBook(${book.id})" title="Borrow physical copy from library">
+                                <i class="fas fa-book-reader"></i> Borrow
+                            </button>
+                        ` : ''}
+                        ${book.hasDigitalCopy ? `
+                            <button class="btn btn-info btn-sm download-btn" onclick="showBookDetails(${book.id})" title="Download digital copy">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        ` : ''}
+                        ${!book.hasPhysicalCopy && !book.hasDigitalCopy ? `
+                            <button class="btn btn-secondary btn-sm" onclick="showBookDetails(${book.id})" title="View details">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        ` : ''}
                         <div class="ratings"><span><i class="fas fa-star text-warning"></i> ${book.averageRating ? book.averageRating.toFixed(1) : 'N/A'} (${book.totalRatings || 0} ratings)</span></div>
                     </div>
                 </div>`;
@@ -1530,6 +1563,29 @@ function displayQuickSearchResults(books) {
         });
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function borrowBook(bookId) {
+    if (!isUserLoggedIn()) {
+        showToast('Please log in to borrow books.', 'error');
+        return;
+    }
+    try {
+        const response = await fetch(`${API_BASE_URL}/borrow/borrow/${bookId}`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (response.ok) {
+            showToast(data.message || 'Book borrowed successfully!', 'success');
+            loadBorrowedBooks();
+        } else {
+            showToast(data.error || 'Failed to borrow book.', 'error');
+        }
+    } catch (error) {
+        console.error('Error borrowing book:', error);
+        showToast('Network error. Please try again.', 'error');
+    }
 }
 
 function clearFilters() {
