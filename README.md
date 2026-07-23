@@ -54,6 +54,13 @@ A modern, full-stack online library management system designed for the **Tesano 
 - **Password Reset** — Token-based recovery via email
 - **Newsletter** — Subscribe with email validation and inline feedback
 
+### Community Features
+- **Book Reservations** — Join a queue for checked-out books; get notified when available
+- **Fine Management** — Overdue fines auto-calculated; pay online or request waiver
+- **Reading Challenges** — Join community challenges, track progress, earn badges
+- **Leaderboard** — See top readers by books borrowed and badges earned
+- **Community Events** — Register for library-hosted events in the Tesano area
+
 ### For Admins
 - **Analytics Dashboard** — Real-time statistics and interactive charts
   - Total users, books, reviews, and downloads
@@ -136,7 +143,7 @@ A modern, full-stack online library management system designed for the **Tesano 
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/DessysGit/Des2_Library.git
+git clone https://github.com/DessysGit/tesano-community-library.git
 # Then create and checkout the new branch:
 # git checkout -b tesano-community-library
 cd Library_Project
@@ -339,6 +346,9 @@ Library_Project/
 │   │   ├── membership.js            # Community library membership management
 │   │   ├── borrowing.js             # Physical book borrowing system
 │   │   ├── events.js                # Community events management
+│   │   ├── reservations.js          # Book reservation queue system
+│   │   ├── fines.js                 # Fine management and payments
+│   │   ├── challenges.js            # Reading challenges, badges, leaderboard
 │   │   └── __tests__/
 │   ├── services/
 │   │   ├── emailService.js          # Multi-provider email (Resend, Gmail, SendGrid, Brevo)
@@ -547,6 +557,39 @@ All endpoints are relative to `BACKEND_URL`. Protected routes accept either a se
 | `GET` | `/events/:id` | — | Get event details |
 | `POST` | `/events/:id/register` | User | Register for an event |
 | `DELETE` | `/events/:id` | Admin | Delete an event |
+
+### Reservations
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/reservations/:bookId` | User | Reserve a checked-out book (join queue) |
+| `GET` | `/reservations/my` | User | View my reservations |
+| `DELETE` | `/reservations/:id` | User | Cancel a reservation |
+| `GET` | `/reservations/all` | Admin | List all reservations |
+| `POST` | `/reservations/fulfill/:id` | Admin | Mark reservation as fulfilled (notify user) |
+
+### Fines
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/fines/my` | User | View my fines |
+| `GET` | `/fines/summary` | User | Get total unpaid fines |
+| `POST` | `/fines/pay/:id` | User | Pay a fine |
+| `POST` | `/fines/pay-all` | User | Pay all unpaid fines |
+| `GET` | `/fines/all` | Admin | List all fines |
+| `POST` | `/fines/waive/:id` | Admin | Waive a fine |
+
+### Reading Challenges
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/challenges` | Admin | Create a reading challenge |
+| `GET` | `/challenges` | — | List active challenges |
+| `POST` | `/challenges/:id/join` | User | Join a challenge |
+| `POST` | `/challenges/:id/progress` | User | Log a book read (increment progress) |
+| `GET` | `/challenges/my` | User | View my challenges |
+| `GET` | `/challenges/badges` | User | View my badges |
+| `GET` | `/challenges/leaderboard` | — | View top readers |
 
 ### Other
 
