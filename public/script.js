@@ -1595,7 +1595,7 @@ async function borrowBook(bookId) {
         return;
     }
     try {
-        const response = await fetch(`${API_BASE_URL}/borrow/borrow/${bookId}`, {
+        const response = await fetch(`${API_BASE_URL}/borrow/${bookId}`, {
             method: 'POST',
             headers: getAuthHeaders()
         });
