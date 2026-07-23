@@ -342,44 +342,52 @@ async function resendVerification() {
 // Function to handle logout
 async function logout() {
     try {
-        const response = await fetch(`${API_BASE_URL}/logout`, { method: 'POST', credentials: 'include' });
-        if (response.ok) {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('authState');
-            localStorage.removeItem('userData');
-
-            const ids = ['hamburger-button','search-books','manage-users-link','add-book-link',
-                'admin-button','admin-section','profile-section','add-book-section',
-                'newsletter-section','main-content','footer','chat-icon'];
-            ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
-
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            if (loginForm) loginForm.style.display = 'block';
-            if (registerForm) registerForm.style.display = 'none';
-
-            const bookList = document.getElementById('book-list');
-            const pagination = document.getElementById('pagination');
-            if (bookList) bookList.innerHTML = '';
-            if (pagination) pagination.innerHTML = '';
-
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && sidebar.classList.contains('active')) sidebar.classList.remove('active');
-
-            const profilePicture = document.getElementById('profile-picture');
-            const burgerProfilePicture = document.getElementById('burger-profile-picture');
-            if (profilePicture) profilePicture.src = '';
-            if (burgerProfilePicture) burgerProfilePicture.src = '';
-
-            userRole = '';
-            window.location.href = 'auth.html';
-        } else {
-            showToast('Failed to log out. Please try again.', 'error');
-        }
+        // Clear session cookie by calling logout endpoint
+        await fetch(`${API_BASE_URL}/logout`, { method: 'POST', credentials: 'include' });
     } catch (error) {
-        console.error('Logout error:', error);
-        showToast('Failed to log out. Please try again.', 'error');
+        console.error('Logout API error:', error);
     }
+
+    // Clear all stored authentication data
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authState');
+    localStorage.removeItem('userData');
+    localStorage.removeItem(`book-${window.currentBookId}-reaction`);
+
+    // Hide all main content sections
+    const ids = ['hamburger-button','search-books','manage-users-link','add-book-link',
+        'admin-button','admin-section','profile-section','add-book-section',
+        'newsletter-section','main-content','footer','chat-icon'];
+    ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+
+    // Show login form
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    if (loginForm) loginForm.style.display = 'block';
+    if (registerForm) registerForm.style.display = 'none';
+
+    // Clear dynamic content
+    const bookList = document.getElementById('book-list');
+    const pagination = document.getElementById('pagination');
+    if (bookList) bookList.innerHTML = '';
+    if (pagination) pagination.innerHTML = '';
+
+    // Close sidebar if open
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('active')) sidebar.classList.remove('active');
+
+    // Clear profile pictures
+    const profilePicture = document.getElementById('profile-picture');
+    const burgerProfilePicture = document.getElementById('burger-profile-picture');
+    if (profilePicture) profilePicture.src = '';
+    if (burgerProfilePicture) burgerProfilePicture.src = '';
+
+    // Reset user state
+    userRole = '';
+    window.currentUsername = '';
+
+    // Redirect to auth page
+    window.location.href = 'auth.html';
 }
 
 function closeMenuOnClickOutside(event) {
@@ -453,7 +461,7 @@ function toggleMenu() {
 }
 
 async function showSection(sectionId) {
-    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, #membership-section, #borrowing-section, .newsletter-section');
+    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, #membership-section, #borrowing-section, #reservations-section, #fines-section, #challenges-section, #events-section, .newsletter-section');
     sections.forEach(section => {
         if (section) section.style.display = section.id === sectionId ? 'block' : 'none';
     });
@@ -505,6 +513,22 @@ async function showSection(sectionId) {
 
     if (sectionId === 'borrowing-section') {
         loadBorrowedBooks();
+    }
+
+    if (sectionId === 'reservations-section') {
+        loadMyReservations();
+    }
+
+    if (sectionId === 'fines-section') {
+        loadMyFines();
+    }
+
+    if (sectionId === 'challenges-section') {
+        loadChallenges();
+    }
+
+    if (sectionId === 'events-section') {
+        loadEvents();
     }
 
     const addBookMessages = document.getElementById('add-book-messages');
@@ -2003,4 +2027,50 @@ async function renewBook(borrowId) {
         console.error('Error renewing book:', error);
         document.getElementById('borrowing-messages').innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
     }
+}
+
+// ─── Events Functions ─────────────────────────────────────────────────────
+async function loadEvents() {
+    const listDiv = document.getElementById('events-list');
+    if (!listDiv) return;
+    listDiv.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading events...</div>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/events`, { headers: getAuthHeaders() });
+        if (!response.ok) throw new Error('Failed to fetch events');
+        const events = await response.json();
+        if (events.length === 0) {
+            listDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-calendar-alt" style="font-size:2rem;opacity:.3;"></i><p class="mt-2 text-muted">No upcoming events.</p></div>';
+            return;
+        }
+        listDiv.innerHTML = events.map(e => `
+            <div class="p-3 mb-2 rounded" style="border-left:4px solid #5bc0de;background:#1e1e1e;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${e.title}</strong>
+                        <p class="mb-1">${e.description || ''}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> ${e.location || 'TBA'} | 
+                            <i class="fas fa-clock"></i> ${new Date(e.eventDate).toLocaleString()} | 
+                            <i class="fas fa-users"></i> ${e.attendeeCount || 0}/${e.maxAttendees || '∞'}
+                        </small>
+                    </div>
+                    <div>
+                        ${e.isRegistered ? '<span class="badge badge-success">Registered</span>' : `<button class="btn btn-primary btn-sm" onclick="registerForEvent(${e.id})">Register</button>`}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        listDiv.innerHTML = '<div class="text-center text-danger">Failed to load events.</div>';
+    }
+}
+
+async function registerForEvent(eventId) {
+    if (!isUserLoggedIn()) { showToast('Please log in to register for events.', 'error'); return; }
+    try {
+        const response = await fetch(`${API_BASE_URL}/events/${eventId}/register`, { method: 'POST', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (response.ok) { showToast(data.message, 'success'); loadEvents(); }
+        else { showToast(data.error || 'Failed to register.', 'error'); }
+    } catch (error) { showToast('Network error.', 'error'); }
 }
