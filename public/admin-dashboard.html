@@ -71,14 +71,26 @@
             border-top: 1px solid rgba(255,255,255,0.06);
         }
         .sidebar-back a {
-            color: #777;
-            font-size: .82rem;
-            text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: #ccc;
+            font-size: .85rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            background: rgba(220,53,69,0.08);
+            border: 1px solid rgba(220,53,69,0.2);
+            transition: all .2s ease;
         }
-        .sidebar-back a:hover { color: #fff; }
+        .sidebar-back a:hover {
+            color: #fff;
+            background: rgba(220,53,69,0.18);
+            border-color: rgba(220,53,69,0.4);
+            transform: translateY(-1px);
+        }
 
         /* ── Main Content Area ───────────────────────────────────── */
         .admin-main {
@@ -361,10 +373,10 @@
             <a href="#" onclick="scrollToSection('management-section', this)"><i class="fas fa-cogs"></i> Console</a>
 
             <div class="nav-section">Actions</div>
-            <a href="#" onclick="switchManagementTab('events'); scrollToSection('management-section', this)"><i class="fas fa-calendar-plus"></i> Create Event</a>
-            <a href="#" onclick="switchManagementTab('fines'); scrollToSection('management-section', this)"><i class="fas fa-dollar-sign"></i> Manage Fines</a>
-            <a href="#" onclick="switchManagementTab('reservations'); scrollToSection('management-section', this)"><i class="fas fa-bookmark"></i> Reservations</a>
-            <a href="#" onclick="switchManagementTab('borrowing'); scrollToSection('management-section', this)"><i class="fas fa-book-reader"></i> Borrowing</a>
+            <a href="#management-section" onclick="event.preventDefault(); switchManagementTab('events'); setTimeout(function(){ scrollToSection('management-section', null); }, 100);"><i class="fas fa-calendar-plus"></i> Create Event</a>
+            <a href="#management-section" onclick="event.preventDefault(); switchManagementTab('fines'); setTimeout(function(){ scrollToSection('management-section', null); }, 100);"><i class="fas fa-dollar-sign"></i> Manage Fines</a>
+            <a href="#management-section" onclick="event.preventDefault(); switchManagementTab('reservations'); setTimeout(function(){ scrollToSection('management-section', null); }, 100);"><i class="fas fa-bookmark"></i> Reservations</a>
+            <a href="#management-section" onclick="event.preventDefault(); switchManagementTab('borrowing'); setTimeout(function(){ scrollToSection('management-section', null); }, 100);"><i class="fas fa-book-reader"></i> Borrowing</a>
             <a href="#" onclick="exportUsers()"><i class="fas fa-download"></i> Export Users</a>
             <a href="#" onclick="exportBooks()"><i class="fas fa-download"></i> Export Books</a>
         </div>
