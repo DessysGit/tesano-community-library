@@ -33,6 +33,14 @@ body {
     text-shadow: 2px 2px 4px rgba(255, 215, 0, 0.5);
 }
 
+.stylish-logo {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0;
+}
+
 .slogan {
     font-family: 'Playfair Display', serif;
     font-size: 20px;
@@ -46,6 +54,30 @@ body {
     padding: 20px 0;
     text-align: center;
     border-bottom: 3px solid #FFD700;
+}
+
+/* Responsive header for mobile */
+@media (max-width: 768px) {
+    .header {
+        padding: 12px 0;
+    }
+    .stylish-logo {
+        font-size: 1.3rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .slogan {
+        font-size: 0.75rem !important;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .header .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
 }
 
 /* ========================================
