@@ -356,7 +356,7 @@ router.get('/users', isAdmin, async (req, res) => {
              COALESCE(COUNT(DISTINCT r.id), 0) as total_reviews,
              COALESCE(COUNT(DISTINCT br.id), 0) as total_reservations,
              MAX(ua."createdAt") as last_activity
-      FROM users u
+      FROM public.users u
       LEFT JOIN borrowed_books bb ON bb."userId" = u.id AND bb.status = 'returned'
       LEFT JOIN reviews r ON r."userId" = u.id
       LEFT JOIN book_reservations br ON br."userId" = u.id
@@ -426,7 +426,7 @@ router.get('/activity/flagged', isAdmin, async (req, res) => {
     const result = await pool.query(`
       SELECT a.*, u.username, u.email
       FROM user_activity a
-      JOIN users u ON u.id = a."userId"
+      JOIN public.users u ON u.id = a."userId"
       WHERE a.severity IN ('suspicious', 'abusive')
       ORDER BY a."createdAt" DESC
       LIMIT 50
@@ -446,7 +446,7 @@ router.get('/activity', isAdmin, async (req, res) => {
     let query = `
       SELECT a.*, u.username
       FROM user_activity a
-      JOIN users u ON u.id = a."userId"
+      JOIN public.users u ON u.id = a."userId"
       WHERE 1=1
     `;
     const params = [];
