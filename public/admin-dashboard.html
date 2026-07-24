@@ -9,28 +9,108 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
+        /* ── Base ─────────────────────────────────────────────────── */
         body {
             background: #0f0f0f;
             color: #fff;
+            overflow-x: hidden;
         }
 
-        .dashboard-card {
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 100%;
-            background: rgba(30, 30, 30, 0.95);
-            border: 1px solid rgba(29, 185, 84, 0.2);
+        /* ── Sidebar ─────────────────────────────────────────────── */
+        .admin-sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 220px;
+            height: 100vh;
+            background: #141414;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform .3s ease;
         }
-        
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(29, 185, 84, 0.3);
+        .admin-sidebar .brand {
+            padding: 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1DB954;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        
-        /* ── Stat cards: dark + left accent (replaces bright gradients) ────── */
+        .admin-sidebar .brand i { font-size: 1.2rem; }
+
+        .sidebar-nav { flex: 1; overflow-y: auto; padding: 10px 0; }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            color: #999;
+            font-size: .85rem;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all .2s ease;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(29,185,84,0.08);
+            color: #1DB954;
+            border-left-color: #1DB954;
+        }
+        .sidebar-nav a i { width: 18px; text-align: center; font-size: .9rem; }
+        .sidebar-nav .nav-section {
+            padding: 14px 20px 4px;
+            font-size: .65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+        }
+        .sidebar-back {
+            padding: 14px 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .sidebar-back a {
+            color: #777;
+            font-size: .82rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-back a:hover { color: #fff; }
+
+        /* ── Main Content Area ───────────────────────────────────── */
+        .admin-main {
+            margin-left: 220px;
+            padding: 24px 28px 40px;
+            min-height: 100vh;
+        }
+
+        /* ── Dashboard Header ───────────────────────────────────── */
+        .dashboard-header {
+            background: linear-gradient(135deg, #1DB954 0%, #17a647 100%);
+            color: white;
+            padding: 24px 28px;
+            margin-bottom: 28px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0h100v100H0z" fill="none"/%3E%3Cpath d="M20 50L50 20l30 30-30 30z" fill="%23ffffff" opacity="0.05"/%3E%3C/svg%3E');
+            background-size: 100px 100px;
+            opacity: 0.3;
+        }
+        .dashboard-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; position: relative; z-index: 1; }
+        .dashboard-header p  { font-size: .85rem; opacity: .85; margin: 4px 0 0; position: relative; z-index: 1; }
+
+        /* ── Stat Cards ──────────────────────────────────────────── */
         .stat-card {
-            padding: 22px 20px;
+            padding: 20px;
             text-align: left;
             background: #141414;
             color: white;
@@ -38,722 +118,497 @@
             border-left: 4px solid #1DB954;
             position: relative;
             overflow: hidden;
+            border-radius: 10px;
         }
-        /* Remove the distracting animated pulse */
-        .stat-card::before { display: none; }
-
         .stat-card.users     { border-left-color: #7c6deb; }
         .stat-card.books     { border-left-color: #1DB954; }
         .stat-card.reviews   { border-left-color: #3b82f6; }
-        .stat-card.downloads { border-left-color: #10b981; }
+        .stat-card.active    { border-left-color: #10b981; }
 
         .stat-label {
-            font-size: 0.72rem;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 6px;
-            position: relative;
-            z-index: 1;
+            font-size: .7rem; color: #888; text-transform: uppercase;
+            letter-spacing: 1.2px; margin-bottom: 4px;
         }
-
         .stat-number {
-            font-size: 2.4rem;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1.1;
-            margin: 6px 0 12px;
-            position: relative;
-            z-index: 1;
+            font-size: 2rem; font-weight: 700; color: #fff;
+            line-height: 1.1; margin: 4px 0 10px;
         }
-
         .stat-icon {
-            font-size: 2rem;
-            position: absolute;
-            bottom: 14px;
-            right: 16px;
-            opacity: 0.12;
+            font-size: 1.8rem; position: absolute; bottom: 12px; right: 14px; opacity: .12;
         }
-        .stat-card.users     .stat-icon { color: #7c6deb; opacity: .18; }
-        .stat-card.books     .stat-icon { color: #1DB954; opacity: .18; }
-        .stat-card.reviews   .stat-icon { color: #3b82f6; opacity: .18; }
-        .stat-card.downloads .stat-icon { color: #10b981; opacity: .18; }
+        .stat-card.users   .stat-icon { color: #7c6deb; opacity: .18; }
+        .stat-card.books   .stat-icon { color: #1DB954; opacity: .18; }
+        .stat-card.reviews .stat-icon { color: #3b82f6; opacity: .18; }
+        .stat-card.active  .stat-icon { color: #10b981; opacity: .18; }
 
         .stat-change {
-            font-size: 0.73rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            border-radius: 12px;
+            font-size: .7rem; display: inline-flex; align-items: center;
+            gap: 4px; padding: 2px 10px; border-radius: 12px;
             background: rgba(255,255,255,0.08);
-            position: relative;
-            z-index: 1;
         }
         .stat-change.positive { background: rgba(29,185,84,0.15); color: #1DB954; }
-        .stat-change.negative { background: rgba(239,68,68,0.15);  color: #f87171; }
-        
-        .chart-container {
-            position: relative;
-            height: 350px;
-            padding: 20px;
-        }
-        
-        .dashboard-header {
-            background: linear-gradient(135deg, #1DB954 0%, #17a647 100%);
-            color: white;
-            padding: 28px 30px;
-            margin-bottom: 32px;
-            border-radius: 15px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .dashboard-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0h100v100H0z" fill="none"/%3E%3Cpath d="M20 50L50 20l30 30-30 30z" fill="%23ffffff" opacity="0.05"/%3E%3C/svg%3E');
-            background-size: 100px 100px;
-            opacity: 0.3;
-        }
-        
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            backdrop-filter: blur(10px);
-        }
-        
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-        
-        .card-header {
-            border-bottom: 2px solid rgba(29, 185, 84, 0.3);
-            font-weight: 600;
-        }
-        
-        .activity-item {
-            padding: 15px;
-            border-left: 4px solid #1DB954;
-            margin-bottom: 15px;
-            background: rgba(40, 40, 40, 0.6);
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .activity-item:hover {
-            background: rgba(50, 50, 50, 0.8);
-            transform: translateX(5px);
-            border-left-color: #17a647;
-        }
-        
-        .book-card {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-            background: rgba(40, 40, 40, 0.4);
-        }
-        
-        .book-card:hover {
-            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.2);
-            transform: translateX(5px);
-            background: rgba(50, 50, 50, 0.6);
-        }
-        
-        .book-card img {
-            width: 60px;
-            height: 90px;
-            object-fit: cover;
-            border-radius: 5px;
-            margin-right: 15px;
-            border: 2px solid rgba(29, 185, 84, 0.3);
-        }
-        
-        .loading-spinner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-        }
-        
-        .metric-badge {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        
-        @media (max-width: 768px) {
-            .stat-number { font-size: 2rem; }
 
-            /* Compact the green title area */
-            .dashboard-header {
-                padding: 20px 16px 0 16px;
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
-                margin-bottom: 0;
-                overflow: hidden;  /* keep gradient clipped to rounded top corners */
-            }
-
-            /* Title block inside the green area */
-            .dashboard-header .flex-grow-1 {
-                width: 100%;
-                padding-bottom: 20px;
-            }
-
-            /* Pull the filter OUT of the green box visually —
-               it renders as a dark attached bar below the green header */
-            .dashboard-header .d-flex {
-                flex-direction: column;
-                align-items: flex-start !important;
-                gap: 0;
-            }
-            .time-filter-inline {
-                /* detach from green header */
-                width: calc(100% + 32px);
-                margin: 0 -16px;
-                background: #1a1a1a;
-                border: 1px solid rgba(255,255,255,0.08);
-                border-top: 2px solid rgba(29,185,84,0.5);
-                border-radius: 0 0 15px 15px;
-                padding: 10px 16px;
-                margin-bottom: 32px;
-
-                /* horizontal scroll row */
-                display: flex;
-                flex-wrap: nowrap;
-                gap: 8px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-            .time-filter-inline::-webkit-scrollbar { display: none; }
-
-            /* Lock buttons to their content width — no stretching */
-            .time-filter-inline .btn {
-                flex: 0 0 auto;
-                width: auto;
-                min-width: max-content;
-                white-space: nowrap;
-            }
-
-            .chart-container { height: 250px; }
+        /* ── Dashboard Card ─────────────────────────────────────── */
+        .dashboard-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            background: rgba(30,30,30,0.95);
+            border: 1px solid rgba(29,185,84,0.15);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(29,185,84,0.2);
         }
 
-        /* ── Unified section card header ─────────────────────────────────────── */
-        /* Replaces the inconsistent rainbow gradients on every section.         */
-        /* One clean dark style with a green left accent — professional & calm.  */
         .section-header {
-            background: rgba(255, 255, 255, 0.04) !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background: rgba(255,255,255,0.04) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.08) !important;
             border-left: 3px solid #1DB954;
             color: #e0e0e0 !important;
-            padding: 14px 18px !important;
+            padding: 12px 16px !important;
             display: flex;
             align-items: center;
             gap: 8px;
         }
         .section-header h5 {
-            margin: 0;
-            font-size: .95rem;
-            font-weight: 600;
-            letter-spacing: .3px;
-            color: #e0e0e0;
+            margin: 0; font-size: .88rem; font-weight: 600;
+            letter-spacing: .2px; color: #e0e0e0;
         }
-        .section-header .section-icon {
-            color: #1DB954;
-            font-size: 1rem;
+        .section-header .section-icon { color: #1DB954; font-size: .9rem; }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            padding: 16px;
         }
 
-        /* ── Time filter pill tabs ───────────────────────────────────────────── */
-        .time-filter-inline {
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 8px;
-            align-items: center;
-        }
+        /* ── Time Filter Pills ───────────────────────────────────── */
+        .time-filter-inline { display: flex; gap: 6px; flex-wrap: wrap; }
         .time-filter-inline .btn {
-            border-radius: 20px;
-            font-size: 0.8rem;
-            padding: 5px 16px;
+            border-radius: 20px; font-size: .75rem; padding: 4px 14px;
             border: 1px solid rgba(255,255,255,.25);
             background: rgba(255,255,255,.08);
             color: rgba(255,255,255,.8);
-            backdrop-filter: blur(10px);
-            transition: all .2s ease;
-            font-weight: 500;
+            transition: all .2s ease; font-weight: 500;
         }
-        .time-filter-inline .btn:hover {
-            background: rgba(255,255,255,.18);
-            color: #fff;
-        }
+        .time-filter-inline .btn:hover { background: rgba(255,255,255,.18); color: #fff; }
         .time-filter-inline .btn.active {
-            background: #fff;
-            color: #1DB954;
-            border-color: #fff;
-            font-weight: 700;
+            background: #fff; color: #1DB954; border-color: #fff; font-weight: 700;
             box-shadow: 0 2px 8px rgba(0,0,0,.2);
         }
 
-        /* ── Reviewer card — no email shown ─────────────────────────────────── */
+        /* ── List Items ──────────────────────────────────────────── */
+        .book-card {
+            display: flex; align-items: center; padding: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px; margin-bottom: 10px;
+            transition: all .2s ease; background: rgba(40,40,40,0.4);
+        }
+        .book-card:hover {
+            box-shadow: 0 3px 12px rgba(29,185,84,0.15);
+            transform: translateX(3px); background: rgba(50,50,50,0.6);
+        }
+        .book-card img {
+            width: 50px; height: 70px; object-fit: cover; border-radius: 4px;
+            margin-right: 12px; border: 1px solid rgba(29,185,84,0.3);
+        }
+
+        .activity-item {
+            padding: 12px; border-left: 3px solid #1DB954;
+            margin-bottom: 10px; background: rgba(40,40,40,0.5);
+            border-radius: 6px; transition: all .2s ease;
+        }
+        .activity-item:hover {
+            background: rgba(50,50,50,0.7); transform: translateX(4px);
+        }
+
         .reviewer-email { display: none; }
+        .loading-spinner {
+            display: flex; justify-content: center; align-items: center; height: 160px;
+        }
 
-        /* ── Management Console Styles ──────────────────────────────────────── */
+        /* ── Management Console ──────────────────────────────────── */
         .management-section {
-            background: rgba(20, 20, 20, 0.5);
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(20,20,20,0.5);
+            border-radius: 8px; padding: 16px;
+            border: 1px solid rgba(255,255,255,0.06);
         }
-
         .management-item {
-            padding: 15px;
-            margin-bottom: 10px;
-            background: rgba(40, 40, 40, 0.6);
-            border-radius: 8px;
-            border-left: 4px solid #1DB954;
-            transition: all 0.3s ease;
+            padding: 12px 14px; margin-bottom: 8px;
+            background: rgba(40,40,40,0.6); border-radius: 6px;
+            border-left: 3px solid #1DB954; transition: all .2s ease;
         }
+        .management-item:hover { background: rgba(50,50,50,0.8); transform: translateX(2px); }
+        .management-item.overdue { border-left-color: #dc3545; }
+        .management-item.warning { border-left-color: #ffc107; }
 
-        .management-item:hover {
-            background: rgba(50, 50, 50, 0.8);
-            transform: translateX(3px);
-        }
-
-        .management-item.overdue {
-            border-left-color: #dc3545;
-        }
-
-        .management-item.warning {
-            border-left-color: #ffc107;
-        }
-
-        .badge-overdue {
-            background: #dc3545;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-        }
-
-        .badge-warning {
-            background: #ffc107;
-            color: #000;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-        }
-
-        .badge-success {
-            background: #28a745;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-
-        .btn-action {
-            padding: 4px 10px;
-            font-size: 0.75rem;
-            border-radius: 6px;
-        }
+        .action-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
+        .btn-action { padding: 3px 8px; font-size: .72rem; border-radius: 4px; }
 
         .flagged-item {
-            padding: 12px;
-            margin-bottom: 10px;
-            background: rgba(220, 53, 69, 0.1);
-            border-left: 4px solid #dc3545;
-            border-radius: 8px;
+            padding: 10px 12px; margin-bottom: 8px;
+            background: rgba(220,53,69,0.08);
+            border-left: 3px solid #dc3545; border-radius: 6px;
+        }
+        .flagged-item.suspicious {
+            background: rgba(255,193,7,0.08); border-left-color: #ffc107;
         }
 
-        .flagged-item.suspicious {
-            background: rgba(255, 193, 7, 0.1);
-            border-left-color: #ffc107;
+        /* Badges */
+        .badge-overdue { background: #dc3545; color: white; padding: 3px 8px; border-radius: 10px; font-size: .7rem; }
+        .badge-warning  { background: #ffc107; color: #000; padding: 3px 8px; border-radius: 10px; font-size: .7rem; }
+        .badge-success  { background: #28a745; color: white; padding: 3px 8px; border-radius: 10px; font-size: .7rem; }
+        .badge-info     { background: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: .7rem; }
+
+        /* ── Console summary bar ────────────────────────────────── */
+        .console-summary {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            padding: 12px 16px; margin-bottom: 16px;
+            background: rgba(0,0,0,0.25); border-radius: 8px;
+        }
+        .console-stat {
+            display: flex; align-items: center; gap: 6px; font-size: .82rem;
+        }
+        .console-stat .num { font-weight: 700; color: #1DB954; }
+
+        /* ── Mobile hamburger toggle (hidden on desktop) ─────────── */
+        .sidebar-toggle {
+            display: none; position: fixed; top: 12px; left: 12px;
+            z-index: 1100; background: #1DB954; border: none;
+            color: #fff; width: 38px; height: 38px; border-radius: 8px;
+            font-size: 1.1rem; cursor: pointer; align-items: center; justify-content: center;
+        }
+        .sidebar-overlay { display: none; }
+
+        /* ── Responsive ──────────────────────────────────────────── */
+        @media (max-width: 991px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+            .admin-sidebar.open {
+                transform: translateX(0);
+            }
+            .admin-main { margin-left: 0; padding: 20px 16px; }
+            .sidebar-toggle { display: flex; }
+            .sidebar-overlay {
+                display: none; position: fixed; inset: 0;
+                background: rgba(0,0,0,.6); z-index: 999;
+            }
+            .sidebar-overlay.show { display: block; }
+            .chart-container { height: 220px; }
+            .dashboard-header h1 { font-size: 1.2rem; }
+            .dashboard-header { padding: 18px 20px; }
+            .stat-number { font-size: 1.6rem; }
+        }
+
+        @media (max-width: 576px) {
+            .admin-main { padding: 54px 10px 20px; }
+            .dashboard-header { padding: 14px 16px; margin-bottom: 16px; }
+            .dashboard-header h1 { font-size: 1rem; }
+            .chart-container { height: 180px; padding: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-number { font-size: 1.4rem; }
+            .console-summary { flex-direction: column; gap: 8px; }
+            .management-section { padding: 10px; }
         }
     </style>
 </head>
 <body>
-    <!-- Back Button -->
-    <a href="index.html" class="btn back-btn">
-        <i class="fas fa-arrow-left"></i> Back to Library
-    </a>
 
-    <div class="container mt-5">
+    <!-- Sidebar Toggle (Mobile) -->
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="admin-sidebar" id="adminSidebar">
+        <div class="brand">
+            <i class="fas fa-book-open"></i> Admin Panel
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">Analytics</div>
+            <a href="#" class="active" onclick="scrollToSection('stats-section', this)"><i class="fas fa-chart-bar"></i> Overview</a>
+            <a href="#" onclick="scrollToSection('charts-section', this)"><i class="fas fa-chart-pie"></i> Charts</a>
+            <a href="#" onclick="scrollToSection('lists-section', this)"><i class="fas fa-list"></i> Top Lists</a>
+            <a href="#" onclick="scrollToSection('activity-section', this)"><i class="fas fa-history"></i> Activity</a>
+
+            <div class="nav-section">Management</div>
+            <a href="#" onclick="scrollToSection('management-section', this)"><i class="fas fa-cogs"></i> Console</a>
+
+            <div class="nav-section">Actions</div>
+            <a href="#" onclick="switchManagementTab('events'); scrollToSection('management-section', this)"><i class="fas fa-calendar-plus"></i> Create Event</a>
+            <a href="#" onclick="switchManagementTab('fines'); scrollToSection('management-section', this)"><i class="fas fa-dollar-sign"></i> Manage Fines</a>
+            <a href="#" onclick="switchManagementTab('reservations'); scrollToSection('management-section', this)"><i class="fas fa-bookmark"></i> Reservations</a>
+            <a href="#" onclick="switchManagementTab('borrowing'); scrollToSection('management-section', this)"><i class="fas fa-book-reader"></i> Borrowing</a>
+            <a href="#" onclick="exportUsers()"><i class="fas fa-download"></i> Export Users</a>
+            <a href="#" onclick="exportBooks()"><i class="fas fa-download"></i> Export Books</a>
+        </div>
+        <div class="sidebar-back">
+            <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Library</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+
         <!-- Dashboard Header -->
-        <div class="dashboard-header text-center">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="flex-grow-1">
-                    <h1><i class="fas fa-chart-line"></i> Admin Dashboard</h1>
-                    <p class="mb-0">Comprehensive insights and real-time statistics</p>
-                    <small id="last-updated" class="d-block mt-2" style="opacity: 0.8;"></small>
-                </div>
-                <!-- Time Filter in Header -->
-                <div class="time-filter-inline">
-                    <button class="btn btn-outline-light btn-sm active" onclick="setTimeFilter('all', this)">All Time</button>
-                    <button class="btn btn-outline-light btn-sm" onclick="setTimeFilter('30', this)">30 Days</button>
-                    <button class="btn btn-outline-light btn-sm" onclick="setTimeFilter('7', this)">7 Days</button>
-                    <button class="btn btn-outline-light btn-sm" onclick="setTimeFilter('1', this)">Today</button>
-                </div>
+        <div class="dashboard-header d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1><i class="fas fa-chart-line mr-2"></i>Admin Dashboard</h1>
+                <p>Comprehensive insights and real-time library statistics</p>
+                <small id="last-updated" style="opacity:0.7;"></small>
+            </div>
+            <div class="time-filter-inline mt-2 mt-md-0">
+                <button class="btn active" onclick="setTimeFilter('all', this)">All Time</button>
+                <button class="btn" onclick="setTimeFilter('30', this)">30 Days</button>
+                <button class="btn" onclick="setTimeFilter('7', this)">7 Days</button>
+                <button class="btn" onclick="setTimeFilter('1', this)">Today</button>
             </div>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card dashboard-card stat-card users">
-                    <div class="position-relative">
+        <!-- ─── Stats Section ────────────────────────────────────── -->
+        <section id="stats-section">
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-card users">
                         <p class="stat-label">Total Users</p>
-                        <h2 class="stat-number" id="total-users">
-                            <div class="spinner-border text-light" role="status"></div>
-                        </h2>
-                        <div class="stat-change positive" id="users-change">
-                            <i class="fas fa-arrow-up"></i> <span id="users-change-text">Loading...</span>
-                        </div>
+                        <h2 class="stat-number" id="total-users"><div class="spinner-border text-light" style="width:1.2rem;height:1.2rem;"></div></h2>
+                        <div class="stat-change positive" id="users-change"><i class="fas fa-arrow-up"></i> <span>Loading...</span></div>
                         <i class="fas fa-users stat-icon"></i>
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card dashboard-card stat-card books">
-                    <div class="position-relative">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-card books">
                         <p class="stat-label">Total Books</p>
-                        <h2 class="stat-number" id="total-books">
-                            <div class="spinner-border text-light" role="status"></div>
-                        </h2>
-                        <div class="stat-change positive" id="books-change">
-                            <i class="fas fa-arrow-up"></i> <span id="books-change-text">Loading...</span>
-                        </div>
+                        <h2 class="stat-number" id="total-books"><div class="spinner-border text-light" style="width:1.2rem;height:1.2rem;"></div></h2>
+                        <div class="stat-change positive" id="books-change"><i class="fas fa-arrow-up"></i> <span>Loading...</span></div>
                         <i class="fas fa-book stat-icon"></i>
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card dashboard-card stat-card reviews">
-                    <div class="position-relative">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-card reviews">
                         <p class="stat-label">Total Reviews</p>
-                        <h2 class="stat-number" id="total-reviews">
-                            <div class="spinner-border text-light" role="status"></div>
-                        </h2>
-                        <div class="stat-change" id="reviews-change">
-                            <i class="fas fa-star"></i> <span id="avg-rating">Avg: 0.0 ⭐</span>
-                        </div>
+                        <h2 class="stat-number" id="total-reviews"><div class="spinner-border text-light" style="width:1.2rem;height:1.2rem;"></div></h2>
+                        <div class="stat-change" id="reviews-change"><i class="fas fa-star"></i> <span id="avg-rating">Avg: 0.0</span></div>
                         <i class="fas fa-star stat-icon"></i>
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card dashboard-card stat-card downloads">
-                    <div class="position-relative">
-                        <p class="stat-label">Active Users</p>
-                        <h2 class="stat-number" id="active-users">
-                            <div class="spinner-border text-light" role="status"></div>
-                        </h2>
-                        <div class="stat-change" id="active-change">
-                            <i class="fas fa-users"></i> <span id="active-text">Last 7 days</span>
-                        </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-card active">
+                        <p class="stat-label">Active Users (7d)</p>
+                        <h2 class="stat-number" id="active-users"><div class="spinner-border text-light" style="width:1.2rem;height:1.2rem;"></div></h2>
+                        <div class="stat-change" id="active-change"><i class="fas fa-users"></i> <span>Last 7 days</span></div>
                         <i class="fas fa-user-check stat-icon"></i>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Main Charts Row -->
-        <div class="row mb-4">
-            <div class="col-lg-8 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-chart-area section-icon"></i>
-                        <h5>User Growth & Book Uploads</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="growthChart"></canvas>
+        <!-- ─── Charts Section ───────────────────────────────────── -->
+        <section id="charts-section">
+            <div class="row mb-4">
+                <div class="col-lg-8 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-chart-area section-icon"></i>
+                            <h5>User Growth & Book Uploads</h5>
                         </div>
+                        <div class="card-body"><div class="chart-container"><canvas id="growthChart"></canvas></div></div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-chart-pie section-icon"></i>
+                            <h5>Genre Distribution</h5>
+                        </div>
+                        <div class="card-body"><div class="chart-container"><canvas id="genreChart"></canvas></div></div>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-4 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-chart-pie section-icon"></i>
-                        <h5>Genre Distribution</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="genreChart"></canvas>
+            <div class="row mb-4">
+                <div class="col-lg-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-star-half-alt section-icon"></i>
+                            <h5>Rating Distribution</h5>
                         </div>
+                        <div class="card-body"><div class="chart-container"><canvas id="ratingChart"></canvas></div></div>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-chart-line section-icon"></i>
+                            <h5>Review Trends</h5>
+                        </div>
+                        <div class="card-body"><div class="chart-container"><canvas id="reviewTrendChart"></canvas></div></div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Rating & Reviews Charts -->
-        <div class="row mb-4">
-            <div class="col-lg-6 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-star-half-alt section-icon"></i>
-                        <h5>Rating Distribution</h5>
+        <!-- ─── Top Lists Section ────────────────────────────────── -->
+        <section id="lists-section">
+            <div class="row mb-4">
+                <div class="col-lg-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-fire section-icon"></i>
+                            <h5>Top 10 Popular Books</h5>
+                        </div>
+                        <div class="card-body" style="max-height:420px;overflow-y:auto;">
+                            <div id="popular-books"><div class="loading-spinner"><div class="spinner-border text-success"></div></div></div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="ratingChart"></canvas>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-trophy section-icon"></i>
+                            <h5>Top Reviewers</h5>
+                        </div>
+                        <div class="card-body" style="max-height:420px;overflow-y:auto;">
+                            <div id="top-reviewers"><div class="loading-spinner"><div class="spinner-border text-success"></div></div></div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-6 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-chart-line section-icon"></i>
-                        <h5>Review Trends</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="reviewTrendChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </section>
 
-        <!-- Popular Books & Top Reviewers -->
-        <div class="row mb-4">
-            <div class="col-lg-6 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-fire section-icon"></i>
-                        <h5>Top 10 Popular Books</h5>
+        <!-- ─── Activity Section ─────────────────────────────────── -->
+        <section id="activity-section">
+            <div class="row mb-4">
+                <div class="col-lg-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-history section-icon"></i>
+                            <h5>Recent Activity</h5>
+                        </div>
+                        <div class="card-body" style="max-height:420px;overflow-y:auto;">
+                            <div id="recent-activity"><div class="loading-spinner"><div class="spinner-border text-success"></div></div></div>
+                        </div>
                     </div>
-                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                        <div id="popular-books">
-                            <div class="loading-spinner">
-                                <div class="spinner-border text-success" role="status"></div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-flag section-icon" style="color:#dc3545;"></i>
+                            <h5>Flagged Activities</h5>
+                        </div>
+                        <div class="card-body" style="max-height:420px;overflow-y:auto;">
+                            <div id="flagged-activities"><div class="loading-spinner"><div class="spinner-border text-success"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-lg-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-exclamation-triangle section-icon" style="color:#f59e0b;"></i>
+                            <h5>Books Without Reviews</h5>
+                        </div>
+                        <div class="card-body" style="max-height:420px;overflow-y:auto;">
+                            <div id="books-without-reviews"><div class="loading-spinner"><div class="spinner-border text-success"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header section-header">
+                            <i class="fas fa-cogs section-icon"></i>
+                            <h5>Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-success btn-sm" onclick="switchManagementTab('events');scrollToSection('management-section')"><i class="fas fa-calendar-plus"></i> Create Event</button>
+                                <button class="btn btn-warning btn-sm" onclick="switchManagementTab('fines');scrollToSection('management-section')"><i class="fas fa-dollar-sign"></i> Manage Fines</button>
+                                <button class="btn btn-info btn-sm" onclick="switchManagementTab('reservations');scrollToSection('management-section')"><i class="fas fa-bookmark"></i> Reservations</button>
+                                <button class="btn btn-primary btn-sm" onclick="switchManagementTab('borrowing');scrollToSection('management-section')"><i class="fas fa-book-reader"></i> Borrowing</button>
+                                <button class="btn btn-secondary btn-sm" onclick="switchManagementTab('users');scrollToSection('management-section')"><i class="fas fa-users"></i> Manage Users</button>
+                                <button class="btn btn-danger btn-sm" onclick="exportUsers()"><i class="fas fa-download"></i> Export Users CSV</button>
+                                <button class="btn btn-dark btn-sm" onclick="exportBooks()"><i class="fas fa-download"></i> Export Books CSV</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-6 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-trophy section-icon"></i>
-                        <h5>Top Reviewers</h5>
+        </section>
+
+        <!-- ─── Management Console ───────────────────────────────── -->
+        <section id="management-section">
+            <div class="card dashboard-card">
+                <div class="card-header section-header">
+                    <i class="fas fa-cogs section-icon"></i>
+                    <h5>Management Console</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Console Summary Stats -->
+                    <div class="console-summary">
+                        <span class="console-stat"><i class="fas fa-calendar text-success"></i> Events: <span class="num" id="summary-events">-</span></span>
+                        <span class="console-stat"><i class="fas fa-clock text-warning"></i> Pending Reservations: <span class="num" id="summary-reservations">-</span></span>
+                        <span class="console-stat"><i class="fas fa-book text-primary"></i> Active Borrows: <span class="num" id="summary-borrows">-</span></span>
+                        <span class="console-stat"><i class="fas fa-exclamation-circle text-danger"></i> Overdue: <span class="num" id="summary-overdue">-</span></span>
+                        <span class="console-stat"><i class="fas fa-money-bill text-warning"></i> Unpaid Fines: <span class="num" id="summary-fines">-</span></span>
                     </div>
-                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                        <div id="top-reviewers">
-                            <div class="loading-spinner">
-                                <div class="spinner-border text-success" role="status"></div>
-                            </div>
+
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="managementTabs" style="border-bottom-color:rgba(255,255,255,0.08);">
+                        <li class="nav-item"><a class="nav-link active" href="#" onclick="switchManagementTab('events')" style="color:#999;border:none;padding:8px 14px;">Events</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('reservations')" style="color:#999;border:none;padding:8px 14px;">Reservations</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('borrowing')" style="color:#999;border:none;padding:8px 14px;">Borrowing</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('fines')" style="color:#999;border:none;padding:8px 14px;">Fines</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('users')" style="color:#999;border:none;padding:8px 14px;">Users</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('activity')" style="color:#999;border:none;padding:8px 14px;">Activity Logs</a></li>
+                    </ul>
+
+                    <!-- Events Management -->
+                    <div id="events-management" class="management-section">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 style="color:#e0e0e0;margin:0;">Event Management</h6>
+                            <button class="btn btn-success btn-sm" onclick="showCreateEventModal()"><i class="fas fa-plus"></i> Create Event</button>
                         </div>
+                        <div id="events-list"></div>
+                    </div>
+
+                    <div id="reservations-management" class="management-section" style="display:none;">
+                        <h6 style="color:#e0e0e0;margin-bottom:12px;">Reservation Management</h6>
+                        <div id="admin-reservations-list"></div>
+                    </div>
+
+                    <div id="borrowing-management" class="management-section" style="display:none;">
+                        <h6 style="color:#e0e0e0;margin-bottom:12px;">Borrowing Management</h6>
+                        <div class="mb-3"><button class="btn btn-warning btn-sm" onclick="loadOverdueBooks()"><i class="fas fa-exclamation-circle"></i> View Overdue Books</button></div>
+                        <div id="admin-borrowing-list"></div>
+                    </div>
+
+                    <div id="fines-management" class="management-section" style="display:none;">
+                        <h6 style="color:#e0e0e0;margin-bottom:12px;">Fine Management</h6>
+                        <div id="admin-fines-list"></div>
+                    </div>
+
+                    <div id="users-management" class="management-section" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 style="color:#e0e0e0;margin:0;">User Management</h6>
+                            <button class="btn btn-primary btn-sm" onclick="exportUsers()"><i class="fas fa-download"></i> Export Users</button>
+                        </div>
+                        <div id="admin-users-list"></div>
+                    </div>
+
+                    <div id="activity-management" class="management-section" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 style="color:#e0e0e0;margin:0;">Activity Logs</h6>
+                            <button class="btn btn-primary btn-sm" onclick="exportActivityLogs()"><i class="fas fa-download"></i> Export Logs</button>
+                        </div>
+                        <div id="admin-activity-list"></div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Recent Activity & Books Needing Attention -->
-        <div class="row mb-4">
-            <div class="col-lg-6 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-history section-icon"></i>
-                        <h5>Recent Activity</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                        <div id="recent-activity">
-                            <div class="loading-spinner">
-                                <div class="spinner-border text-success" role="status"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-6 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-exclamation-triangle section-icon" style="color:#f59e0b;"></i>
-                        <h5>Books Without Reviews</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                        <div id="books-without-reviews">
-                            <div class="loading-spinner">
-                                <div class="spinner-border text-success" role="status"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Flagged Activities & Management Console -->
-        <div class="row mb-4">
-            <div class="col-lg-6 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-flag section-icon" style="color:#dc3545;"></i>
-                        <h5>Flagged Activities</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                        <div id="flagged-activities">
-                            <div class="loading-spinner">
-                                <div class="spinner-border text-success" role="status"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-cogs section-icon"></i>
-                        <h5>Quick Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="#management-section" class="btn btn-primary btn-sm" onclick="switchManagementTab('events')">
-                                <i class="fas fa-calendar"></i> Manage Events
-                            </a>
-                            <a href="#management-section" class="btn btn-warning btn-sm" onclick="switchManagementTab('fines')">
-                                <i class="fas fa-dollar-sign"></i> Manage Fines
-                            </a>
-                            <a href="#management-section" class="btn btn-info btn-sm" onclick="switchManagementTab('reservations')">
-                                <i class="fas fa-bookmark"></i> Reservations
-                            </a>
-                            <a href="#management-section" class="btn btn-success btn-sm" onclick="switchManagementTab('borrowing')">
-                                <i class="fas fa-book-reader"></i> Borrowing
-                            </a>
-                            <button class="btn btn-danger btn-sm" onclick="exportUsers()">
-                                <i class="fas fa-download"></i> Export Users CSV
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="exportBooks()">
-                                <i class="fas fa-download"></i> Export Books CSV
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Management Console -->
-        <div class="row mb-4" id="management-section">
-            <div class="col-12">
-                <div class="card dashboard-card">
-                    <div class="card-header section-header">
-                        <i class="fas fa-cogs section-icon"></i>
-                        <h5>Management Console</h5>
-                    </div>
-                    <div class="card-body">
-                        <ul class="nav nav-tabs mb-3" id="managementTabs">
-                            <li class="nav-item">
-                                <a class="nav-link active" href="#" onclick="switchManagementTab('events')">Events</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" onclick="switchManagementTab('reservations')">Reservations</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" onclick="switchManagementTab('borrowing')">Borrowing</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" onclick="switchManagementTab('fines')">Fines</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" onclick="switchManagementTab('users')">Users</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" onclick="switchManagementTab('activity')">Activity Logs</a>
-                            </li>
-                        </ul>
-
-                        <!-- Events Management -->
-                        <div id="events-management" class="management-section">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6>Event Management</h6>
-                                <button class="btn btn-success btn-sm" onclick="showCreateEventModal()">
-                                    <i class="fas fa-plus"></i> Create Event
-                                </button>
-                            </div>
-                            <div id="events-list"></div>
-                        </div>
-
-                        <!-- Reservations Management -->
-                        <div id="reservations-management" class="management-section" style="display:none;">
-                            <h6 class="mb-3">Reservation Management</h6>
-                            <div id="admin-reservations-list"></div>
-                        </div>
-
-                        <!-- Borrowing Management -->
-                        <div id="borrowing-management" class="management-section" style="display:none;">
-                            <h6 class="mb-3">Borrowing Management</h6>
-                            <div class="mb-3">
-                                <button class="btn btn-warning btn-sm mr-2" onclick="loadOverdueBooks()">
-                                    <i class="fas fa-exclamation-circle"></i> View Overdue Books
-                                </button>
-                            </div>
-                            <div id="admin-borrowing-list"></div>
-                        </div>
-
-                        <!-- Fines Management -->
-                        <div id="fines-management" class="management-section" style="display:none;">
-                            <h6 class="mb-3">Fine Management</h6>
-                            <div id="admin-fines-list"></div>
-                        </div>
-
-                        <!-- Users Management -->
-                        <div id="users-management" class="management-section" style="display:none;">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6>User Management</h6>
-                                <div>
-                                    <button class="btn btn-primary btn-sm mr-2" onclick="exportUsers()">
-                                        <i class="fas fa-download"></i> Export Users
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="admin-users-list"></div>
-                        </div>
-
-                        <!-- Activity Logs -->
-                        <div id="activity-management" class="management-section" style="display:none;">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6>Activity Logs</h6>
-                                <button class="btn btn-primary btn-sm" onclick="exportActivityLogs()">
-                                    <i class="fas fa-download"></i> Export Logs
-                                </button>
-                            </div>
-                            <div id="admin-activity-list"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <!-- Create Event Modal -->
     <div class="modal fade" id="createEventModal" tabindex="-1" role="dialog">
@@ -781,7 +636,7 @@
                         <input type="text" class="form-control" id="event-location" style="background:#2a2a2a;color:#fff;border:1px solid #444;">
                     </div>
                     <div class="form-group">
-                        <label>Max Attendees (optional)</label>
+                        <label>Max Attendees</label>
                         <input type="number" class="form-control" id="event-max-attendees" style="background:#2a2a2a;color:#fff;border:1px solid #444;">
                     </div>
                 </div>
@@ -797,5 +652,81 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="admin-dashboard.js"></script>
+    <script>
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+
+        // Scroll to section and update sidebar active state
+        function scrollToSection(id, el) {
+            if (el) {
+                document.querySelectorAll('.sidebar-nav a').forEach(function(a) { a.classList.remove('active'); });
+                el.classList.add('active');
+            }
+            var target = document.getElementById(id);
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Close sidebar on mobile
+            document.getElementById('adminSidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+        }
+
+        // Override tab switching to update sidebar highlight
+        var origSwitch = switchManagementTab;
+        switchManagementTab = function(tab) {
+            if (origSwitch) origSwitch(tab);
+            // Update sidebar active
+            document.querySelectorAll('.sidebar-nav a').forEach(function(a) { a.classList.remove('active'); });
+            var link = document.querySelector('.sidebar-nav a[onclick*="' + tab + '"]');
+            if (link) link.classList.add('active');
+        };
+
+        // Load console summary stats
+        async function loadConsoleSummary() {
+            try {
+                var res = await fetch(API_BASE_URL + '/analytics/stats', { credentials: 'include' });
+                if (!res.ok) return;
+                var stats = await res.json();
+
+                // Try to get counts from management endpoints
+                var evRes = await fetch(API_BASE_URL + '/admin/events', { credentials: 'include' });
+                if (evRes.ok) {
+                    var events = await evRes.json();
+                    document.getElementById('summary-events').textContent = events.length;
+                }
+
+                var boRes = await fetch(API_BASE_URL + '/admin/borrowing', { credentials: 'include' });
+                if (boRes.ok) {
+                    var borrows = await boRes.json();
+                    var active = borrows.filter(function(b) { return b.status === 'borrowed'; });
+                    var overdue = borrows.filter(function(b) { return new Date(b.dueDate) < new Date() && b.status === 'borrowed'; });
+                    document.getElementById('summary-borrows').textContent = active.length;
+                    document.getElementById('summary-overdue').textContent = overdue.length;
+                }
+
+                var reRes = await fetch(API_BASE_URL + '/admin/reservations', { credentials: 'include' });
+                if (reRes.ok) {
+                    var resvs = await reRes.json();
+                    var pending = resvs.filter(function(r) { return r.status === 'waiting'; });
+                    document.getElementById('summary-reservations').textContent = pending.length;
+                }
+
+                var fiRes = await fetch(API_BASE_URL + '/admin/fines', { credentials: 'include' });
+                if (fiRes.ok) {
+                    var fines = await fiRes.json();
+                    var unpaid = fines.filter(function(f) { return f.status === 'unpaid'; });
+                    document.getElementById('summary-fines').textContent = unpaid.length;
+                }
+            } catch(e) { /* silent */ }
+        }
+
+        // Extend initDashboard to also load summary
+        var origInit = initDashboard;
+        initDashboard = async function() {
+            if (origInit) await origInit();
+            loadConsoleSummary();
+        };
+    </script>
 </body>
 </html>
