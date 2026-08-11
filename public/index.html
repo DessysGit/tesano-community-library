@@ -20,12 +20,22 @@
     <!-- Hamburger button for navigation -->
     <button id="hamburger-button" class="hamburger" aria-label="Open navigation menu" onclick="toggleMenu()" style="display: none;">&#9776;</button>
 
+    <!-- Guest Login/Register Buttons (visible only for guests) -->
+    <div id="guest-auth-buttons" class="guest-auth-buttons" style="display: none;">
+        <button class="btn btn-outline-light btn-sm" onclick="showLoginForm()">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="showRegisterForm()">
+            <i class="fas fa-user-plus"></i> Register
+        </button>
+    </div>
+
     <!-- Sidebar menu -->
 <div id="sidebar" class="sidebar">
     <a href="javascript:void(0)" class="closebtn" onclick="toggleMenu()">&times;</a>
     <div class="sidebar-header">
-        <img id="burger-profile-picture" src="" alt="Profile Picture" loading="lazy" style="width: 80px; height: 80px; border-radius: 50%;">
-        <p id="burger-username">Username</p>
+        <img id="burger-profile-picture" src="" alt="Profile Picture" loading="lazy" style="width: 80px; height: 80px; border-radius: 50%; display: none;">
+        <p id="burger-username">Guest</p>
     </div>
     
     <!-- Admin Edit Controls in Sidebar -->
@@ -45,26 +55,20 @@
         </a>
     </div>
     
-    <a href="javascript:void(0)" onclick="showSection('profile-section')">User Profile</a>
-    <a href="javascript:void(0)" onclick="showSection('membership-section')">
-        <i class="fas fa-id-card"></i> My Membership
-    </a>
-    <a href="javascript:void(0)" onclick="showSection('borrowing-section')">
+    <!-- Logged-in user items (hidden for guests) -->
+    <a href="javascript:void(0)" onclick="showSection('borrowing-section')" id="user-borrowing-link" style="display: none;">
         <i class="fas fa-book-reader"></i> My Borrowed Books
     </a>
-    <a href="javascript:void(0)" onclick="showSection('reservations-section')">
+    <a href="javascript:void(0)" onclick="showSection('reservations-section')" id="user-reservations-link" style="display: none;">
         <i class="fas fa-clock"></i> My Reservations
     </a>
-    <a href="javascript:void(0)" onclick="showSection('fines-section')">
+    <a href="javascript:void(0)" onclick="showSection('fines-section')" id="user-fines-link" style="display: none;">
         <i class="fas fa-money-bill-wave"></i> My Fines
     </a>
-    <a href="javascript:void(0)" onclick="showSection('challenges-section')">
+    <a href="javascript:void(0)" onclick="showSection('challenges-section')" id="user-challenges-link" style="display: none;">
         <i class="fas fa-trophy"></i> Reading Challenges
     </a>
-    <a href="javascript:void(0)" onclick="showSection('events-section')">
-        <i class="fas fa-calendar-alt"></i> Events
-    </a>
-    <a href="javascript:void(0)" onclick="logout()">Logout</a>
+    <a href="javascript:void(0)" onclick="logout()" id="logout-link" style="display: none;">Logout</a>
 </div>
 
     <!-- Main Content -->
@@ -457,86 +461,6 @@
     </div>
 </div>
 
-        <!-- Membership Section -->
-        <div id="membership-section" style="display: none;">
-            <div class="container mt-4">
-                <div class="card shadow-lg bg-dark text-white border-0">
-                    <div class="card-body p-4">
-                        <h2 class="card-title text-success mb-4 text-center">
-                            <i class="fas fa-id-card"></i> My Library Membership
-                        </h2>
-
-                        <!-- Membership Status -->
-                        <div id="membership-status" class="mb-4">
-                            <div class="text-center">
-                                <div class="spinner-border text-success" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                                <p class="mt-3">Checking membership status...</p>
-                            </div>
-                        </div>
-
-                        <!-- Membership Details (shown when active) -->
-                        <div id="membership-details" style="display: none;">
-                            <div class="membership-card bg-success text-white p-4 rounded mb-4">
-                                <h3 class="mb-3">
-                                    <i class="fas fa-check-circle"></i> Active Member
-                                </h3>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>Card Number:</strong> <span id="membership-card-number"></span></p>
-                                        <p><strong>Type:</strong> <span id="membership-type"></span></p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Valid Until:</strong> <span id="membership-end-date"></span></p>
-                                        <p><strong>Status:</strong> <span id="membership-status-text"></span></p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="text-center">
-                                <button onclick="renewMembership()" class="btn btn-success btn-lg">
-                                    <i class="fas fa-sync-alt"></i> Renew Membership
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Apply for Membership (shown when not a member) -->
-                        <div id="membership-apply" style="display: none;">
-                            <div class="alert alert-info" role="alert">
-                                <h4 class="alert-heading">
-                                    <i class="fas fa-info-circle"></i> Become a Member
-                                </h4>
-                                <p>Join the Tesano Community Library to enjoy exclusive benefits:</p>
-                                <ul class="mb-0">
-                                    <li>Borrow up to 5 physical books at a time</li>
-                                    <li>Access to community events and reading clubs</li>
-                                    <li>Priority access to new arrivals</li>
-                                    <li>Support your local library community</li>
-                                </ul>
-                            </div>
-
-                            <div class="form-group mt-4">
-                                <label for="membership-type-select">Membership Type</label>
-                                <select id="membership-type-select" class="form-control">
-                                    <option value="standard">Standard - Free</option>
-                                    <option value="premium">Premium - GHS 50/year</option>
-                                </select>
-                            </div>
-
-                            <div class="text-center mt-4">
-                                <button onclick="applyForMembership()" class="btn btn-success btn-lg">
-                                    <i class="fas fa-user-plus"></i> Apply for Membership
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="membership-messages" class="mt-3"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Borrowing Section -->
         <div id="borrowing-section" style="display: none;">
             <div class="container mt-4">
@@ -621,22 +545,6 @@
         </div>
     </div>
 
-    <!-- FINES SECTION -->
-    <div id="fines-section" style="display: none;">
-        <div class="container mt-4">
-            <div class="card shadow-lg bg-dark text-white border-0">
-                <div class="card-body p-4">
-                    <h2 class="card-title text-success mb-4 text-center">
-                        <i class="fas fa-money-bill-wave"></i> Fines & Payments
-                    </h2>
-                    <p class="text-muted text-center mb-4">Manage overdue fines for late book returns.</p>
-                    <div id="fines-summary" class="mt-3"></div>
-                    <div id="fines-list" class="mt-3"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- CHALLENGES SECTION -->
     <div id="challenges-section" style="display: none;">
         <div class="container mt-4">
@@ -655,21 +563,6 @@
                     <div id="my-challenges" class="mt-3" style="display:none;"></div>
                     <div id="badges-list" class="mt-3" style="display:none;"></div>
                     <div id="leaderboard-list" class="mt-3" style="display:none;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- EVENTS SECTION -->
-    <div id="events-section" style="display: none;">
-        <div class="container mt-4">
-            <div class="card shadow-lg bg-dark text-white border-0">
-                <div class="card-body p-4">
-                    <h2 class="card-title text-success mb-4 text-center">
-                        <i class="fas fa-calendar-alt"></i> Community Events
-                    </h2>
-                    <p class="text-muted text-center mb-4">Join us for exciting community events and reading clubs.</p>
-                    <div id="events-list" class="mt-3"></div>
                 </div>
             </div>
         </div>
@@ -793,6 +686,53 @@
       <div class="modal-buttons">
         <button id="confirm-modal-ok" class="btn btn-danger">Delete</button>
         <button id="confirm-modal-cancel" class="btn btn-outline-light">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guest Access Modal -->
+  <div id="guest-access-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-user-circle"></i> Login Required</h3>
+        <button class="modal-close" onclick="closeGuestModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="guest-modal-message" class="alert alert-info">
+          Please login or create an account to access this feature.
+        </div>
+        
+        <!-- Login Form -->
+        <div id="guest-login-form">
+          <div class="form-group">
+            <label for="guest-email-username">
+              <i class="fas fa-envelope"></i> Email or Username
+            </label>
+            <input type="text" id="guest-email-username" class="form-control" 
+                   placeholder="Enter your email or username">
+          </div>
+          
+          <div class="form-group">
+            <label for="guest-password">
+              <i class="fas fa-lock"></i> Password
+            </label>
+            <input type="password" id="guest-password" class="form-control" 
+                   placeholder="Enter your password">
+          </div>
+          
+          <div id="guest-login-messages"></div>
+          
+          <button id="guest-login-btn" class="btn btn-primary btn-block" onclick="handleGuestLogin()">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+        </div>
+        
+        <!-- Register Prompt -->
+        <div class="register-prompt">
+          <p>Don't have an account? 
+            <a href="auth.html" onclick="closeGuestModal()">Create one here</a>
+          </p>
+        </div>
       </div>
     </div>
   </div>

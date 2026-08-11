@@ -1,0 +1,46 @@
+<!-- Guest Access Modal - Shown when unauthenticated users try to access protected features -->
+<div id="guest-access-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-circle"></i> Login Required</h3>
+            <button class="modal-close" onclick="closeGuestModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="guest-modal-message" class="alert alert-info">
+                Please login or create an account to access this feature.
+            </div>
+            
+            <!-- Login Form -->
+            <div id="guest-login-form">
+                <div class="form-group">
+                    <label for="guest-email-username">
+                        <i class="fas fa-envelope"></i> Email or Username
+                    </label>
+                    <input type="text" id="guest-email-username" class="form-control" 
+                           placeholder="Enter your email or username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="guest-password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="guest-password" class="form-control" 
+                           placeholder="Enter your password">
+                </div>
+                
+                <div id="guest-login-messages"></div>
+                
+                <button id="guest-login-btn" class="btn btn-primary btn-block" onclick="handleGuestLogin()">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </div>
+            
+            <!-- Register Prompt -->
+            <div class="register-prompt">
+                <p>Don't have an account? 
+                    <a href="auth.html" onclick="closeGuestModal()">Create one here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
