@@ -16,13 +16,12 @@
 
 /* Guest Auth Buttons */
 .guest-auth-buttons {
-    position: absolute;
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%);
+    position: fixed;
+    top: 15px;
+    right: 15px;
     display: flex;
     gap: 10px;
-    z-index: 100;
+    z-index: 1002;
 }
 
 .guest-auth-buttons .btn {
@@ -70,13 +69,13 @@
     
     /* Adjust guest buttons for mobile */
     .guest-auth-buttons {
-        position: relative;
-        top: auto;
-        right: auto;
+        position: fixed;
+        top: 15px;
+        right: 15px;
         transform: none;
-        justify-content: center;
-        margin-top: 15px;
-        gap: 8px;
+        display: flex;
+        gap: 6px;
+        z-index: 1002;
     }
     
     .guest-auth-buttons .btn {

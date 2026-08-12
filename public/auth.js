@@ -59,6 +59,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('❌ Auth check error:', error);
         console.log('Staying on auth page');
     }
+
+    // Check if we should show register form initially
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'register') {
+        showRegisterForm();
+    }
 });
 
 // Function to display messages
