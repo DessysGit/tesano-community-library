@@ -373,7 +373,6 @@
             <a href="#" onclick="scrollToSection('management-section', this)"><i class="fas fa-cogs"></i> Console</a>
 
             <div class="nav-section">Actions</div>
-            <a href="#management-section" onclick="event.preventDefault(); switchManagementTab('events'); setTimeout(function(){ scrollToSection('management-section', null); }, 100);"><i class="fas fa-calendar-plus"></i> Create Event</a>
             <a href="#management-section" onclick="event.preventDefault(); switchManagementTab('fines'); setTimeout(function(){ scrollToSection('management-section', null); }, 100);"><i class="fas fa-dollar-sign"></i> Manage Fines</a>
             <a href="#management-section" onclick="event.preventDefault(); switchManagementTab('reservations'); setTimeout(function(){ scrollToSection('management-section', null); }, 100);"><i class="fas fa-bookmark"></i> Reservations</a>
             <a href="#management-section" onclick="event.preventDefault(); switchManagementTab('borrowing'); setTimeout(function(){ scrollToSection('management-section', null); }, 100);"><i class="fas fa-book-reader"></i> Borrowing</a>
@@ -559,7 +558,6 @@
                         </div>
                         <div class="card-body">
                             <div class="d-flex flex-wrap gap-2">
-                                <button class="btn btn-success btn-sm" onclick="switchManagementTab('events');scrollToSection('management-section')"><i class="fas fa-calendar-plus"></i> Create Event</button>
                                 <button class="btn btn-warning btn-sm" onclick="switchManagementTab('fines');scrollToSection('management-section')"><i class="fas fa-dollar-sign"></i> Manage Fines</button>
                                 <button class="btn btn-info btn-sm" onclick="switchManagementTab('reservations');scrollToSection('management-section')"><i class="fas fa-bookmark"></i> Reservations</button>
                                 <button class="btn btn-primary btn-sm" onclick="switchManagementTab('borrowing');scrollToSection('management-section')"><i class="fas fa-book-reader"></i> Borrowing</button>
@@ -583,7 +581,6 @@
                 <div class="card-body">
                     <!-- Console Summary Stats -->
                     <div class="console-summary">
-                        <span class="console-stat"><i class="fas fa-calendar text-success"></i> Events: <span class="num" id="summary-events">-</span></span>
                         <span class="console-stat"><i class="fas fa-clock text-warning"></i> Pending Reservations: <span class="num" id="summary-reservations">-</span></span>
                         <span class="console-stat"><i class="fas fa-book text-primary"></i> Active Borrows: <span class="num" id="summary-borrows">-</span></span>
                         <span class="console-stat"><i class="fas fa-exclamation-circle text-danger"></i> Overdue: <span class="num" id="summary-overdue">-</span></span>
@@ -592,24 +589,14 @@
 
                     <!-- Tabs -->
                     <ul class="nav nav-tabs mb-3" id="managementTabs" style="border-bottom-color:rgba(255,255,255,0.08);">
-                        <li class="nav-item"><a class="nav-link active" href="#" onclick="switchManagementTab('events')" style="color:#999;border:none;padding:8px 14px;">Events</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('reservations')" style="color:#999;border:none;padding:8px 14px;">Reservations</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="#" onclick="switchManagementTab('reservations')" style="color:#999;border:none;padding:8px 14px;">Reservations</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('borrowing')" style="color:#999;border:none;padding:8px 14px;">Borrowing</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('fines')" style="color:#999;border:none;padding:8px 14px;">Fines</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('users')" style="color:#999;border:none;padding:8px 14px;">Users</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="switchManagementTab('activity')" style="color:#999;border:none;padding:8px 14px;">Activity Logs</a></li>
                     </ul>
 
-                    <!-- Events Management -->
-                    <div id="events-management" class="management-section">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 style="color:#e0e0e0;margin:0;">Event Management</h6>
-                            <button class="btn btn-success btn-sm" onclick="showCreateEventModal()"><i class="fas fa-plus"></i> Create Event</button>
-                        </div>
-                        <div id="events-list"></div>
-                    </div>
-
-                    <div id="reservations-management" class="management-section" style="display:none;">
+                    <div id="reservations-management" class="management-section">
                         <h6 style="color:#e0e0e0;margin-bottom:12px;">Reservation Management</h6>
                         <div id="admin-reservations-list"></div>
                     </div>
@@ -644,44 +631,6 @@
             </div>
         </section>
     </main>
-
-    <!-- Create Event Modal -->
-    <div class="modal fade" id="createEventModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="dialog">
-            <div class="modal-content" style="background:#1e1e1e;color:#fff;">
-                <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.1);">
-                    <h5 class="modal-title">Create New Event</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Event Title</label>
-                        <input type="text" class="form-control" id="event-title" style="background:#2a2a2a;color:#fff;border:1px solid #444;">
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea class="form-control" id="event-description" rows="3" style="background:#2a2a2a;color:#fff;border:1px solid #444;"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Event Date & Time</label>
-                        <input type="datetime-local" class="form-control" id="event-date" style="background:#2a2a2a;color:#fff;border:1px solid #444;">
-                    </div>
-                    <div class="form-group">
-                        <label>Location</label>
-                        <input type="text" class="form-control" id="event-location" style="background:#2a2a2a;color:#fff;border:1px solid #444;">
-                    </div>
-                    <div class="form-group">
-                        <label>Max Attendees</label>
-                        <input type="number" class="form-control" id="event-max-attendees" style="background:#2a2a2a;color:#fff;border:1px solid #444;">
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.1);">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" onclick="createEvent()">Create Event</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
@@ -725,12 +674,6 @@
                 var stats = await res.json();
 
                 // Try to get counts from management endpoints
-                var evRes = await fetch(API_BASE_URL + '/admin/events', { credentials: 'include' });
-                if (evRes.ok) {
-                    var events = await evRes.json();
-                    document.getElementById('summary-events').textContent = events.length;
-                }
-
                 var boRes = await fetch(API_BASE_URL + '/admin/borrowing', { credentials: 'include' });
                 if (boRes.ok) {
                     var borrows = await boRes.json();

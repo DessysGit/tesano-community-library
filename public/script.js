@@ -630,7 +630,7 @@ async function showSection(sectionId) {
         return;
     }
 
-    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, #membership-section, #borrowing-section, #reservations-section, #fines-section, #challenges-section, .newsletter-section');
+    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, #borrowing-section, #reservations-section, #fines-section, #challenges-section, .newsletter-section');
     sections.forEach(section => {
         if (section) section.style.display = section.id === sectionId ? 'block' : 'none';
     });
@@ -1996,124 +1996,13 @@ function switchChallengeTab(tab) {
     loadChallenges();
 }
 
-// ─── Membership Functions ─────────────────────────────────────────────────
-async function checkMembershipStatus() {
-    const statusDiv = document.getElementById('membership-status');
-    const detailsDiv = document.getElementById('membership-details');
-    const applyDiv = document.getElementById('membership-apply');
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/membership/status`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-        });
-
-        if (!response.ok) {
-            statusDiv.style.display = 'none';
-            applyDiv.style.display = 'block';
-            return;
-        }
-
-        const data = await response.json();
-
-        statusDiv.style.display = 'none';
-
-        if (data.isMember) {
-            document.getElementById('membership-card-number').textContent = data.cardNumber || 'N/A';
-            document.getElementById('membership-type').textContent = data.membershipType || 'Standard';
-            document.getElementById('membership-end-date').textContent = new Date(data.endDate).toLocaleDateString();
-            document.getElementById('membership-status-text').textContent = data.status || 'Active';
-            detailsDiv.style.display = 'block';
-            applyDiv.style.display = 'none';
-        } else {
-            applyDiv.style.display = 'block';
-            detailsDiv.style.display = 'none';
-        }
-    } catch (error) {
-        console.error('Error checking membership:', error);
-        statusDiv.innerHTML = '<div class="alert alert-danger">Failed to load membership status. Please try again.</div>';
-    }
-}
-
-async function applyForMembership() {
-    const membershipType = document.getElementById('membership-type-select').value;
-    const messagesDiv = document.getElementById('membership-messages');
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/membership/apply`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ membershipType })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            showToast(data.message, 'success', 3000);
-            checkMembershipStatus();
-        } else {
-            messagesDiv.innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to apply for membership'}</div>`;
-        }
-    } catch (error) {
-        console.error('Error applying for membership:', error);
-        messagesDiv.innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
-    }
-}
-
-async function renewMembership() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/membership/renew`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            showToast(data.message, 'success', 3000);
-            checkMembershipStatus();
-        } else {
-            document.getElementById('membership-messages').innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to renew membership'}</div>`;
-        }
-    } catch (error) {
-        console.error('Error renewing membership:', error);
-        document.getElementById('membership-messages').innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
-    }
-}
-
 // ─── Borrowing Functions ──────────────────────────────────────────────────
 async function loadBorrowedBooks() {
     const statusDiv = document.getElementById('borrowing-status');
     const listDiv = document.getElementById('borrowed-books-list');
     const noBooksDiv = document.getElementById('no-borrowed-books');
-    const notMemberDiv = document.getElementById('not-a-member-message');
 
     try {
-        // First check if user is a member
-        const membershipResponse = await fetch(`${API_BASE_URL}/membership/status`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-        });
-
-        if (!membershipResponse.ok) {
-            statusDiv.style.display = 'none';
-            listDiv.style.display = 'none';
-            noBooksDiv.style.display = 'none';
-            notMemberDiv.style.display = 'block';
-            return;
-        }
-
-        const membershipData = await membershipResponse.json();
-
-        if (!membershipData.isMember) {
-            statusDiv.style.display = 'none';
-            listDiv.style.display = 'none';
-            noBooksDiv.style.display = 'none';
-            notMemberDiv.style.display = 'block';
-            return;
-        }
-
         // Load borrowed books
         const booksResponse = await fetch(`${API_BASE_URL}/borrow/my`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
@@ -2126,7 +2015,6 @@ async function loadBorrowedBooks() {
         const borrowedBooks = await booksResponse.json();
 
         statusDiv.style.display = 'none';
-        notMemberDiv.style.display = 'none';
 
         if (borrowedBooks.length === 0) {
             listDiv.style.display = 'none';
@@ -2222,48 +2110,4 @@ async function renewBook(borrowId) {
     }
 }
 
-// ─── Events Functions ─────────────────────────────────────────────────────
-async function loadEvents() {
-    const listDiv = document.getElementById('events-list');
-    if (!listDiv) return;
-    listDiv.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading events...</div>';
-    try {
-        const response = await fetch(`${API_BASE_URL}/events`, { headers: getAuthHeaders() });
-        if (!response.ok) throw new Error('Failed to fetch events');
-        const events = await response.json();
-        if (events.length === 0) {
-            listDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-calendar-alt" style="font-size:2rem;opacity:.3;"></i><p class="mt-2 text-muted">No upcoming events.</p></div>';
-            return;
-        }
-        listDiv.innerHTML = events.map(e => `
-            <div class="p-3 mb-2 rounded" style="border-left:4px solid #5bc0de;background:#1e1e1e;">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <strong>${e.title}</strong>
-                        <p class="mb-1">${e.description || ''}</p>
-                        <small class="text-muted">
-                            <i class="fas fa-map-marker-alt"></i> ${e.location || 'TBA'} | 
-                            <i class="fas fa-clock"></i> ${new Date(e.eventDate).toLocaleString()} | 
-                            <i class="fas fa-users"></i> ${e.attendeeCount || 0}/${e.maxAttendees || '∞'}
-                        </small>
-                    </div>
-                    <div>
-                        ${e.isRegistered ? '<span class="badge badge-success">Registered</span>' : `<button class="btn btn-primary btn-sm" onclick="registerForEvent(${e.id})">Register</button>`}
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        listDiv.innerHTML = '<div class="text-center text-danger">Failed to load events.</div>';
-    }
-}
 
-async function registerForEvent(eventId) {
-    if (!isUserLoggedIn()) { showToast('Please log in to register for events.', 'error'); return; }
-    try {
-        const response = await fetch(`${API_BASE_URL}/events/${eventId}/register`, { method: 'POST', headers: getAuthHeaders() });
-        const data = await response.json();
-        if (response.ok) { showToast(data.message, 'success'); loadEvents(); }
-        else { showToast(data.error || 'Failed to register.', 'error'); }
-    } catch (error) { showToast('Network error.', 'error'); }
-}

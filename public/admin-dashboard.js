@@ -450,76 +450,18 @@ function switchManagementTab(tab) {
     document.querySelectorAll('.management-section').forEach(function(s) { s.style.display = 'none'; });
     document.querySelectorAll('#managementTabs .nav-link').forEach(function(l) { l.classList.remove('active'); });
     
-    var tabMap = { events: 'events-management', reservations: 'reservations-management', borrowing: 'borrowing-management', fines: 'fines-management', users: 'users-management', activity: 'activity-management' };
+    var tabMap = { reservations: 'reservations-management', borrowing: 'borrowing-management', fines: 'fines-management', users: 'users-management', activity: 'activity-management' };
     var sectionId = tabMap[tab];
     if (sectionId) document.getElementById(sectionId).style.display = 'block';
     
     var activeLink = document.querySelector('#managementTabs .nav-link[onclick*="' + tab + '"]');
     if (activeLink) activeLink.classList.add('active');
     
-    if (tab === 'events') loadAdminEvents();
     if (tab === 'reservations') loadAdminReservations();
     if (tab === 'borrowing') loadAdminBorrowing();
     if (tab === 'fines') loadAdminFines();
     if (tab === 'users') loadAdminUsers();
     if (tab === 'activity') loadAdminActivityLogs();
-}
-
-// ─── Event Management ───────────────────────────────────────────────────────
-async function loadAdminEvents() {
-    var container = document.getElementById('events-list');
-    container.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-    try {
-        var response = await fetch(API_BASE_URL + '/admin/events', { credentials: 'include' });
-        if (!response.ok) throw new Error('Failed to fetch events');
-        var events = await response.json();
-        if (events.length === 0) { container.innerHTML = '<p class="text-center text-muted">No events found</p>'; return; }
-        
-        container.innerHTML = events.map(function(event) {
-            return '<div class="management-item">' +
-                '<div class="d-flex justify-content-between align-items-start">' +
-                '<div><strong>' + event.title + '</strong><p class="mb-1">' + (event.description || '') + '</p><small class="text-muted">Date: ' + new Date(event.eventDate).toLocaleString() + '</small><br><small class="text-muted">Location: ' + (event.location || 'TBA') + '</small><br><small class="text-muted">Created by: ' + event.created_by_name + '</small></div>' +
-                '<div class="action-buttons">' +
-                '<button class="btn btn-danger btn-action" onclick="deleteAdminEvent(' + event.id + ", '" + event.title.replace(/'/g, "\\'") + "')" + '">Delete</button>' +
-                '</div></div></div>';
-        }).join('');
-    } catch (error) {
-        container.innerHTML = '<p class="text-center text-danger">Failed to load events</p>';
-    }
-}
-
-function showCreateEventModal() { $('#createEventModal').modal('show'); }
-
-async function createEvent() {
-    var title = document.getElementById('event-title').value.trim();
-    var description = document.getElementById('event-description').value.trim();
-    var eventDate = document.getElementById('event-date').value;
-    var location = document.getElementById('event-location').value.trim();
-    var maxAttendees = document.getElementById('event-max-attendees').value;
-    
-    if (!title || !eventDate) { alert('Title and event date are required'); return; }
-    
-    try {
-        var response = await fetch(API_BASE_URL + '/admin/events', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ title: title, description: description, eventDate: eventDate, location: location, maxAttendees: maxAttendees || null })
-        });
-        var data = await response.json();
-        if (response.ok) { alert('Event created successfully!'); $('#createEventModal').modal('hide'); loadAdminEvents(); }
-        else { alert('Failed to create event: ' + data.error); }
-    } catch (error) { alert('Network error. Please try again.'); }
-}
-
-async function deleteAdminEvent(eventId, eventTitle) {
-    if (!confirm("Are you sure you want to delete \"" + eventTitle + "\"?")) return;
-    try {
-        var response = await fetch(API_BASE_URL + '/admin/events/' + eventId, { method: 'DELETE', credentials: 'include' });
-        var data = await response.json();
-        if (response.ok) { alert('Event deleted successfully'); loadAdminEvents(); }
-        else { alert('Failed to delete event: ' + data.error); }
-    } catch (error) { alert('Network error. Please try again.'); }
 }
 
 // ─── Reservation Management ─────────────────────────────────────────────────
