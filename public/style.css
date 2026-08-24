@@ -467,8 +467,12 @@ body {
     background-color: #343a40;
     padding: 20px 0;
     text-align: center;
-    border-top: 3px solid #FFD700;
     margin-top: 40px;
+}
+
+/* Gold top border only on the auth pages footer */
+#auth-footer {
+    border-top: 3px solid #FFD700;
 }
 
 .footer h5 {
@@ -1603,7 +1607,7 @@ body {
    HERO SEARCH SECTION (NEW MODERN DESIGN)
 ======================================== */
 .hero-search-section {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+    background: #1e1e1e;
     border-radius: 15px;
     padding: 2rem 1.5rem;
     margin-bottom: 2rem;
