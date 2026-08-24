@@ -65,9 +65,6 @@
     <a href="javascript:void(0)" onclick="showSection('reservations-section')" id="user-reservations-link" style="display: none;">
         <i class="fas fa-clock"></i> My Reservations
     </a>
-    <a href="javascript:void(0)" onclick="showSection('fines-section')" id="user-fines-link" style="display: none;">
-        <i class="fas fa-money-bill-wave"></i> My Fines
-    </a>
     <a href="javascript:void(0)" onclick="showSection('challenges-section')" id="user-challenges-link" style="display: none;">
         <i class="fas fa-trophy"></i> Reading Challenges
     </a>
@@ -483,6 +480,9 @@
                             </div>
                         </div>
 
+                        <!-- Unpaid Fines Summary (FR-03: Borrowed Books & Fines) -->
+                        <div id="borrowing-fines-summary" style="display: none;" class="mt-3"></div>
+
                         <!-- Borrowed Books List -->
                         <div id="borrowed-books-list" style="display: none;">
                             <div class="table-responsive">
@@ -493,6 +493,7 @@
                                             <th>Borrowed Date</th>
                                             <th>Due Date</th>
                                             <th>Status</th>
+                                            <th>Fine</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>

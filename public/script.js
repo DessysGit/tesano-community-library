@@ -178,7 +178,6 @@ function updateUIForAuthState(isAuthenticated) {
     const userProfileLink = document.getElementById('user-profile-link');
     const userBorrowingLink = document.getElementById('user-borrowing-link');
     const userReservationsLink = document.getElementById('user-reservations-link');
-    const userFinesLink = document.getElementById('user-fines-link');
     const userChallengesLink = document.getElementById('user-challenges-link');
     const logoutLink = document.getElementById('logout-link');
     
@@ -193,7 +192,6 @@ function updateUIForAuthState(isAuthenticated) {
         if (userProfileLink) userProfileLink.style.display = 'block';
         if (userBorrowingLink) userBorrowingLink.style.display = 'block';
         if (userReservationsLink) userReservationsLink.style.display = 'block';
-        if (userFinesLink) userFinesLink.style.display = 'block';
         if (userChallengesLink) userChallengesLink.style.display = 'block';
         if (logoutLink) logoutLink.style.display = 'block';
         
@@ -219,7 +217,6 @@ function updateUIForAuthState(isAuthenticated) {
         if (userProfileLink) userProfileLink.style.display = 'none';
         if (userBorrowingLink) userBorrowingLink.style.display = 'none';
         if (userReservationsLink) userReservationsLink.style.display = 'none';
-        if (userFinesLink) userFinesLink.style.display = 'none';
         if (userChallengesLink) userChallengesLink.style.display = 'none';
         if (logoutLink) logoutLink.style.display = 'none';
     }
@@ -620,20 +617,19 @@ function toggleMenu() {
 
 async function showSection(sectionId) {
     // Auth guard - redirect to login modal for protected sections
-    const protectedSections = ['profile-section', 'borrowing-section', 'reservations-section', 'fines-section', 'challenges-section'];
+    const protectedSections = ['profile-section', 'borrowing-section', 'reservations-section', 'challenges-section'];
     if (protectedSections.includes(sectionId) && !isUserLoggedIn()) {
         const messages = {
             'profile-section': 'Please log in to view your profile.',
             'borrowing-section': 'Please log in to view your borrowed books.',
             'reservations-section': 'Please log in to view your reservations.',
-            'fines-section': 'Please log in to view your fines.',
             'challenges-section': 'Please log in to view reading challenges.'
         };
         showGuestModal(messages[sectionId] || 'Please log in to access this feature.', () => showSection(sectionId));
         return;
     }
 
-    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, #borrowing-section, #reservations-section, #fines-section, #challenges-section, .newsletter-section');
+    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, #borrowing-section, #reservations-section, #challenges-section, .newsletter-section');
     sections.forEach(section => {
         if (section) section.style.display = section.id === sectionId ? 'block' : 'none';
     });
@@ -685,10 +681,6 @@ async function showSection(sectionId) {
 
     if (sectionId === 'reservations-section') {
         loadMyReservations();
-    }
-
-    if (sectionId === 'fines-section') {
-        loadMyFines();
     }
 
     if (sectionId === 'challenges-section') {
@@ -780,11 +772,15 @@ async function fetchBooks(query = '', page = 1) {
                             <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">👍 ${book.likes || 0}</button>
                             <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">👎 ${book.dislikes || 0}</button>
                         </div>
-                        ${book.hasPhysicalCopy ? `
+                        ${book.hasPhysicalCopy ? (book.isAvailable === false ? `
+                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out — join the reservation queue">
+                                <i class="fas fa-clock"></i> Reserve
+                            </button>
+                        ` : `
                             <button class="btn btn-success btn-sm borrow-btn" onclick="borrowBook(${book.id})" title="Borrow physical copy from library">
                                 <i class="fas fa-book-reader"></i> Borrow
                             </button>
-                        ` : ''}
+                        `) : ''}
                         ${book.hasDigitalCopy ? `
                             <button class="btn btn-info btn-sm download-btn" onclick="showBookDetails(${book.id})" title="Download digital copy">
                                 <i class="fas fa-download"></i> Download
@@ -1748,11 +1744,15 @@ function displayQuickSearchResults(books) {
                             <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">👍 ${book.likes || 0}</button>
                             <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">👎 ${book.dislikes || 0}</button>
                         </div>
-                        ${book.hasPhysicalCopy ? `
+                        ${book.hasPhysicalCopy ? (book.isAvailable === false ? `
+                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out — join the reservation queue">
+                                <i class="fas fa-clock"></i> Reserve
+                            </button>
+                        ` : `
                             <button class="btn btn-success btn-sm borrow-btn" onclick="borrowBook(${book.id})" title="Borrow physical copy from library">
                                 <i class="fas fa-book-reader"></i> Borrow
                             </button>
-                        ` : ''}
+                        `) : ''}
                         ${book.hasDigitalCopy ? `
                             <button class="btn btn-info btn-sm download-btn" onclick="showBookDetails(${book.id})" title="Download digital copy">
                                 <i class="fas fa-download"></i> Download
@@ -1864,42 +1864,12 @@ async function cancelReservation(id) {
 }
 
 // ─── Fine Management Functions ───────────────────────────────────────────
-async function loadMyFines() {
-    const listDiv = document.getElementById('fines-list');
-    const summaryDiv = document.getElementById('fines-summary');
-    if (!listDiv) return;
-    try {
-        const [finesRes, summaryRes] = await Promise.all([
-            fetch(`${API_BASE_URL}/fines/my`, { headers: getAuthHeaders() }),
-            fetch(`${API_BASE_URL}/fines/summary`, { headers: getAuthHeaders() })
-        ]);
-        const fines = await finesRes.json();
-        const summary = await summaryRes.json();
-        if (summaryDiv) {
-            summaryDiv.innerHTML = summary.count > 0
-                ? `<div class="alert alert-warning"><strong>Total Unpaid:</strong> GHS ${parseFloat(summary.total).toFixed(2)} (${summary.count} fine${summary.count > 1 ? 's' : ''}) <button class="btn btn-success btn-sm float-right" onclick="payAllFines()"><i class="fas fa-credit-card"></i> Pay All</button></div>`
-                : '<div class="alert alert-success">No unpaid fines. Great job!</div>';
-        }
-        if (fines.length === 0) { listDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-check-circle" style="font-size:2rem;color:#1DB954;"></i><p class="mt-2">No fines.</p></div>'; return; }
-        listDiv.innerHTML = fines.map(f => {
-            const sClass = f.status === 'paid' ? 'success' : f.status === 'waived' ? 'info' : 'danger';
-            const sText = f.status === 'paid' ? 'Paid' : f.status === 'waived' ? 'Waived' : 'Unpaid';
-            return `<div class="p-3 mb-2 rounded" style="border-left:4px solid ${f.status === 'unpaid' ? '#dc3545' : '#28a745'};background:#1e1e1e;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div><strong>GHS ${parseFloat(f.amount).toFixed(2)}</strong>${f.bookTitle ? `<br><small>Book: ${f.bookTitle}</small>` : ''}<br><small>${f.reason || ''}</small></div>
-                    <div class="text-right"><span class="badge badge-${sClass}">${sText}</span><br>${f.status === 'unpaid' ? `<button class="btn btn-success btn-sm mt-1" onclick="payFine(${f.id})"><i class="fas fa-credit-card"></i> Pay</button>` : ''}</div>
-                </div>
-                <small class="text-muted">Issued: ${new Date(f.issuedAt).toLocaleDateString()}</small>
-                ${f.paidAt ? `<br><small class="text-success">Paid: ${new Date(f.paidAt).toLocaleDateString()}</small>` : ''}</div>`;
-        }).join('');
-    } catch (error) { listDiv.innerHTML = '<div class="text-center text-danger">Failed to load fines.</div>'; }
-}
-
+// Fines are managed inline within "My Borrowed Books" (see loadBorrowedBooks)
 async function payFine(id) {
     try {
         const response = await fetch(`${API_BASE_URL}/fines/pay/${id}`, { method: 'POST', headers: getAuthHeaders() });
         const data = await response.json();
-        if (response.ok) { showToast(data.message, 'success'); loadMyFines(); }
+        if (response.ok) { showToast(data.message, 'success'); loadBorrowedBooks(); }
         else { showToast(data.error || 'Failed.', 'error'); }
     } catch (error) { showToast('Network error.', 'error'); }
 }
@@ -1909,7 +1879,7 @@ async function payAllFines() {
     try {
         const response = await fetch(`${API_BASE_URL}/fines/pay-all`, { method: 'POST', headers: getAuthHeaders() });
         const data = await response.json();
-        if (response.ok) { showToast(data.message, 'success'); loadMyFines(); }
+        if (response.ok) { showToast(data.message, 'success'); loadBorrowedBooks(); }
         else { showToast(data.error || 'Failed.', 'error'); }
     } catch (error) { showToast('Network error.', 'error'); }
 }
@@ -2004,20 +1974,41 @@ async function loadBorrowedBooks() {
     const statusDiv = document.getElementById('borrowing-status');
     const listDiv = document.getElementById('borrowed-books-list');
     const noBooksDiv = document.getElementById('no-borrowed-books');
+    const finesSummaryDiv = document.getElementById('borrowing-fines-summary');
 
     try {
-        // Load borrowed books
-        const booksResponse = await fetch(`${API_BASE_URL}/borrow/my`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-        });
+        // Load borrowed books and fines in parallel (FR-03: Borrowed Books & Fines)
+        const authHeaders = { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` };
+        const [booksResponse, finesResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/borrow/my`, { headers: authHeaders }),
+            fetch(`${API_BASE_URL}/fines/my`, { headers: authHeaders }).catch(() => null)
+        ]);
 
         if (!booksResponse.ok) {
             throw new Error('Failed to load borrowed books');
         }
 
         const borrowedBooks = await booksResponse.json();
+        const unpaidFines = (finesResponse && finesResponse.ok)
+            ? (await finesResponse.json()).filter(f => f.status === 'unpaid')
+            : [];
 
         statusDiv.style.display = 'none';
+
+        // Unpaid fines summary banner
+        if (finesSummaryDiv) {
+            if (unpaidFines.length > 0) {
+                const total = unpaidFines.reduce((sum, f) => sum + parseFloat(f.amount || 0), 0);
+                finesSummaryDiv.innerHTML = `
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-exclamation-triangle"></i> You have <strong>${unpaidFines.length}</strong> unpaid fine${unpaidFines.length > 1 ? 's' : ''} totaling <strong>GHS ${total.toFixed(2)}</strong></span>
+                        <button class="btn btn-success btn-sm" onclick="payAllFines()"><i class="fas fa-credit-card"></i> Pay All</button>
+                    </div>`;
+                finesSummaryDiv.style.display = 'block';
+            } else {
+                finesSummaryDiv.style.display = 'none';
+            }
+        }
 
         if (borrowedBooks.length === 0) {
             listDiv.style.display = 'none';
@@ -2036,6 +2027,21 @@ async function loadBorrowedBooks() {
                                borrow.status === 'borrowed' ? '<span class="badge badge-warning">Borrowed</span>' :
                                '<span class="badge badge-success">Returned</span>';
 
+            // Fine for this book: prefer the official unpaid fine record; otherwise
+            // show the live daily accrual (GHS 1.00/day) for overdue books
+            const matchingFine = unpaidFines.find(f => f.bookTitle === borrow.title);
+            let fineCell = '<span class="text-muted">—</span>';
+            if (matchingFine) {
+                fineCell = `
+                    <span class="text-danger"><strong>GHS ${parseFloat(matchingFine.amount).toFixed(2)}</strong></span><br>
+                    <button class="btn btn-sm btn-success mt-1" onclick="payFine(${matchingFine.id})" title="Pay fine">
+                        <i class="fas fa-credit-card"></i> Pay
+                    </button>`;
+            } else if (isOverdue) {
+                const daysOverdue = Math.ceil((new Date() - new Date(borrow.dueDate)) / (1000 * 60 * 60 * 24));
+                fineCell = `<span class="text-warning" title="Accrues at GHS 1.00 per day">GHS ${(daysOverdue * 1.0).toFixed(2)} <small>(accruing)</small></span>`;
+            }
+
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>
@@ -2045,6 +2051,7 @@ async function loadBorrowedBooks() {
                 <td>${borrowDate}</td>
                 <td>${dueDate}</td>
                 <td>${statusBadge}</td>
+                <td>${fineCell}</td>
                 <td>
                     ${borrow.status === 'borrowed' ? `
                         <button class="btn btn-sm btn-success" onclick="returnBook(${borrow.id})" title="Return Book">
