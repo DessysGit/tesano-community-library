@@ -34,7 +34,7 @@
 <div id="sidebar" class="sidebar">
     <a href="javascript:void(0)" class="closebtn" onclick="toggleMenu()">&times;</a>
     <div class="sidebar-header">
-        <img id="burger-profile-picture" src="" alt="Profile Picture" loading="lazy" style="width: 80px; height: 80px; border-radius: 50%; display: none;">
+        <img id="burger-profile-picture" src="" alt="Profile Picture" loading="lazy" style="width: 80px; height: 80px; border-radius: 50%;">
         <p id="burger-username">Guest</p>
     </div>
     
@@ -56,6 +56,9 @@
     </div>
     
     <!-- Logged-in user items (hidden for guests) -->
+    <a href="javascript:void(0)" onclick="showSection('profile-section')" id="user-profile-link" style="display: none;">
+        <i class="fas fa-user"></i> User Profile
+    </a>
     <a href="javascript:void(0)" onclick="showSection('borrowing-section')" id="user-borrowing-link" style="display: none;">
         <i class="fas fa-book-reader"></i> My Borrowed Books
     </a>

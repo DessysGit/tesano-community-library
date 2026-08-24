@@ -175,6 +175,7 @@ function updateUIForAuthState(isAuthenticated) {
     const guestAuthButtons = document.getElementById('guest-auth-buttons');
     
     // User links
+    const userProfileLink = document.getElementById('user-profile-link');
     const userBorrowingLink = document.getElementById('user-borrowing-link');
     const userReservationsLink = document.getElementById('user-reservations-link');
     const userFinesLink = document.getElementById('user-fines-link');
@@ -189,6 +190,7 @@ function updateUIForAuthState(isAuthenticated) {
         if (chatIcon) chatIcon.style.display = 'block';
         
         // Show user links
+        if (userProfileLink) userProfileLink.style.display = 'block';
         if (userBorrowingLink) userBorrowingLink.style.display = 'block';
         if (userReservationsLink) userReservationsLink.style.display = 'block';
         if (userFinesLink) userFinesLink.style.display = 'block';
@@ -214,6 +216,7 @@ function updateUIForAuthState(isAuthenticated) {
         if (burgerUsername) burgerUsername.innerText = 'Guest';
         
         // Hide all user-specific links
+        if (userProfileLink) userProfileLink.style.display = 'none';
         if (userBorrowingLink) userBorrowingLink.style.display = 'none';
         if (userReservationsLink) userReservationsLink.style.display = 'none';
         if (userFinesLink) userFinesLink.style.display = 'none';
