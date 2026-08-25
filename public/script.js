@@ -27,14 +27,18 @@ let _sessionExpiredRedirecting = false; // prevents parallel 401s from each trig
   window.fetch = function(input, init = {}) {
     const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : String(input));
     const isBackendCall = API_BASE_URL && url.startsWith(API_BASE_URL);
+    let hadToken = false; // true only if the request actually carried a JWT
     if (isBackendCall) {
       const token = localStorage.getItem('authToken');
+      hadToken = !!token;
       if (token) {
         init.headers = Object.assign({ 'Authorization': `Bearer ${token}` }, init.headers || {});
       }
     }
     return _fetch.call(this, input, init).then(response => {
-      if (isBackendCall && response.status === 401 && !_sessionExpiredRedirecting) {
+      // Only treat a 401 as "session expired" when the user actually had a token.
+      // Guests legitimately get 401s (e.g. /current-user) and must stay in guest mode.
+      if (isBackendCall && hadToken && response.status === 401 && !_sessionExpiredRedirecting) {
         const currentPage = window.location.pathname.split('/').pop();
         // Skip redirect when already on auth page or when the endpoint itself
         // legitimately returns 401 (wrong password, unverified email, etc.)
