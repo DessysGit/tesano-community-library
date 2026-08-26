@@ -35,7 +35,7 @@ A modern, full-stack online library management system designed for the **Tesano 
 ## Features
 
 ### For Community Members
-- **Browse & Search Books** — Advanced search by title, author, and genre with quick search
+- **Browse & Search Books** — Advanced search with a fully integrated dark-themed search card matching the app's green/gray color scheme, supporting quick search and advanced filtering
 - **Review & Rate** — Share thoughts and rate books 1–5 stars
 - **Like / Dislike** — Quick reactions synced across all pages
 - **AI Recommendations** — Personalised book suggestions powered by HuggingFace
@@ -80,10 +80,10 @@ A modern, full-stack online library management system designed for the **Tesano 
 
 ### Developer / Architecture Highlights
 - **JWT Authentication** — Cross-origin auth between frontend and backend
-  - JWT issued at login, stored in `localStorage`
-  - Global `fetch` interceptor auto-attaches token to every backend request
-  - Session cookie auth retained as same-origin fallback (local dev)
-  - Token verified before redirect post-login (eliminates flash-back-to-login bug)
+   - JWT issued at login, stored in `localStorage`
+   - Global `fetch` interceptor auto-attaches token to every backend request with guest-friendly logic (does not force guests into redirect loops)
+   - Session cookie auth retained as same-origin fallback (local dev)
+   - Token verified before redirect post-login (eliminates flash-back-to-login bug)
 - **Separated Auth Pages** — Dedicated `auth.html` / `auth.js` with smart redirect logic
 - **Toast Notification System** — Replaces all `alert()` / `confirm()` / `prompt()` dialogs
 - **Confirm Modal** — Styled dark-theme modal for all destructive actions
