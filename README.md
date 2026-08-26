@@ -91,6 +91,7 @@ A modern, full-stack online library management system designed for the **Tesano 
 - **Automated Testing** — 44 tests across 3 suites (Jest + Supertest)
 - **Structured Logging** — Winston with file rotation and configurable log levels
 - **Secure File Uploads** — MIME + extension validation, size limits, filename sanitisation
+- **Activity Logging** — Full audit trail for admin actions (suspend users, waive fines, fulfill reservations, etc.)
 
 ---
 
@@ -102,6 +103,7 @@ A modern, full-stack online library management system designed for the **Tesano 
 - **Authentication**: Passport.js (sessions) + JSON Web Tokens (cross-origin)
 - **Session Management**: express-session, connect-pg-simple
 - **File Upload**: Multer (memory storage)
+- **Password Hashing**: bcryptjs (salted hash, 12 rounds)
 - **PDF Storage**: Google Cloud Storage (primary) / Cloudinary (fallback)
 - **Image Storage**: Cloudinary
 - **Email**: Resend / Gmail SMTP / SendGrid / Brevo
@@ -144,9 +146,9 @@ A modern, full-stack online library management system designed for the **Tesano 
 **1. Clone the repository**
 ```bash
 git clone https://github.com/DessysGit/tesano-community-library.git
-# Then create and checkout the new branch:
-# git checkout -b tesano-community-library
-cd Library_Project
+# Then create and checkout a new branch:
+# git checkout -b feature/your-feature-name
+cd tesano-community-library
 ```
 
 **2. Install dependencies**
@@ -174,7 +176,8 @@ npm run dev
 | Admin Dashboard | http://localhost:3000/admin-dashboard.html |
 | Book Details | http://localhost:3000/book-details.html |
 | Password Reset | http://localhost:3000/reset-password.html |
-| Community Events | http://localhost:3000/events.html |
+
+> **Community Events** are managed through the main app interface (index.html) — there is no standalone events page.
 
 Tables are created automatically on first server start. A default admin account is seeded from your environment variables.
 
@@ -183,6 +186,8 @@ Tables are created automatically on first server start. A default admin account 
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in your values. The table below lists every variable the app recognises.
+
+> **Note:** The app reads `ENABLE_FILE_LOGGING` and `LOG_SQL_QUERIES` directly from `process.env` in the logger — these are **not** in `.env.example` but are recognised by the code. Add them manually if needed. Conversely, `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW` are **not** read by the rate limiter (which hardcodes 5 attempts per 15 minutes); they are listed in `.env.example` but have no effect.
 
 ### Core (all environments)
 
@@ -249,11 +254,9 @@ SENDGRID_FROM_EMAIL=noreply@tesanolibrary.com
 ```env
 HUGGINGFACE_API_KEY=your_key    # AI recommendations (optional)
 LOG_LEVEL=info                  # debug | info | warn | error
-ENABLE_FILE_LOGGING=true        # Write logs to file in dev
+ENABLE_FILE_LOGGING=true        # Write logs to file in dev (defaults to false)
 LOG_SQL_QUERIES=true            # Log DB queries (debug only)
 FORCE_CLOUDINARY=true           # Force Cloudinary even in development
-RATE_LIMIT_MAX=100              # Max requests per window (default: 100)
-RATE_LIMIT_WINDOW=15            # Rate limit window in minutes
 ```
 
 Generate a secure secret:
@@ -319,7 +322,7 @@ Requires Python 3 with `flask`, `pandas`, `scikit-learn`, and `psycopg2-binary`.
 ## Project Structure
 
 ```
-Library_Project/
+tesano-community-library/
 ├── src/
 │   ├── config/
 │   │   ├── database.js              # PostgreSQL connection pool
@@ -330,8 +333,9 @@ Library_Project/
 │   │   └── logger.js                # Winston logger setup
 │   ├── middleware/
 │   │   ├── auth.js                  # isAuthenticated, isAdmin, isSeedAdmin, optionalAuth
-│   │   ├── rateLimiter.js           # Login rate limiting
+│   │   ├── rateLimiter.js           # Login rate limiting (5 attempts / 15 min, hardcoded)
 │   │   ├── requestLogger.js         # HTTP request logging
+│   │   ├── activityLogger.js        # User activity and audit trail logging
 │   │   └── __tests__/
 │   ├── routes/
 │   │   ├── auth.js                  # Login, register, JWT issuance, password reset
@@ -341,7 +345,7 @@ Library_Project/
 │   │   ├── analytics.js             # Admin analytics API
 │   │   ├── recommendations.js       # AI recommendations
 │   │   ├── chatbot.js               # Chatbot responses
-│   │   ├── download.js              # Returns JSON {url, filename} — no proxy
+│   │   ├── download.js              # Returns JSON {url, filename} or blob proxy URL
 │   │   ├── newsletter.js            # Email subscriptions
 │   │   ├── membership.js            # Community library membership management
 │   │   ├── borrowing.js             # Physical book borrowing system
@@ -349,14 +353,20 @@ Library_Project/
 │   │   ├── reservations.js          # Book reservation queue system
 │   │   ├── fines.js                 # Fine management and payments
 │   │   ├── challenges.js            # Reading challenges, badges, leaderboard
+│   │   ├── admin.js                 # Admin management (fines, reservations, borrowing, users, activity, exports)
 │   │   └── __tests__/
 │   ├── services/
-│   │   ├── emailService.js          # Multi-provider email (Resend, Gmail, SendGrid, Brevo)
-│   │   └── databaseService.js       # DB seeding, admin creation, rating recalculation
+│   │   ├── emailService.js          # Multi-provider email dispatcher (Resend, Gmail, SendGrid, Brevo)
+│   │   ├── emailService-resend.js   # Resend email provider
+│   │   ├── emailService-gmail.js    # Gmail SMTP provider
+│   │   ├── emailService-brevo.js    # Brevo email provider
+│   │   ├── databaseService.js       # DB seeding, admin creation, rating recalculation
+│   │   └── __tests__/
 │   ├── utils/
 │   │   ├── fileValidation.js        # MIME/extension validation, size limits
 │   │   ├── testHelpers.js           # Jest mocks for request/response/user
 │   │   ├── helpers.js               # General utility functions (formatDate, truncate, etc.)
+│   │   ├── cloudinaryHelpers.js     # Cloudinary URL helpers
 │   │   └── __tests__/
 │   └── app.js                       # Express app, CORS, sessions, CSP middleware
 ├── public/
@@ -364,12 +374,13 @@ Library_Project/
 │   ├── index.html / script.js       # Main authenticated app
 │   ├── admin-dashboard.html/.js     # Analytics dashboard (admin only)
 │   ├── book-details.html            # Book details + download + reviews
-│   ├── events.html                  # Community events page
+│   ├── guest-access-modal.html      # Guest access information modal
 │   ├── reset-password.html          # Password reset landing page
 │   ├── style.css                    # Global dark-theme styles
 │   └── chatbot/                     # Chatbot widget (chat.js, chat.css)
 ├── logs/                            # Winston log files (auto-generated)
 ├── uploads/                         # Local file storage (dev only)
+├── out/                             # Build output
 ├── subscribers.txt                  # Newsletter subscription list
 ├── server.js                        # Application entry point
 ├── recommend.py                     # Python recommendation script
@@ -377,7 +388,8 @@ Library_Project/
 ├── .env.example                     # Environment template
 ├── jest.setup.js                    # Jest test configuration
 ├── check-database.js                # DB connection test script
-├── verify-production.js             # Production config verification
+├── test-email.js                    # Test email service script
+├── switch-email.bat                 # Quick email provider toggle (Windows)
 ├── package.json
 └── LICENSE
 ```
@@ -387,9 +399,7 @@ Library_Project/
 | Script | Purpose |
 |---|---|
 | `check-database.js` | Test database connectivity |
-| `verify-production.js` | Verify production environment config |
-| `fix-cloudinary-urls.js` | Migrate/fix Cloudinary URLs in database |
-| `migrations/` | Database migration scripts (auto-created) |
+| `test-email.js` | Test email service configuration |
 | `switch-email.bat` | Quick email provider toggle (Windows) |
 
 ---
@@ -467,24 +477,38 @@ Admin selects PDF in the Add Book form
 
 ### Download
 ```
-User clicks Download
-    → fetch() to Render /download/:id  (JWT auto-injected by interceptor)
-    → Render queries DB, returns JSON { url, filename }
-    → Frontend opens URL in new tab
-    → GCS or Cloudinary CDN serves PDF directly to the browser
+User clicks Download in the UI
+    → fetch() to Render /download/:bookId  (JWT auto-injected by interceptor)
+    → Render queries DB for the book's file URL
+
+    ┌── If file URL is on GCS (or any non-Cloudinary CDN):
+    │    → Returns JSON { url, filename }
+    │    → Frontend opens URL in a new browser tab
+    │    → GCS CDN serves PDF directly
+
+    └── If file URL is on Cloudinary:
+         → Returns JSON { url, filename, useBlob: true }
+         → Frontend fetches the URL as a blob via fetch()
+         → Triggers download with a.download = filename
+         → (Blob approach is necessary because Cloudinary's CORS headers
+            don't include the Netlify origin, blocking the HTML5 download
+            attribute on a direct link)
 ```
 
-> **Why JSON instead of a redirect?**
-> The HTML5 `download` attribute causes browsers to make a CORS-checked fetch.
-> GCS and Cloudinary do not include the Netlify origin in their CORS headers,
-> so the download fails silently. Returning JSON and opening the URL in a new
-> tab bypasses the CORS check and works for any file size from any backend.
+> **Why the two approaches?**
+> GCS URLs are public and work fine when opened in a new tab. Cloudinary URLs
+> don't include the Netlify origin in their CORS headers, so the HTML5
+> `download` attribute fails silently. The `useBlob` flag tells the frontend
+> to use `fetch + blob` instead, which bypasses the CORS check and allows
+> setting the correct filename on download. This works for any file size.
 
 ---
 
 ## API Reference
 
 All endpoints are relative to `BACKEND_URL`. Protected routes accept either a session cookie (local dev) or `Authorization: Bearer <token>` (production).
+
+> **Note:** Admin management endpoints under `/admin/*` are defined in `src/routes/admin.js` and provide functionality that overlaps with some `/fines`, `/reservations`, and `/borrowing` routes. The `/admin/*` routes additionally include activity logging, CSV exports, and a broader set of management features.
 
 ### Authentication
 
@@ -591,11 +615,37 @@ All endpoints are relative to `BACKEND_URL`. Protected routes accept either a se
 | `GET` | `/challenges/badges` | User | View my badges |
 | `GET` | `/challenges/leaderboard` | — | View top readers |
 
+### Admin Management (`/admin/*`)
+
+These endpoints are mounted at `/admin` in `src/app.js` and provide an alternative, more feature-rich admin interface with activity logging. They are secured with the `isAdmin` middleware.
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/admin/fines` | Admin | List all fines (with user & book info) |
+| `POST` | `/admin/fines/:id/waive` | Admin | Waive a fine (with activity log) |
+| `POST` | `/admin/fines/:id/adjust` | Admin | Adjust a fine amount (with activity log) |
+| `GET` | `/admin/reservations` | Admin | List all reservations (with user & book info) |
+| `POST` | `/admin/reservations/:id/fulfill` | Admin | Mark reservation as fulfilled (with activity log) |
+| `DELETE` | `/admin/reservations/:id` | Admin | Cancel a reservation (admin override) |
+| `GET` | `/admin/borrowing` | Admin | List all borrowed books (with user & book info) |
+| `POST` | `/admin/borrowing/:id/return` | Admin | Mark a book as returned (with activity log) |
+| `GET` | `/admin/borrowing/overdue` | Admin | List all overdue books |
+| `GET` | `/admin/users` | Admin | List all users with activity stats |
+| `GET` | `/admin/users/:id/activity` | Admin | Get activity log for a specific user |
+| `POST` | `/admin/users/:id/suspend` | Admin | Suspend or unsuspend a user (with activity log) |
+| `GET` | `/admin/activity/flagged` | Admin | List flagged/suspicious activities |
+| `GET` | `/admin/activity` | Admin | List all activity logs (filterable by user, type, severity, date) |
+| `GET` | `/admin/export/users` | Admin | Export users as CSV |
+| `GET` | `/admin/export/books` | Admin | Export books as CSV |
+| `GET` | `/admin/export/transactions` | Admin | Export borrowing transactions as CSV |
+
+> **Note:** The `/admin/fines/waive`, `/admin/reservations/fulfill`, and `/admin/borrowing/return` endpoints duplicate functionality available at `/fines/waive/:id`, `/reservations/fulfill/:id`, and `/borrow/return/:borrowId` respectively. The `/admin/*` versions include activity logging, while the shorter-form routes do not.
+
 ### Other
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `GET` | `/download/:bookId` | — | Get PDF download URL (JSON) |
+| `GET` | `/download/:bookId` | — | Get PDF download URL (JSON) or proxy URL for Cloudinary files |
 | `GET` | `/recommendations` | User | AI book recommendations |
 | `POST` | `/subscribe` | User | Newsletter subscription |
 | `POST` | `/api/chat` | — | Chatbot message (accepts optional JWT for personalized responses) |
@@ -652,18 +702,10 @@ npm test                           # Run all tests
 npm run test:watch                 # Tests in watch mode
 npm run test:coverage              # Coverage report
 npm run test:connection            # Test DB connection
-npm run diagnose                   # Connection diagnostics
-npm run connection-guide             # Display connection setup guide
-npm run fix-database                 # Run connection guide and diagnose
-npm run test-email your@email.com    # Test email service
-npm run test-deployment              # Test deployment connectivity
-npm run verify-production            # Verify production configuration
-npm run fix-cloudinary               # Fix Cloudinary URLs in database
-npm run test-dashboard               # Test dashboard functionality
-npm run add-timestamps               # Add created_at timestamps to users
-npm run migrate                      # Run database migrations
-npm run add-indexes                    # Add database indexes
+npm run test-email your@email.com  # Test email service
 ```
+
+> **Note:** The following npm scripts are defined in `package.json` but reference files that are **not present** in this repository and will fail if run: `diagnose`, `connection-guide`, `fix-database`, `verify-production`, `fix-cloudinary`, `test-deployment`, `test-dashboard`, `add-timestamps`, `migrate`, `add-indexes`. These appear to be leftover from a different project layout. Remove them from `package.json` or create the missing script files to enable them.
 
 ---
 
@@ -715,15 +757,17 @@ npm test -- auth.test.js
 
 | Layer | Mechanism |
 |---|---|
-| Passwords | bcrypt (salted hash) |
+| Passwords | bcryptjs (salted hash, 12 rounds) |
 | Sessions | PostgreSQL-backed, HttpOnly cookies |
 | Cross-origin auth | JWT (HS256, 24 h expiry) stored in `localStorage` |
 | SQL injection | Parameterised queries (`pg`) |
 | Input validation | express-validator on all mutation routes |
-| Rate limiting | Login endpoint throttled |
+| Rate limiting | Login endpoint throttled (5 attempts / 15 min, hardcoded in `rateLimiter.js`) |
 | File uploads | MIME + extension validation, 50 MB cap, filename sanitisation |
 | Secrets | All in environment variables — none hardcoded |
 | Production guard | Server refuses to start with default admin password |
+
+> **Note:** `package.json` lists both `bcrypt` (v6.0.0) and `bcryptjs` (v2.4.3). The application code uses `bcryptjs` exclusively (`require('bcryptjs')` in `src/routes/auth.js`). The `bcrypt` native package is not imported anywhere and can be removed from dependencies. Additionally, the `install` package (`^0.13.0`) is listed as a dependency but is unused — it should be removed.
 
 ---
 
@@ -753,6 +797,8 @@ npm test -- auth.test.js
 
    Each file contains an `API_BASE_URL` constant that defaults to the production Render URL. Replace it with your own backend URL.
 
+   > **Important:** `src/app.js` has a hardcoded CSP `connect-src` that includes `https://library-backend-j90e.onrender.com`. You must replace this URL with your own Render backend URL to allow API calls from your Netlify domain.
+
 ### Render Environment Variable Checklist
 
 | Variable | Required | Notes |
@@ -773,6 +819,8 @@ npm test -- auth.test.js
 | `GOOGLE_STORAGE_BUCKET` | ✔ | GCS bucket name |
 | Email service key | ✔ | RESEND / GMAIL / BREVO / SENDGRID |
 | `HUGGINGFACE_API_KEY` | Optional | AI recommendations |
+| `LOG_LEVEL` | Optional | `info` recommended (debug \| info \| warn \| error) |
+| `ENABLE_FILE_LOGGING` | Optional | `true` to write logs to `logs/` directory |
 
 ---
 
@@ -792,9 +840,9 @@ Log files (production): `logs/combined.log`, `logs/error.log`
 
 Configuration:
 ```env
-LOG_LEVEL=info
-ENABLE_FILE_LOGGING=true
-LOG_SQL_QUERIES=true    # debug only
+LOG_LEVEL=info                  # debug | info | warn | error
+ENABLE_FILE_LOGGING=true        # Write logs to file (defaults to false in dev)
+LOG_SQL_QUERIES=true            # Log DB queries (debug only)
 ```
 
 ---
@@ -809,7 +857,7 @@ LOG_SQL_QUERIES=true    # debug only
 
 **Downloads not working**
 - GCS: verify `allUsers = Storage Object Viewer` is in bucket IAM
-- Cloudinary: URLs are public by default — check the URL stored in the DB is valid
+- Cloudinary: URLs are public by default — check the URL stored in the DB is valid. Cloudinary files use the `useBlob: true` proxy path — ensure the frontend handles blob downloads
 - Open DevTools → Network, check what `/download/:id` returns
 
 **Login flashes back to auth.html**
@@ -869,7 +917,7 @@ ISC License — see [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
-**Backend:** Node.js · Express.js · PostgreSQL · Passport.js · jsonwebtoken · Multer · Winston · Jest · Supertest
+**Backend:** Node.js · Express.js · PostgreSQL · Passport.js · jsonwebtoken · Multer · bcryptjs · Winston · Jest · Supertest
 
 **Storage:** Google Cloud Storage · Cloudinary
 
