@@ -239,7 +239,7 @@
 
     <hr class="section-divider">
 
-    <div class="card review-form-card">
+    <div class="card review-form-card" id="review-form-card">
       <div class="card-body">
         <h5 class="card-title text-success">
           <i class="fas fa-pen mr-2"></i>Leave a Review
@@ -379,6 +379,25 @@
             
             // Pre-fill edit form
             populateEditForm(book);
+          }
+        } else {
+          // Guest: reviews are open to read, but writing one requires an account.
+          // Replace the "Leave a Review" form with a friendly sign-in prompt.
+          const formCard = document.getElementById('review-form-card');
+          if (formCard) {
+            const promptCard = document.createElement('div');
+            promptCard.className = 'card review-card mb-3';
+            promptCard.innerHTML = `
+              <div class="card-body text-center py-4">
+                <i class="fas fa-lock fa-2x text-muted mb-3"></i>
+                <h5 class="text-white mb-2">Sign in to leave a review</h5>
+                <p class="text-muted mb-3">Reviews are open for everyone to read — you just need an account to share your thoughts.</p>
+                <a href="auth.html" class="btn btn-success px-4">
+                  <i class="fas fa-sign-in-alt mr-2"></i>Sign In / Register
+                </a>
+              </div>
+            `;
+            formCard.parentNode.replaceChild(promptCard, formCard);
           }
         }
       } catch (err) {
