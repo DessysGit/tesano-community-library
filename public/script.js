@@ -130,8 +130,7 @@ async function handleGuestLogin() {
             window.currentUsername = user.username;
             
             // Store auth token
-            const authData = await response.json();
-            if (authData.token) localStorage.setItem('authToken', authData.token);
+            if (user.token) localStorage.setItem('authToken', user.token);
             
             // Close modal
             closeGuestModal();
