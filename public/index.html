@@ -9,26 +9,35 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Top Banner Bar (visible only for guests) -->
+    <div id="guest-top-banner" class="guest-top-banner" style="display: none;">
+        <div class="container banner-container">
+            <span class="banner-welcome">
+                <i class="fas fa-book-reader"></i> Welcome to Tesano Community Library
+            </span>
+            <div class="banner-auth-buttons">
+                <button class="btn btn-outline-light btn-sm" onclick="window.location.href='auth.html'">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="window.location.href='auth.html?mode=register'">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header Section -->
     <header class="header text-center">
-        <div class="container">
-            <h1 class="stylish-logo">Tesano Community Library</h1>
-            <p class="slogan">Empowering Tesano Through Knowledge & Community</p>
+        <div class="container header-container">
+            <div class="header-logo-area">
+                <h1 class="stylish-logo">Tesano Community Library</h1>
+                <p class="slogan">Empowering Tesano Through Knowledge & Community</p>
+            </div>
         </div>
     </header>
 
     <!-- Hamburger button for navigation -->
     <button id="hamburger-button" class="hamburger" aria-label="Open navigation menu" onclick="toggleMenu()" style="display: none;">&#9776;</button>
-
-    <!-- Guest Login/Register Buttons (visible only for guests) -->
-    <div id="guest-auth-buttons" class="guest-auth-buttons" style="display: none;">
-        <button class="btn btn-outline-light btn-sm" onclick="window.location.href='auth.html'">
-            <i class="fas fa-sign-in-alt"></i> Login
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="window.location.href='auth.html?mode=register'">
-            <i class="fas fa-user-plus"></i> Register
-        </button>
-    </div>
 
     <!-- Sidebar menu -->
 <div id="sidebar" class="sidebar">

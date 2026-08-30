@@ -175,7 +175,7 @@ function updateUIForAuthState(isAuthenticated) {
     const manageUsersLink = document.getElementById('manage-users-link');
     const chatIcon = document.getElementById('chat-icon');
     const burgerUsername = document.getElementById('burger-username');
-    const guestAuthButtons = document.getElementById('guest-auth-buttons');
+    const guestTopBanner = document.getElementById('guest-top-banner');
     
     // User links
     const userProfileLink = document.getElementById('user-profile-link');
@@ -188,7 +188,7 @@ function updateUIForAuthState(isAuthenticated) {
         // User is logged in - hide guest UI, show user UI
         if (loginForm) loginForm.style.display = 'none';
         if (registerForm) registerForm.style.display = 'none';
-        if (guestAuthButtons) guestAuthButtons.style.display = 'none';
+        if (guestTopBanner) guestTopBanner.style.display = 'none';
         if (chatIcon) chatIcon.style.display = 'block';
         
         // Show user links
@@ -209,7 +209,7 @@ function updateUIForAuthState(isAuthenticated) {
         // Guest user - show guest UI
         if (loginForm) loginForm.style.display = 'block';
         if (registerForm) registerForm.style.display = 'none';
-        if (guestAuthButtons) guestAuthButtons.style.display = 'flex';
+        if (guestTopBanner) guestTopBanner.style.display = 'block';
         if (sidebarAdminControls) sidebarAdminControls.style.display = 'none';
         if (addBookLink) addBookLink.style.display = 'none';
         if (manageUsersLink) manageUsersLink.style.display = 'none';
