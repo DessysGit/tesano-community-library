@@ -42,7 +42,7 @@
       </a>
     </div>
     <a href="index.html">Back to Main Page</a>
-    <a href="javascript:void(0)" onclick="logout()">Logout</a>
+    <a href="javascript:void(0)" onclick="logout()" id="sidebar-logout-link" style="display: none;">Logout</a>
   </div>
 
   <!-- Hamburger Button -->
@@ -297,7 +297,7 @@
             <div class="col-md-4">
                 <h5>Quick Links</h5>
                 <ul class="list-unstyled">
-                    <li><a href="javascript:void(0)" onclick="logout()">Logout</a></li>
+                    <li><a href="javascript:void(0)" onclick="logout()" id="footer-logout-link" style="display: none;">Logout</a></li>
                 </ul>
             </div>
             <div class="col-md-4">
@@ -373,6 +373,11 @@
         if (userRes.ok) {
           const user = await userRes.json();
           currentUserProfile = user; // Store for review fallback
+          // Show logout links (only relevant for logged-in users)
+          const sidebarLogout = document.getElementById('sidebar-logout-link');
+          const footerLogout = document.getElementById('footer-logout-link');
+          if (sidebarLogout) sidebarLogout.style.display = 'block';
+          if (footerLogout) footerLogout.style.display = 'inline';
           if (user.role === 'admin') {
             // Show admin controls
             document.getElementById('sidebar-admin-controls').style.display = 'block';
@@ -381,6 +386,18 @@
             populateEditForm(book);
           }
         } else {
+          // Guest: hide logout links (guests aren't logged in) and show a guest-friendly sidebar header
+          const sidebarLogout = document.getElementById('sidebar-logout-link');
+          const footerLogout = document.getElementById('footer-logout-link');
+          if (sidebarLogout) sidebarLogout.style.display = 'none';
+          if (footerLogout) footerLogout.style.display = 'none';
+          const burgerUsername = document.getElementById('burger-username');
+          if (burgerUsername) burgerUsername.innerText = 'Guest';
+          const burgerProfilePic = document.getElementById('burger-profile-picture');
+          // An empty src="" resolves to the page URL, so check getAttribute instead
+          if (burgerProfilePic && !burgerProfilePic.getAttribute('src')) {
+            burgerProfilePic.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23343a40"/%3E%3Ccircle cx="40" cy="30" r="14" fill="%236c757d"/%3E%3Cpath d="M12 72c0-15.5 12.5-28 28-28s28 12.5 28 28" fill="%236c757d"/%3E%3C/svg%3E';
+          }
           // Guest: reviews are open to read, but writing one requires an account.
           // Replace the "Leave a Review" form with a friendly sign-in prompt.
           const formCard = document.getElementById('review-form-card');
