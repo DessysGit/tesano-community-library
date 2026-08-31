@@ -49,8 +49,14 @@
     background-color: #212529;
     border-bottom: 2px solid #FFD700;
     padding: 10px 0;
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 1003;
+}
+
+/* Push the fixed hamburger below the sticky banner in guest mode */
+body.guest-mode .hamburger {
+    top: 66px;
 }
 
 .banner-container {
@@ -98,7 +104,6 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(29, 185, 84, 0.4);
 }
-}
 
 /* Responsive header for mobile */
 @media (max-width: 768px) {
@@ -144,6 +149,11 @@
         flex-direction: column;
         text-align: center;
         gap: 8px;
+    }
+
+    /* Banner stacks taller on mobile — push hamburger further down */
+    body.guest-mode .hamburger {
+        top: 92px;
     }
 
     .banner-welcome {

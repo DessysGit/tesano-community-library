@@ -186,6 +186,7 @@ function updateUIForAuthState(isAuthenticated) {
     
     if (isAuthenticated) {
         // User is logged in - hide guest UI, show user UI
+        document.body.classList.remove('guest-mode');
         if (loginForm) loginForm.style.display = 'none';
         if (registerForm) registerForm.style.display = 'none';
         if (guestTopBanner) guestTopBanner.style.display = 'none';
@@ -207,6 +208,7 @@ function updateUIForAuthState(isAuthenticated) {
         }
     } else {
         // Guest user - show guest UI
+        document.body.classList.add('guest-mode');
         if (loginForm) loginForm.style.display = 'block';
         if (registerForm) registerForm.style.display = 'none';
         if (guestTopBanner) guestTopBanner.style.display = 'block';
@@ -512,24 +514,6 @@ async function logout() {
     localStorage.removeItem('userData');
     localStorage.removeItem(`book-${window.currentBookId}-reaction`);
 
-    // Hide all main content sections
-    const ids = ['hamburger-button','search-books','manage-users-link','add-book-link',
-        'admin-button','admin-section','profile-section','add-book-section',
-        'newsletter-section','main-content','footer','chat-icon'];
-    ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
-
-    // Show login form
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    if (loginForm) loginForm.style.display = 'block';
-    if (registerForm) registerForm.style.display = 'none';
-
-    // Clear dynamic content
-    const bookList = document.getElementById('book-list');
-    const pagination = document.getElementById('pagination');
-    if (bookList) bookList.innerHTML = '';
-    if (pagination) pagination.innerHTML = '';
-
     // Close sidebar if open
     const sidebar = document.getElementById('sidebar');
     if (sidebar && sidebar.classList.contains('active')) sidebar.classList.remove('active');
@@ -544,8 +528,22 @@ async function logout() {
     userRole = '';
     window.currentUsername = '';
 
-    // Redirect to auth page
-    window.location.href = 'auth.html';
+    // From sub-pages (e.g. book details) return to the main catalog page;
+    // on the main page we simply stay put and switch to guest mode.
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage && currentPage !== 'index.html') {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // Switch the UI to guest mode (same state as a fresh guest visit)
+    updateUIForAuthState(false);
+
+    // Return to the book catalog view and refresh it as a guest
+    showSection('search-books');
+
+    // Confirm logout
+    showToast("You've been signed out — browsing as a guest.", 'info');
 }
 
 function closeMenuOnClickOutside(event) {
