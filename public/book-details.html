@@ -708,6 +708,7 @@
     let currentPage = 1;
     let totalPages = 1;
     let currentZoom = 1.0;
+    let progressSaveTimer = null;
     const ZOOM_STEP = 0.25;
     const MIN_ZOOM = 0.5;
     const MAX_ZOOM = 3.0;
@@ -715,6 +716,82 @@
     // Initialize PDF.js worker
     if (typeof pdfjsLib !== 'undefined') {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // Check if user is logged in
+    function isLoggedIn() {
+      return document.cookie.includes('sessionId');
+    }
+
+    // Save reading progress (debounced for logged-in users, localStorage for guests)
+    function saveProgress() {
+      if (!currentBookId) return;
+
+      // Clear any pending save
+      if (progressSaveTimer) clearTimeout(progressSaveTimer);
+
+      progressSaveTimer = setTimeout(async () => {
+        if (isLoggedIn()) {
+          // Save to database for logged-in users
+          try {
+            await fetch(`${API_BASE_URL}/progress/${currentBookId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ lastPage: currentPage, totalPages: totalPages })
+            });
+          } catch (err) {
+            console.error('Failed to save progress:', err);
+          }
+        } else {
+          // Save to localStorage for guests
+          try {
+            localStorage.setItem(`book-${currentBookId}-progress`, JSON.stringify({
+              lastPage: currentPage,
+              totalPages: totalPages,
+              savedAt: new Date().toISOString()
+            }));
+          } catch (err) {
+            console.error('Failed to save progress to localStorage:', err);
+          }
+        }
+      }, 1000); // Debounce: save 1 second after last page change
+    }
+
+    // Restore reading progress
+    async function restoreProgress() {
+      if (!currentBookId) return;
+
+      let progress = null;
+
+      if (isLoggedIn()) {
+        // Fetch from database for logged-in users
+        try {
+          const res = await fetch(`${API_BASE_URL}/progress/${currentBookId}`, {
+            credentials: 'include'
+          });
+          if (res.ok) {
+            progress = await res.json();
+          }
+        } catch (err) {
+          console.error('Failed to fetch progress:', err);
+        }
+      } else {
+        // Fetch from localStorage for guests
+        try {
+          const stored = localStorage.getItem(`book-${currentBookId}-progress`);
+          if (stored) progress = JSON.parse(stored);
+        } catch (err) {
+          console.error('Failed to read progress from localStorage:', err);
+        }
+      }
+
+      if (progress && progress.lastPage > 1 && progress.lastPage <= totalPages) {
+        currentPage = progress.lastPage;
+        if (typeof showToast === 'function') {
+          showToast(`📖 Resuming from page ${currentPage}`, 'info', 2000);
+        }
+      }
     }
 
     async function handleRead() {
@@ -764,7 +841,10 @@
         document.getElementById('book-reader-modal').classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        // Render first page
+        // Restore saved progress (jump to last read page)
+        await restoreProgress();
+
+        // Render the page (either saved page or first page)
         await renderPage(currentPage);
 
       } catch (err) {
@@ -813,6 +893,9 @@
 
         document.getElementById('reader-loading').style.display = 'none';
         document.getElementById('reader-canvas-container').style.display = 'block';
+
+        // Save progress after successful page render
+        saveProgress();
 
       } catch (err) {
         console.error('Render error:', err);
