@@ -783,8 +783,8 @@ async function fetchBooks(query = '', page = 1) {
                             </button>
                         `) : ''}
                         ${book.hasDigitalCopy ? `
-                            <button class="btn btn-info btn-sm download-btn" onclick="showBookDetails(${book.id})" title="Download digital copy">
-                                <i class="fas fa-download"></i> Download
+                            <button class="btn btn-info btn-sm read-btn" onclick="showBookDetails(${book.id})" title="Read on site">
+                                <i class="fas fa-book-open"></i> Read
                             </button>
                         ` : ''}
                         ${!book.hasPhysicalCopy && !book.hasDigitalCopy ? `
@@ -1755,8 +1755,8 @@ function displayQuickSearchResults(books) {
                             </button>
                         `) : ''}
                         ${book.hasDigitalCopy ? `
-                            <button class="btn btn-info btn-sm download-btn" onclick="showBookDetails(${book.id})" title="Download digital copy">
-                                <i class="fas fa-download"></i> Download
+                            <button class="btn btn-info btn-sm read-btn" onclick="showBookDetails(${book.id})" title="Read on site">
+                                <i class="fas fa-book-open"></i> Read
                             </button>
                         ` : ''}
                         ${!book.hasPhysicalCopy && !book.hasDigitalCopy ? `
