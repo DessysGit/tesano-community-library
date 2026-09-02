@@ -614,16 +614,25 @@ async function loadAdminUsers() {
     container.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
     try {
         var response = await fetch(API_BASE_URL + '/admin/users', { credentials: 'include' });
-        if (!response.ok) throw new Error('Failed to fetch users');
-        var users = await response.json();
+        
+        var text = await response.text();
+        var data;
+        try { data = JSON.parse(text); } catch (e) { data = { error: text || ('HTTP ' + response.status) }; }
+        if (!response.ok) throw new Error((data && data.error) || ('HTTP ' + response.status));
+        var users = data;
         if (users.length === 0) { container.innerHTML = '<p class="text-center text-muted">No users found</p>'; return; }
 
         var isSeedAdmin = window.currentAdminUser && window.currentAdminUser.username === 'admin';
+        var currentUserId = window.currentAdminUser ? window.currentAdminUser.id : null;
         
         container.innerHTML = users.map(function(user) {
             var suspendBtn = (user.role === 'suspended' ? 'Unsuspend' : 'Suspend');
-            var buttons = '<button class="btn btn-info btn-action" onclick="viewUserActivity(' + user.id + ')">Activity</button>' +
-                '<button class="btn btn-warning btn-action" onclick="toggleUserStatus(' + user.id + ", '" + user.role + "')" + '">' + suspendBtn + '</button>';
+            var buttons = '<button class="btn btn-info btn-action" onclick="viewUserActivity(' + user.id + ')">Activity</button>';
+            var isProtectedRow = (user.username === 'admin') || (user.id === currentUserId);
+            if (!isProtectedRow) {
+                buttons += '<button class="btn btn-warning btn-action" onclick="toggleUserStatus(' + user.id + ", '" + user.role + "')" + '">' + suspendBtn + '</button>';
+            }
+                
 
             // Seed admin-only controls (Grant/Revoke/Delete)
             if (isSeedAdmin && user.username !== 'admin') {
@@ -647,7 +656,8 @@ async function loadAdminUsers() {
                 '</div></div></div>';
         }).join('');
     } catch (error) {
-        container.innerHTML = '<p class="text-center text-danger">Failed to load users</p>';
+        console.error('Failed to load users:', error);
+        container.innerHTML = '<p class="text-center text-danger">Failed to load users' + (error && error.message ? ': ' + error.message : '') + '</p>';
     }
 }
 

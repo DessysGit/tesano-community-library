@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
+const { logActivity, ActivityTypes, SeverityLevels } = require('../middleware/activityLogger');
 
 // Checkout / borrow a physical book
 router.post('/:bookId', isAuthenticated, async (req, res) => {
@@ -43,6 +44,12 @@ router.post('/:bookId', isAuthenticated, async (req, res) => {
       'INSERT INTO borrowed_books ("userId", "bookId", "dueDate") VALUES ($1, $2, $3) RETURNING id, "borrowDate", "dueDate"',
       [userId, bookId, dueDate]
     );
+
+    await logActivity(userId, ActivityTypes.BORROW, {
+      bookId,
+      bookTitle: bookResult.rows[0].title,
+      borrowId: result.rows[0].id
+    }, SeverityLevels.NEUTRAL);
 
     res.status(201).json({
       message: `Successfully borrowed "${bookResult.rows[0].title}". Due back: ${dueDate.toLocaleDateString()}`,
@@ -105,6 +112,10 @@ router.post('/return/:borrowId', isAuthenticated, async (req, res) => {
     const message = fine > 0 
       ? `Book returned successfully. An overdue fine of GHS ${fine.toFixed(2)} has been applied.`
       : 'Book returned successfully. Thank you!';
+
+    await logActivity(borrow.userId, ActivityTypes.RETURN, {
+      borrowId
+    }, SeverityLevels.NEUTRAL);
 
     res.json({ message, fine });
   } catch (err) {

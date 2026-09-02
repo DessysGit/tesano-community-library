@@ -16,6 +16,7 @@ const {
   ALLOWED_FILE_TYPES 
 } = require('../utils/fileValidation');
 const { deleteCoverFromCloudinary, deletePdfFromCloudinary } = require('../utils/cloudinaryHelpers');
+const { logActivity, ActivityTypes, SeverityLevels } = require('../middleware/activityLogger');
 
 // Configure multer with memory storage, file validation, and size limits
 const upload = multer({ 
@@ -225,6 +226,11 @@ router.post('/', isAdmin, upload.fields([{ name: 'cover' }, { name: 'bookFile' }
       'INSERT INTO books (title, author, description, genres, cover, file, "physicalCopies") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, author',
       [title, author, description, genres, coverUrl, pdfUrl, physicalCopies]
     );
+    await logActivity(req.user.id, ActivityTypes.CREATE_BOOK, {
+      bookId: inserted.rows[0].id,
+      bookTitle: inserted.rows[0].title
+    }, SeverityLevels.NEUTRAL);
+
     res.status(200).json({ message: 'Book added successfully', book: inserted.rows[0] });
   } catch (error) {
     console.error('Error uploading book:', error);
@@ -443,6 +449,7 @@ router.post('/:id/like', isAuthenticated, async (req, res) => {
     );
 
     await pool.query('COMMIT');
+    await logActivity(userId, ActivityTypes.LIKE, { bookId }, SeverityLevels.NEUTRAL);
     const bookResult = await pool.query('SELECT likes, dislikes FROM books WHERE id = $1', [bookId]);
     res.json(bookResult.rows[0]);
   } catch (e) {
@@ -476,6 +483,7 @@ router.post('/:id/dislike', isAuthenticated, async (req, res) => {
     );
 
     await pool.query('COMMIT');
+    await logActivity(userId, ActivityTypes.DISLIKE, { bookId }, SeverityLevels.NEUTRAL);
     const bookResult = await pool.query('SELECT likes, dislikes FROM books WHERE id = $1', [bookId]);
     res.json(bookResult.rows[0]);
   } catch (e) {
