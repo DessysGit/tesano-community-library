@@ -433,6 +433,7 @@
             <a href="#" onclick="showAdminSection('lists-section', this)"><i class="fas fa-list"></i> Top Lists</a>
             <a href="#" onclick="showAdminSection('activity-section', this)"><i class="fas fa-history"></i> Activity</a>
             <a href="#" onclick="showAdminSection('add-book-section', this)"><i class="fas fa-plus-circle"></i> Add Book</a>
+            <a href="#" onclick="showAdminSection('inventory-section', this)"><i class="fas fa-boxes"></i> Inventory</a>
             <a href="#" onclick="showAdminSection('management-section', this)"><i class="fas fa-cogs"></i> Console</a>
 
             <div class="nav-section">Quick Jump</div>
@@ -700,6 +701,19 @@
                     <button id="add-book-btn" onclick="submitAddBook()" class="btn btn-success w-100 mt-2">
                         <i class="fas fa-plus-circle mr-2"></i>Add Book
                     </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── Inventory Section ────────────────────────────────── -->
+        <section id="inventory-section" style="display: none;">
+            <div class="card dashboard-card">
+                <div class="card-header section-header">
+                    <i class="fas fa-boxes section-icon"></i>
+                    <h5>Physical Book Inventory</h5>
+                </div>
+                <div class="card-body" style="max-height:600px;overflow-y:auto;">
+                    <div id="inventory-list"><div class="loading-spinner"><div class="spinner-border text-success"></div></div></div>
                 </div>
             </div>
         </section>

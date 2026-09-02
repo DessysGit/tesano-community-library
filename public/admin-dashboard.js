@@ -616,6 +616,82 @@ async function returnAdminBook(borrowId) {
     }, 'Return');
 }
 
+// ─── Book Inventory ─────────────────────────────────────────────────────────
+async function loadInventory() {
+    var container = document.getElementById('inventory-list');
+    container.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading inventory...</div>';
+    try {
+        var response = await fetch(API_BASE_URL + '/admin/inventory', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch inventory');
+        var books = await response.json();
+        if (books.length === 0) {
+            container.innerHTML = '<p class="text-center text-muted">No books in the library yet</p>';
+            return;
+        }
+        container.innerHTML =
+            '<div class="console-summary" style="margin-bottom:12px;">' +
+            '<span class="console-stat"><i class="fas fa-book text-primary"></i> Titles: <span class="num">' + books.length + '</span></span>' +
+            '<span class="console-stat"><i class="fas fa-layer-group text-info"></i> Total copies: <span class="num">' +
+            books.reduce(function(sum, b) { return sum + b.physicalCopies; }, 0) + '</span></span>' +
+            '<span class="console-stat"><i class="fas fa-check-circle text-success"></i> Available now: <span class="num">' +
+            books.reduce(function(sum, b) { return sum + b.availableCopies; }, 0) + '</span></span>' +
+            '</div>' +
+            books.map(function(book) {
+                var outOfStock = book.availableCopies === 0 && book.physicalCopies > 0;
+                var digitalOnly = book.physicalCopies === 0;
+                var statusBadge = digitalOnly
+                    ? '<span class="badge badge-info ml-1">Digital only</span>'
+                    : (outOfStock ? '<span class="badge badge-overdue ml-1">All copies out</span>' : '');
+                return '<div class="management-item">' +
+                    '<div class="d-flex justify-content-between align-items-center flex-wrap">' +
+                    '<div><strong>' + (book.title || 'Unknown Title') + '</strong> by ' + (book.author || 'Unknown') + '<br>' +
+                    '<small>Total copies: <strong>' + book.physicalCopies + '</strong> | ' +
+                    'Currently borrowed: ' + book.activeBorrows + ' | ' +
+                    'Available: <strong style="color:' + (book.availableCopies > 0 ? '#1DB954' : '#dc3545') + '">' + book.availableCopies + '</strong></small>' +
+                    statusBadge + '</div>' +
+                    '<div class="action-buttons">' +
+                    '<button class="btn btn-success btn-action" onclick="adjustCopies(' + book.id + ', 1)">+1</button>' +
+                    '<button class="btn btn-warning btn-action" onclick="adjustCopies(' + book.id + ', -1)">-1</button>' +
+                    '</div></div></div>';
+            }).join('');
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p class="text-center text-danger">Failed to load inventory</p>';
+    }
+}
+
+async function adjustCopies(bookId, delta) {
+    try {
+        // Fetch current list to determine new count
+        var response = await fetch(API_BASE_URL + '/admin/inventory', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch inventory');
+        var books = await response.json();
+        var book = books.find(function(b) { return b.id === bookId; });
+        if (!book) { showToast('Book not found', 'error'); return; }
+
+        var newCount = Math.max(0, book.physicalCopies + delta);
+        if (newCount < book.activeBorrows) {
+            showToast('Cannot reduce below the number of currently borrowed copies (' + book.activeBorrows + ')', 'error');
+            return;
+        }
+        var update = await fetch(API_BASE_URL + '/admin/inventory/' + bookId + '/copies', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ physicalCopies: newCount })
+        });
+        var data = await update.json();
+        if (update.ok) {
+            showToast('"' + book.title + '" now has ' + newCount + ' physical copies', 'success');
+            loadInventory();
+        } else {
+            showToast('Failed to update: ' + (data.error || 'unknown error'), 'error');
+        }
+    } catch (error) {
+        showToast('Network error. Please try again.', 'error');
+    }
+}
+
 // ─── Fine Management ────────────────────────────────────────────────────────
 async function loadAdminFines() {
     var container = document.getElementById('admin-fines-list');
@@ -853,7 +929,7 @@ function getTimeAgo(date) {
 // ─── View Switching ─────────────────────────────────────────────────────────
 function showAdminSection(sectionId, navEl) {
     // Hide all top-level sections
-    var sections = ['stats-section', 'charts-section', 'lists-section', 'activity-section', 'add-book-section', 'management-section'];
+    var sections = ['stats-section', 'charts-section', 'lists-section', 'activity-section', 'add-book-section', 'inventory-section', 'management-section'];
     sections.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -887,6 +963,9 @@ function showAdminSection(sectionId, navEl) {
         loadRecentActivity();
         loadBooksWithoutReviews();
         loadFlaggedActivities();
+    }
+    if (sectionId === 'inventory-section') {
+        loadInventory();
     }
     if (sectionId === 'management-section') {
         // Default to first tab when entering console
@@ -987,8 +1066,13 @@ async function submitAddBook() {
         var data = await response.json().catch(function() { return { error: 'Unknown error' }; });
 
         if (response.ok) {
-            msgBox.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> <strong>"' + (data.book?.title || title) + '"</strong> added successfully!</div>';
+            // Clear form fields FIRST (clearAddBookFields also wipes the message box),
+            // then show the success message so it is not erased immediately.
+            var successMsg = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> <strong>"' + (data.book?.title || title) + '"</strong> added successfully!</div>';
             clearAddBookFields();
+            msgBox.innerHTML = successMsg;
+            showToast('"' + (data.book?.title || title) + '" added successfully!', 'success');
+            setTimeout(function() { if (msgBox.innerHTML === successMsg) msgBox.innerHTML = ''; }, 6000);
         } else {
             msgBox.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> ' + (data.error || 'Failed to add book.') + '</div>';
         }
