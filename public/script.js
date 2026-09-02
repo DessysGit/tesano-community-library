@@ -233,6 +233,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     try {
+        // Gate on backend readiness first (handles free-tier cold starts)
+        await waitForBackend();
+
         // Check authentication status
         const authCheckPromise = checkAuthStatus();
         const timeoutPromise = new Promise((_, reject) => 
@@ -334,6 +337,56 @@ function hideLoadingState() {
     if (loadingOverlay) {
         loadingOverlay.style.display = 'none';
     }
+}
+
+// ─── Free-tier cold-start handler ("waking up" gate) ────────────────────────
+// Free hosting (Render free tier) spins the backend down after ~15 min idle,
+// so the first visit after a quiet period can take 30-60s. Instead of letting
+// requests hang on a dead server, poll the instant-response /health endpoint
+// and tell the user what's happening.
+function wakeBackendMessage(msg) {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        const p = overlay.querySelector('.loading-content p');
+        if (p) p.textContent = msg;
+    }
+}
+
+async function pingBackendHealth(timeoutMs = 4000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const res = await fetch(`${API_BASE_URL}/health`, { signal: controller.signal, cache: 'no-store' });
+        if (res.ok) {
+            const data = await res.json().catch(() => null);
+            return !!(data && data.status === 'ok');
+        }
+        return false;
+    } catch (e) {
+        return false;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function waitForBackend(maxWaitMs = 120000) {
+    // Fast path: server is warm (or running locally) — respond instantly.
+    if (await pingBackendHealth()) return true;
+
+    // Cold start: keep the existing loading overlay visible but explain why.
+    showLoadingState();
+    wakeBackendMessage('Waking up the library… ☕ (first visit after idle can take up to a minute)');
+    const start = Date.now();
+    while (Date.now() - start < maxWaitMs) {
+        await new Promise(r => setTimeout(r, 3000));
+        if (await pingBackendHealth()) {
+            wakeBackendMessage('Loading...');
+            return true;
+        }
+    }
+    // Give up waiting but let the page proceed — normal error handling kicks in.
+    wakeBackendMessage('Loading...');
+    return false;
 }
 
 // Helper: get auth headers with JWT token if available
