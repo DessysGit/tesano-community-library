@@ -675,7 +675,7 @@
                             <div class="form-group">
                                 <label>Book Cover (optional)</label>
                                 <div class="upload-area-wrapper">
-                                    <div class="upload-area" id="add-cover-upload-area" style="border: 2px dashed rgba(29,185,84,0.3); border-radius: 8px; padding: 0.85rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem;">
+                                    <div class="upload-area" id="add-cover-upload-area" onclick="document.getElementById('add-book-cover').click()" style="border: 2px dashed rgba(29,185,84,0.3); border-radius: 8px; padding: 0.85rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem;">
                                         <i class="fas fa-image" style="color: #1DB954; font-size: 1.3rem;"></i>
                                         <span id="add-cover-label-text" style="color: #aaa; font-size: 0.875rem;">Click to choose an image…</span>
                                         <input type="file" id="add-book-cover" accept="image/*" style="display: none;" onchange="updateAddBookUploadLabel('add-book-cover','add-cover-label-text','add-cover-upload-area')">
@@ -687,7 +687,7 @@
                             <div class="form-group">
                                 <label>Book File (PDF) <span class="text-danger">*</span></label>
                                 <div class="upload-area-wrapper">
-                                    <div class="upload-area" id="add-pdf-upload-area" style="border: 2px dashed rgba(29,185,84,0.3); border-radius: 8px; padding: 0.85rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem;">
+                                    <div class="upload-area" id="add-pdf-upload-area" onclick="document.getElementById('add-book-file').click()" style="border: 2px dashed rgba(29,185,84,0.3); border-radius: 8px; padding: 0.85rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem;">
                                         <i class="fas fa-file-pdf" style="color: #1DB954; font-size: 1.3rem;"></i>
                                         <span id="add-pdf-label-text" style="color: #aaa; font-size: 0.875rem;">Click to choose a PDF…</span>
                                         <input type="file" id="add-book-file" accept=".pdf,application/pdf" style="display: none;" onchange="updateAddBookUploadLabel('add-book-file','add-pdf-label-text','add-pdf-upload-area')">
