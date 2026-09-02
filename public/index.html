@@ -56,12 +56,6 @@
         <a href="admin-dashboard.html" id="dashboard-link">
             <i class="fas fa-chart-line"></i> Analytics Dashboard
         </a>
-        <a href="javascript:void(0)" onclick="showSection('admin-section')" id="manage-users-link">
-            <i class="fas fa-users"></i> Manage Users
-        </a>
-        <a href="javascript:void(0)" onclick="showSection('add-book-section')" id="add-book-link">
-            <i class="fas fa-book"></i> Add Book
-        </a>
     </div>
     
     <!-- Logged-in user items (hidden for guests) -->
@@ -168,114 +162,6 @@
     </div>
   </div>
   
-
-        <!-- Add Book Section -->
-<div id="add-book-section" class="mt-4" style="display: none;">
-    <div class="card shadow-lg border-0 bg-dark text-white p-4">
-      <div class="card-body">
-        <h2 class="card-title text-success mb-4 text-center">📚 Add a New Book</h2>
-  
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="title">Book Title</label>
-              <input type="text" id="title" class="form-control" placeholder="e.g., The Alchemist">
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="author">Author</label>
-              <input type="text" id="author" class="form-control" placeholder="e.g., Paulo Coelho">
-            </div>
-          </div>
-        </div>
-  
-        <div class="form-group">
-          <label for="description">Short Description</label>
-          <textarea id="description" class="form-control" rows="3" placeholder="A brief summary of the book..."></textarea>
-        </div>
-  
-        <div class="form-group">
-          <label for="genres">Genres</label>
-          <input type="text" id="genres" class="form-control" placeholder="e.g., Fiction, Philosophy">
-        </div>
-  
-        <div class="upload-row">
-          <!-- Cover upload -->
-          <div class="upload-box">
-            <label for="book-cover">
-              Upload Book Cover
-              <small>(optional &mdash; image)</small>
-            </label>
-            <div class="upload-area-wrapper">
-              <div class="upload-area" id="cover-upload-area">
-                <i class="fas fa-image upload-icon"></i>
-                <span class="upload-label-text" id="cover-label-text">Click to choose an image&hellip;</span>
-                <input type="file" id="book-cover" name="cover" accept="image/*"
-                       onchange="updateUploadLabel('book-cover','cover-label-text','cover-upload-area')">
-              </div>
-            </div>
-          </div>
-
-          <!-- PDF upload -->
-          <div class="upload-box">
-            <label for="book-file">
-              Upload Book File <span class="text-danger">*</span>
-              <small>(PDF &mdash; required)</small>
-            </label>
-            <div class="upload-area-wrapper">
-              <div class="upload-area" id="pdf-upload-area">
-                <i class="fas fa-file-pdf upload-icon"></i>
-                <span class="upload-label-text" id="pdf-label-text">Click to choose a PDF&hellip;</span>
-                <input type="file" id="book-file" name="bookFile" accept=".pdf,application/pdf"
-                       onchange="updateUploadLabel('book-file','pdf-label-text','pdf-upload-area')">
-              </div>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Feedback message area -->
-        <div id="add-book-messages" class="mt-3"></div>
-
-        <div class="d-flex flex-column align-items-center mt-4">
-          <button id="add-book-btn" onclick="addBook()" class="btn btn-success w-100 mb-2">
-            <i class="fas fa-plus-circle mr-2"></i>Add Book
-          </button>
-          <button onclick="showSection('search-books')" class="btn btn-outline-light">← Back to Main Page</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-
-        <!-- Admin Section to Manage Users -->
-        <div id="admin-section" class="mt-4" style="display: none;">
-          <div class="card shadow-lg bg-dark text-white p-4 border-0">
-            <div class="card-body">
-              <h2 class="card-title text-success text-center mb-4">👥 Manage Users</h2>
-              <div id="users-messages" class="mt-2"></div>
-              <div class="table-responsive">
-                <table class="table table-dark table-hover text-white">
-                  <thead class="thead-light">
-                    <tr>
-                      <th scope="col">👤 Username</th>
-                      <th scope="col">🔐 Role</th>
-                      <th scope="col" class="text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="user-list">
-                    <!-- Dynamically injected rows here -->
-                  </tbody>
-                </table>
-              </div>
-              <div class="text-center mt-4">
-                <button onclick="showSection('search-books')" class="btn btn-outline-light">
-                  ← Back to Main Page
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <!-- User Profile Section -->
 <div id="profile-section" style="display: none;">

@@ -1,4 +1,4 @@
-// Automatic API URL detection based on current environment
+﻿// Automatic API URL detection based on current environment
 const API_BASE_URL = (() => {
   const currentHost = window.location.hostname;
   const isLocalhost = currentHost === 'localhost' || currentHost === '127.0.0.1';
@@ -16,10 +16,10 @@ const API_BASE_URL = (() => {
   }
 })();
 
-// ─── JWT Auto-Inject & 401 Handler ─────────────────────────────────────────
+// â”€â”€â”€ JWT Auto-Inject & 401 Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Intercept every fetch() call. If the request targets our Render backend,
 // automatically attach the stored JWT as an Authorization header.
-// Also handles 401 responses globally — if the token is expired/invalid,
+// Also handles 401 responses globally â€” if the token is expired/invalid,
 // clear it and redirect to auth page.
 let _sessionExpiredRedirecting = false; // prevents parallel 401s from each triggering a redirect
 (function injectJwtOnBackendRequests() {
@@ -71,7 +71,7 @@ let userRole = "";
 // Guest modal callback - stores action to perform after login
 let guestActionCallback = null;
 
-// ── Guest Modal Functions ──────────────────────────────────────────────────
+// â”€â”€ Guest Modal Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showGuestModal(message, callback) {
     const modal = document.getElementById('guest-access-modal');
     const messageEl = document.getElementById('guest-modal-message');
@@ -171,8 +171,6 @@ function updateUIForAuthState(isAuthenticated) {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
     const sidebarAdminControls = document.getElementById('sidebar-admin-controls');
-    const addBookLink = document.getElementById('add-book-link');
-    const manageUsersLink = document.getElementById('manage-users-link');
     const chatIcon = document.getElementById('chat-icon');
     const burgerUsername = document.getElementById('burger-username');
     const guestTopBanner = document.getElementById('guest-top-banner');
@@ -201,8 +199,6 @@ function updateUIForAuthState(isAuthenticated) {
         
         if (userRole === 'admin') {
             if (sidebarAdminControls) sidebarAdminControls.style.display = 'block';
-            if (addBookLink) addBookLink.style.display = 'block';
-            if (manageUsersLink) manageUsersLink.style.display = 'block';
         } else {
             if (sidebarAdminControls) sidebarAdminControls.style.display = 'none';
         }
@@ -213,8 +209,6 @@ function updateUIForAuthState(isAuthenticated) {
         if (registerForm) registerForm.style.display = 'none';
         if (guestTopBanner) guestTopBanner.style.display = 'block';
         if (sidebarAdminControls) sidebarAdminControls.style.display = 'none';
-        if (addBookLink) addBookLink.style.display = 'none';
-        if (manageUsersLink) manageUsersLink.style.display = 'none';
         if (chatIcon) chatIcon.style.display = 'none';
         if (burgerUsername) burgerUsername.innerText = 'Guest';
         
@@ -405,10 +399,6 @@ async function login() {
             if (userRole === 'admin') {
                 const sidebarAdminControls = document.getElementById('sidebar-admin-controls');
                 if (sidebarAdminControls) sidebarAdminControls.style.display = 'block';
-                const addBookLink = document.getElementById('add-book-link');
-                const manageUsersLink = document.getElementById('manage-users-link');
-                if (addBookLink) addBookLink.style.display = 'block';
-                if (manageUsersLink) manageUsersLink.style.display = 'block';
             }
 
             const burgerUsername = document.getElementById('burger-username');
@@ -482,7 +472,7 @@ async function resendVerification() {
             document.getElementById('resend-email').value = '';
             setTimeout(() => {
                 displayMessage('resend-messages',
-                    data.message + '<br><br><strong>Remember:</strong><br>• Check your spam folder<br>• The link expires in 24 hours',
+                    data.message + '<br><br><strong>Remember:</strong><br>â€¢ Check your spam folder<br>â€¢ The link expires in 24 hours',
                     'success');
             }, 2000);
             setTimeout(() => {
@@ -543,7 +533,7 @@ async function logout() {
     showSection('search-books');
 
     // Confirm logout
-    showToast("You've been signed out — browsing as a guest.", 'info');
+    showToast("You've been signed out â€” browsing as a guest.", 'info');
 }
 
 function closeMenuOnClickOutside(event) {
@@ -592,7 +582,7 @@ async function subscribeNewsletter(event) {
             body: JSON.stringify({ email })
         });
         if (response.ok) {
-            displayMessage(msgBox, '✅ Subscribed successfully! Check your inbox.', 'success');
+            displayMessage(msgBox, 'âœ… Subscribed successfully! Check your inbox.', 'success');
             emailInput.value = '';
         } else {
             const errorMessage = await response.text();
@@ -630,7 +620,7 @@ async function showSection(sectionId) {
         return;
     }
 
-    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #admin-section, #add-book-section, #borrowing-section, #reservations-section, #challenges-section, .newsletter-section');
+    const sections = document.querySelectorAll('#register-form, #login-form, #search-books, #profile-section, #borrowing-section, #reservations-section, #challenges-section, .newsletter-section');
     sections.forEach(section => {
         if (section) section.style.display = section.id === sectionId ? 'block' : 'none';
     });
@@ -665,15 +655,9 @@ async function showSection(sectionId) {
     const sidebar = document.getElementById('sidebar');
     if (sidebar && sidebar.classList.contains('active')) sidebar.classList.remove('active');
 
-    if (sectionId === 'admin-section') fetchUsers();
     if (sectionId === 'profile-section') {
         loadProfileData();
         await refreshProfilePicture();
-    }
-
-    if (sectionId === 'add-book-section' && userRole !== 'admin') {
-        showToast('You do not have access to this section.', 'error');
-        showSection('search-books');
     }
 
     if (sectionId === 'borrowing-section') {
@@ -770,11 +754,11 @@ async function fetchBooks(query = '', page = 1) {
                         </div>
                     <div class="like-dislike-ratings">
                         <div class="like-dislike-buttons">
-                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">👍 ${book.likes || 0}</button>
-                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">👎 ${book.dislikes || 0}</button>
+                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">ðŸ‘ ${book.likes || 0}</button>
+                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">ðŸ‘Ž ${book.dislikes || 0}</button>
                         </div>
                         ${book.hasPhysicalCopy ? (book.isAvailable === false ? `
-                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out — join the reservation queue">
+                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out â€” join the reservation queue">
                                 <i class="fas fa-clock"></i> Reserve
                             </button>
                         ` : `
@@ -828,8 +812,8 @@ async function fetchBooks(query = '', page = 1) {
 function updateLikeDislikeUI(bookId, likes, dislikes, action) {
     const likeButton    = document.querySelector(`#book-${bookId} .like-button`);
     const dislikeButton = document.querySelector(`#book-${bookId} .dislike-button`);
-    if (likeButton)    { likeButton.innerHTML    = `👍 ${likes}`;    likeButton.classList.toggle('active', action === 'like'); }
-    if (dislikeButton) { dislikeButton.innerHTML = `👎 ${dislikes}`; dislikeButton.classList.toggle('active', action === 'dislike'); }
+    if (likeButton)    { likeButton.innerHTML    = `ðŸ‘ ${likes}`;    likeButton.classList.toggle('active', action === 'like'); }
+    if (dislikeButton) { dislikeButton.innerHTML = `ðŸ‘Ž ${dislikes}`; dislikeButton.classList.toggle('active', action === 'dislike'); }
 }
 
 function getUserAction(bookId) { return localStorage.getItem(`book-${bookId}-reaction`); }
@@ -855,7 +839,7 @@ function hideLoadingSpinner() {
     if (spinner) spinner.style.display = 'none';
 }
 
-// ── Toast Notifications ──────────────────────────────────────────────────────
+// â”€â”€ Toast Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -870,7 +854,7 @@ function showToast(message, type = 'info', duration = 3500) {
     }, duration);
 }
 
-// ── Confirm Modal ─────────────────────────────────────────────────────────────
+// â”€â”€ Confirm Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showConfirmModal(message, onConfirm, dangerLabel = 'Delete') {
     const overlay   = document.getElementById('confirm-modal-overlay');
     const msgEl     = document.getElementById('confirm-modal-message');
@@ -891,7 +875,7 @@ function showConfirmModal(message, onConfirm, dangerLabel = 'Delete') {
     overlay.classList.add('active');
 }
 
-// ── displayMessage ─────────────────────────────────────────────────────────────
+// â”€â”€ displayMessage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function displayMessage(elementId, message, type = 'error') {
     const messageElement = document.getElementById(elementId);
     if (messageElement) {
@@ -946,19 +930,19 @@ async function fetchUsers() {
 
 async function grantAdmin(userId) {
     const response = await fetch(`${API_BASE_URL}/users/${userId}/grant-admin`, { method: 'POST', credentials: 'include' });
-    if (response.ok) { showToast('✅ Admin role granted.', 'success'); fetchUsers(); }
+    if (response.ok) { showToast('âœ… Admin role granted.', 'success'); fetchUsers(); }
     else { showToast('Failed to grant admin: ' + await response.text(), 'error'); }
 }
 
 async function revokeAdmin(userId) {
     const response = await fetch(`${API_BASE_URL}/users/${userId}/revoke-admin`, { method: 'POST', credentials: 'include' });
-    if (response.ok) { showToast('✅ Admin role revoked.', 'success'); fetchUsers(); }
+    if (response.ok) { showToast('âœ… Admin role revoked.', 'success'); fetchUsers(); }
     else { showToast('Failed to revoke admin: ' + await response.text(), 'error'); }
 }
 
 async function deleteUser(userId) {
     const response = await fetch(`${API_BASE_URL}/users/${userId}`, { method: 'DELETE', credentials: 'include' });
-    if (response.ok) { showToast('✅ User deleted.', 'success'); fetchUsers(); }
+    if (response.ok) { showToast('âœ… User deleted.', 'success'); fetchUsers(); }
     else { showToast('Failed to delete user: ' + await response.text(), 'error'); }
 }
 
@@ -995,7 +979,7 @@ async function addBook() {
     document.getElementById(msgBox).innerHTML = '';
     showButtonSpinner(addBtn, '<i class="fas fa-plus-circle mr-2"></i>Add Book');
     displayMessage(msgBox,
-        '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading… Please wait, this may take a moment for large files.',
+        '<i class="fas fa-spinner fa-spin mr-2"></i>Uploadingâ€¦ Please wait, this may take a moment for large files.',
         'info'
     );
 
@@ -1012,7 +996,7 @@ async function addBook() {
         const response = await fetch(`${API_BASE_URL}/books`, { method: 'POST', body: formData, credentials: 'include' });
         const data = await response.json().catch(() => null);
         if (response.ok) {
-            displayMessage(msgBox, `✅ <strong>"${data?.book?.title || title}"</strong> added successfully!`, 'success');
+            displayMessage(msgBox, `âœ… <strong>"${data?.book?.title || title}"</strong> added successfully!`, 'success');
             clearAddBookFields();
             setTimeout(() => showSection('search-books'), 1800);
         } else {
@@ -1040,13 +1024,13 @@ function updateUploadLabel(inputId, labelId, areaId) {
         if (area) { area.style.borderColor = '#1DB954'; area.style.background = 'rgba(29,185,84,0.08)'; }
         const msgBox = document.getElementById('add-book-messages');
         if (msgBox && inputId === 'book-file' && file.size > 10 * 1024 * 1024) {
-            displayMessage('add-book-messages', `⚠️ Large file detected (${sizeMB} MB). Upload will take longer — please be patient and don't close the tab.`, 'info');
+            displayMessage('add-book-messages', `âš ï¸ Large file detected (${sizeMB} MB). Upload will take longer â€” please be patient and don't close the tab.`, 'info');
         } else if (msgBox && inputId === 'book-file') {
             msgBox.innerHTML = '';
         }
     } else {
         const isImage = inputId === 'book-cover';
-        labelText.textContent = isImage ? 'Click to choose an image…' : 'Click to choose a PDF…';
+        labelText.textContent = isImage ? 'Click to choose an imageâ€¦' : 'Click to choose a PDFâ€¦';
         labelText.style.color = '';
         if (area) { area.style.borderColor = ''; area.style.background = ''; }
     }
@@ -1064,7 +1048,7 @@ function editBook(bookId) { window.location.href = `book-details.html?bookId=${b
 
 async function deleteBook(bookId) {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}`, { method: 'DELETE', credentials: 'include' });
-    if (response.ok) { showToast('✅ Book deleted.', 'success'); fetchBooks(); }
+    if (response.ok) { showToast('âœ… Book deleted.', 'success'); fetchBooks(); }
     else { showToast('Failed to delete book: ' + await response.text(), 'error'); }
 }
 
@@ -1218,7 +1202,7 @@ async function uploadProfilePicture() {
                 const ts = '?timestamp=' + new Date().getTime();
                 document.getElementById('profile-picture').src = url + ts;
                 document.getElementById('burger-profile-picture').src = url + ts;
-                showToast('✅ Profile picture updated!', 'success');
+                showToast('âœ… Profile picture updated!', 'success');
             } else {
                 showToast('Failed to upload profile picture: ' + await response.text(), 'error');
             }
@@ -1234,7 +1218,7 @@ const profilePictureInput = document.getElementById('profile-picture-input');
 if (profilePictureInput) profilePictureInput.addEventListener('change', uploadProfilePicture);
 
 async function refreshProfilePicture() {
-    const defaultImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23444" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="32" font-family="Arial"%3E👤%3C/text%3E%3C/svg%3E';
+    const defaultImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23444" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="32" font-family="Arial"%3EðŸ‘¤%3C/text%3E%3C/svg%3E';
     try {
         const response = await fetch(`${API_BASE_URL}/users/profile`, { credentials: 'include' });
         if (response.ok) {
@@ -1252,7 +1236,7 @@ async function refreshProfilePicture() {
 }
 
 function setDefaultProfilePictures() {
-    const d = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23444" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="32" font-family="Arial"%3E👤%3C/text%3E%3C/svg%3E';
+    const d = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23444" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="32" font-family="Arial"%3EðŸ‘¤%3C/text%3E%3C/svg%3E';
     const p = document.getElementById('profile-picture');       if (p) p.src = d;
     const b = document.getElementById('burger-profile-picture'); if (b) b.src = d;
 }
@@ -1295,7 +1279,7 @@ async function checkAuthStatus() {
             hide('login-form');
             show('main-content'); show('newsletter-section'); show('hamburger-button');
             show('search-books'); show('footer');
-            hide('add-book-section'); hide('profile-section');
+            hide('profile-section');
 
             const burgerUsername = document.getElementById('burger-username');
             if (burgerUsername) burgerUsername.innerText = user.username;
@@ -1305,8 +1289,6 @@ async function checkAuthStatus() {
 
             if (userRole === 'admin') {
                 show('sidebar-admin-controls');
-                show('add-book-link');
-                show('manage-users-link');
             } else {
                 hide('sidebar-admin-controls');
             }
@@ -1325,7 +1307,7 @@ async function checkAuthStatus() {
             hide('login-form');
             show('main-content'); show('newsletter-section'); show('hamburger-button');
             show('search-books'); show('footer');
-            hide('add-book-section'); hide('profile-section');
+            hide('profile-section');
             hide('chat-icon');
             
             const burgerUsername = document.getElementById('burger-username');
@@ -1380,8 +1362,8 @@ async function handleLikeDislike(bookId, action) {
 function syncLikeDislikeAcrossPages(bookId, likes, dislikes, action) {
     const likeButton    = document.querySelector(`#book-${bookId} .like-button`);
     const dislikeButton = document.querySelector(`#book-${bookId} .dislike-button`);
-    if (likeButton)    { likeButton.innerHTML    = `👍 ${likes}`;    likeButton.classList.toggle('active',    action === 'like'); }
-    if (dislikeButton) { dislikeButton.innerHTML = `👎 ${dislikes}`; dislikeButton.classList.toggle('active', action === 'dislike'); }
+    if (likeButton)    { likeButton.innerHTML    = `ðŸ‘ ${likes}`;    likeButton.classList.toggle('active',    action === 'like'); }
+    if (dislikeButton) { dislikeButton.innerHTML = `ðŸ‘Ž ${dislikes}`; dislikeButton.classList.toggle('active', action === 'dislike'); }
 }
 
 function showBookDetails(bookId) {
@@ -1389,7 +1371,7 @@ function showBookDetails(bookId) {
     window.location.href = `book-details.html?bookId=${bookId}`;
 }
 
-// Stubs — real versions live as inline scripts in book-details.html
+// Stubs â€” real versions live as inline scripts in book-details.html
 function saveBookDetails()   {}
 function editBookDetails()   {}
 function deleteBookDetails() {}
@@ -1425,7 +1407,7 @@ async function requestPasswordReset() {
         if (response.ok) {
             displayMessage('forgot-password-messages', data.message, 'success');
             document.getElementById('forgot-password-email').value = '';
-            setTimeout(() => { displayMessage('forgot-password-messages', data.message + '<br><br>• Check your inbox (and spam)<br>• Click the reset link within 1 hour', 'success'); }, 1500);
+            setTimeout(() => { displayMessage('forgot-password-messages', data.message + '<br><br>â€¢ Check your inbox (and spam)<br>â€¢ Click the reset link within 1 hour', 'success'); }, 1500);
             setTimeout(() => { hideForgotPasswordForm(); displayMessage('login-messages', 'Password reset email sent! Please check your email.', 'info'); }, 6000);
         } else { displayMessage('forgot-password-messages', data.message || data.error || 'Failed to send reset email', 'error'); }
     } catch (error) { displayMessage('forgot-password-messages', 'Network error. Please try again.', 'error'); }
@@ -1453,7 +1435,7 @@ async function initializeChatbot() {
 
 document.addEventListener('DOMContentLoaded', () => { setupOutsideClickListener(); });
 
-// ── Profile tab functions ────────────────────────────────────────────────────
+// â”€â”€ Profile tab functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function switchProfileTab(tabName) {
     document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
@@ -1497,7 +1479,7 @@ async function savePreferences() {
             ['profile-genres','profile-authors','profile-books'].forEach(id => { document.getElementById(id).disabled = true; });
             document.getElementById('edit-preferences-btn').style.display = 'block';
             document.getElementById('preferences-actions').style.display = 'none';
-            displayMessage('preferences-messages', '✅ Preferences saved!', 'success');
+            displayMessage('preferences-messages', 'âœ… Preferences saved!', 'success');
             updateFavoritesCount(favoriteGenres, favoriteAuthors, favoriteBooks);
             setTimeout(() => { const m = document.getElementById('preferences-messages'); if (m) m.innerHTML = ''; }, 3000);
         } else {
@@ -1532,7 +1514,7 @@ async function changePassword() {
             body: JSON.stringify({ password: newPassword, currentPassword })
         });
         if (response.ok) {
-            displayMessage(msgBox, '✅ Password updated successfully!', 'success');
+            displayMessage(msgBox, 'âœ… Password updated successfully!', 'success');
             ['current-password','new-password','confirm-new-password'].forEach(id => { document.getElementById(id).value = ''; });
             setTimeout(() => { const m = document.getElementById(msgBox); if (m) m.innerHTML = ''; }, 4000);
         } else {
@@ -1590,7 +1572,7 @@ function updateFavoritesCount(genres, authors, books) {
 }
 
 function setDefaultProfilePicture() {
-    const d = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23444" width="150" height="150"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="60" font-family="Arial"%3E👤%3C/text%3E%3C/svg%3E';
+    const d = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23444" width="150" height="150"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="60" font-family="Arial"%3EðŸ‘¤%3C/text%3E%3C/svg%3E';
     const p = document.getElementById('profile-picture'); if (p) p.src = d;
 }
 
@@ -1612,9 +1594,9 @@ async function loadUserActivity() {
         activityList.innerHTML = activities.map(item => {
             const timeAgo  = getTimeAgo(new Date(item.createdAt));
             const bookLink = `<a href="book-details.html?bookId=${item.bookId}" style="color:#1DB954;">${item.bookTitle}</a>`;
-            if (item.type === 'review')   return `<div class="activity-item"><div><strong>📝 Reviewed:</strong> ${bookLink}</div><div style="color:#ffd700;margin-top:4px;">${'⭐'.repeat(item.rating)} ${item.rating}/5</div><div class="activity-item-time">${timeAgo}</div></div>`;
-            if (item.type === 'like')     return `<div class="activity-item" style="border-left-color:#1DB954;"><div><strong>👍 Liked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
-            if (item.type === 'dislike')  return `<div class="activity-item" style="border-left-color:#dc3545;"><div><strong>👎 Disliked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
+            if (item.type === 'review')   return `<div class="activity-item"><div><strong>ðŸ“ Reviewed:</strong> ${bookLink}</div><div style="color:#ffd700;margin-top:4px;">${'â­'.repeat(item.rating)} ${item.rating}/5</div><div class="activity-item-time">${timeAgo}</div></div>`;
+            if (item.type === 'like')     return `<div class="activity-item" style="border-left-color:#1DB954;"><div><strong>ðŸ‘ Liked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
+            if (item.type === 'dislike')  return `<div class="activity-item" style="border-left-color:#dc3545;"><div><strong>ðŸ‘Ž Disliked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
             return '';
         }).join('');
     } catch (error) {
@@ -1651,10 +1633,10 @@ async function loadUserReviews() {
         }
 
         reviewsList.innerHTML = reviews.map(r => {
-            const stars    = '⭐'.repeat(r.rating);
+            const stars    = 'â­'.repeat(r.rating);
             const timeAgo  = getTimeAgo(new Date(r.createdAt));
             const bookLink = `<a href="book-details.html?bookId=${r.bookId}" style="color:#1DB954;">${r.bookTitle}</a>`;
-            const preview  = r.text.length > 120 ? r.text.slice(0, 120) + '…' : r.text;
+            const preview  = r.text.length > 120 ? r.text.slice(0, 120) + 'â€¦' : r.text;
             return `<div class="review-item"><div><strong>${stars} ${bookLink}</strong><small style="color:#888;"> by ${r.author}</small></div><div style="color:#ccc;margin-top:.5rem;font-size:.9rem;">${preview}</div><div class="review-item-time">${timeAgo}</div></div>`;
         }).join('');
     } catch (error) {
@@ -1676,7 +1658,7 @@ async function loadUserReviews() {
     });
 })();
 
-// ── Hero search ──────────────────────────────────────────────────────────────
+// â”€â”€ Hero search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function toggleAdvancedSearch() {
     const advancedFilters = document.getElementById('advanced-filters');
     const toggleBtn       = document.getElementById('advanced-toggle');
@@ -1742,11 +1724,11 @@ function displayQuickSearchResults(books) {
                     </div></div>
                     <div class="like-dislike-ratings">
                         <div class="like-dislike-buttons">
-                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">👍 ${book.likes || 0}</button>
-                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">👎 ${book.dislikes || 0}</button>
+                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">ðŸ‘ ${book.likes || 0}</button>
+                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">ðŸ‘Ž ${book.dislikes || 0}</button>
                         </div>
                         ${book.hasPhysicalCopy ? (book.isAvailable === false ? `
-                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out — join the reservation queue">
+                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out â€” join the reservation queue">
                                 <i class="fas fa-clock"></i> Reserve
                             </button>
                         ` : `
@@ -1818,7 +1800,7 @@ function clearFilters() {
         setTimeout(() => clearMsg.remove(), 2000);
     }
 }
-// ─── Book Reservation Functions ──────────────────────────────────────────
+// â”€â”€â”€ Book Reservation Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function reserveBook(bookId) {
     if (!isUserLoggedIn()) {
         showGuestModal('Please log in or create an account to reserve books.', () => reserveBook(bookId));
@@ -1864,7 +1846,7 @@ async function cancelReservation(id) {
     } catch (error) { showToast('Network error.', 'error'); }
 }
 
-// ─── Fine Management Functions ───────────────────────────────────────────
+// â”€â”€â”€ Fine Management Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Fines are managed inline within "My Borrowed Books" (see loadBorrowedBooks)
 async function payFine(id) {
     try {
@@ -1885,7 +1867,7 @@ async function payAllFines() {
     } catch (error) { showToast('Network error.', 'error'); }
 }
 
-// ─── Reading Challenge Functions ─────────────────────────────────────────
+// â”€â”€â”€ Reading Challenge Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadChallenges() {
     const listDiv = document.getElementById('challenges-list');
     const myDiv = document.getElementById('my-challenges');
@@ -1913,7 +1895,7 @@ async function loadChallenges() {
                     const pct = Math.round((uc.booksRead / uc.goalBooks) * 100);
                     return `<div class="p-3 mb-2 rounded" style="border-left:4px solid ${uc.completedAt ? '#28a745' : '#f0ad4e'};background:#1e1e1e;">
                         <div class="d-flex justify-content-between"><div><strong>${uc.title}</strong><div class="progress mt-2" style="height:10px;"><div class="progress-bar ${uc.completedAt ? 'bg-success' : 'bg-warning'}" style="width:${Math.min(pct,100)}%">${Math.min(pct,100)}%</div></div><small>${uc.booksRead}/${uc.goalBooks} books read</small></div>
-                        <div>${uc.completedAt ? '<span class="badge badge-success">🎉 Done!</span>' : `<button class="btn btn-sm btn-success" onclick="updateChallengeProgress(${uc.challengeId})"><i class="fas fa-book"></i> Log Book</button>`}</div></div></div>`;
+                        <div>${uc.completedAt ? '<span class="badge badge-success">ðŸŽ‰ Done!</span>' : `<button class="btn btn-sm btn-success" onclick="updateChallengeProgress(${uc.challengeId})"><i class="fas fa-book"></i> Log Book</button>`}</div></div></div>`;
                 }).join('');
             }
         }
@@ -1923,14 +1905,14 @@ async function loadChallenges() {
             const badges = await response.json();
             if (badges.length === 0) { badgesDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No badges yet. Complete challenges!</p></div>'; }
             else {
-                badgesDiv.innerHTML = badges.map(b => `<div class="text-center p-2 m-1 d-inline-block" style="background:#2a2a2a;border-radius:8px;min-width:100px;"><div style="font-size:2rem;">${b.icon || '🏆'}</div><strong><small>${b.name}</small></strong></div>`).join('');
+                badgesDiv.innerHTML = badges.map(b => `<div class="text-center p-2 m-1 d-inline-block" style="background:#2a2a2a;border-radius:8px;min-width:100px;"><div style="font-size:2rem;">${b.icon || 'ðŸ†'}</div><strong><small>${b.name}</small></strong></div>`).join('');
             }
         }
         // Leaderboard
         if (leaderboardDiv) {
             const response = await fetch(`${API_BASE_URL}/challenges/leaderboard`, { headers: getAuthHeaders() });
             const leaders = await response.json();
-            const medals = ['🥇','🥈','🥉'];
+            const medals = ['ðŸ¥‡','ðŸ¥ˆ','ðŸ¥‰'];
             if (leaders.length === 0) { leaderboardDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No data.</p></div>'; }
             else {
                 leaderboardDiv.innerHTML = leaders.map((l,i) => `<div class="p-2 mb-1 rounded d-flex justify-content-between" style="background:#1e1e1e;"><span>${medals[i] || `${i+1}.`} <strong>${l.username}</strong></span><span>${l.booksBorrowed} books | ${l.badges} badges</span></div>`).join('');
@@ -1970,7 +1952,7 @@ function switchChallengeTab(tab) {
     loadChallenges();
 }
 
-// ─── Borrowing Functions ──────────────────────────────────────────────────
+// â”€â”€â”€ Borrowing Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadBorrowedBooks() {
     const statusDiv = document.getElementById('borrowing-status');
     const listDiv = document.getElementById('borrowed-books-list');
@@ -2031,7 +2013,7 @@ async function loadBorrowedBooks() {
             // Fine for this book: prefer the official unpaid fine record; otherwise
             // show the live daily accrual (GHS 1.00/day) for overdue books
             const matchingFine = unpaidFines.find(f => f.bookTitle === borrow.title);
-            let fineCell = '<span class="text-muted">—</span>';
+            let fineCell = '<span class="text-muted">â€”</span>';
             if (matchingFine) {
                 fineCell = `
                     <span class="text-danger"><strong>GHS ${parseFloat(matchingFine.amount).toFixed(2)}</strong></span><br>
