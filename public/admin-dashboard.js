@@ -746,6 +746,24 @@ function showAdminSection(sectionId, navEl) {
     }
 
     // Load section-specific data
+    if (sectionId === 'stats-section') {
+        loadStats();
+    }
+    if (sectionId === 'charts-section') {
+        loadGenreChart();
+        loadGrowthChart();
+        loadRatingChart();
+        loadReviewTrendChart();
+    }
+    if (sectionId === 'lists-section') {
+        loadPopularBooks();
+        loadTopReviewers();
+    }
+    if (sectionId === 'activity-section') {
+        loadRecentActivity();
+        loadBooksWithoutReviews();
+        loadFlaggedActivities();
+    }
     if (sectionId === 'management-section') {
         // Default to first tab when entering console
         switchManagementTab('reservations');
