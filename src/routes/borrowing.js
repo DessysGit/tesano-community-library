@@ -68,7 +68,10 @@ router.post('/return/:borrowId', isAuthenticated, async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT id, "userId", "dueDate", status FROM borrowed_books WHERE id = $1',
+      `SELECT bb.id, bb."userId", bb."dueDate", bb.status, bb."bookId", b.title
+       FROM borrowed_books bb
+       LEFT JOIN books b ON b.id = bb."bookId"
+       WHERE bb.id = $1`,
       [borrowId]
     );
 
@@ -114,7 +117,12 @@ router.post('/return/:borrowId', isAuthenticated, async (req, res) => {
       : 'Book returned successfully. Thank you!';
 
     await logActivity(borrow.userId, ActivityTypes.RETURN, {
-      borrowId
+      borrowId,
+      bookId: borrow.bookId,
+      bookTitle: borrow.title,
+      returnedBy: req.user.id === borrow.userId ? 'self' : req.user.username,
+      fine: fine > 0 ? fine : undefined,
+      overdue: fine > 0
     }, SeverityLevels.NEUTRAL);
 
     res.json({ message, fine });

@@ -728,12 +728,68 @@ async function viewUserActivity(userId) {
         var response = await fetch(API_BASE_URL + '/admin/users/' + userId + '/activity', { credentials: 'include' });
         var activity = await response.json().catch(function() { return []; });
         if (!activity || activity.length === 0) { showToast('No activity found for this user', 'info'); return; }
-        var lines = activity.map(function(a) { return '[' + new Date(a.createdAt).toLocaleString() + '] ' + a.type + ': ' + (a.bookTitle || a.text || ''); });
+        var lines = activity.map(function(a) {
+            var desc = formatActivityDescription(a);
+            // formatActivityDescription already escapes HTML
+            return '[' + new Date(a.createdAt).toLocaleString() + '] ' + desc;
+        });
         var escaped = lines.join('<br>').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         showToast('User Activity (Last 100 actions):<br>' + escaped, 'info', 7000);
     } catch (error) {
         showToast('Failed to load activity: ' + (error && error.message ? error.message : 'unknown error'), 'error');
     }
+}
+
+// ─── Activity Log Formatting ────────────────────────────────────────────────
+function escapeHtmlText(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatActivityDescription(log) {
+    var title = log.bookTitle ? '\u201C' + log.bookTitle + '\u201D' : '';
+    var d = (log.details && typeof log.details === 'object') ? log.details : {};
+    var desc;
+
+    switch (log.type) {
+        case 'borrow':
+            desc = 'Borrowed ' + (title || 'a book');
+            break;
+        case 'return': {
+            desc = 'Returned ' + (title || 'a book');
+            if (d.returnedBy && d.returnedBy !== 'self') desc += ' (processed by admin ' + d.returnedBy + ')';
+            if (d.overdue && d.fine) desc += ' \u2014 was overdue, GHS ' + Number(d.fine).toFixed(2) + ' fine applied';
+            break;
+        }
+        case 'reserve':
+            desc = 'Joined the waiting list for ' + (title || 'a book');
+            break;
+        case 'cancel_reservation':
+            desc = 'Cancelled their reservation for ' + (title || 'a book');
+            break;
+        case 'review':
+            desc = 'Reviewed ' + (title || 'a book') +
+                (log.rating ? ' \u2014 rated it ' + log.rating + '/5' : '');
+            break;
+        case 'like':
+            desc = 'Liked ' + (title || 'a book');
+            break;
+        case 'dislike':
+            desc = 'Disliked ' + (title || 'a book');
+            break;
+        case 'create_book':
+            desc = 'Added a new book to the library' + (title ? ': ' + title : '');
+            break;
+        case 'suspicious_activity':
+            desc = 'Suspicious activity detected' + (d.reason ? ': ' + d.reason : '');
+            break;
+        default:
+            desc = log.type ? log.type.replace(/_/g, ' ') : 'Unknown action';
+            if (title) desc += ': ' + title;
+    }
+    if (log.text && log.type === 'review') desc += ' \u2014 ' + log.text;
+    return escapeHtmlText(desc);
 }
 
 // ─── Activity Logs ──────────────────────────────────────────────────────────
@@ -748,12 +804,13 @@ async function loadAdminActivityLogs() {
         
         container.innerHTML = logs.map(function(log) {
             var severityClass = log.severity === 'positive' ? 'badge-success' : log.severity === 'suspicious' ? 'badge-warning' : log.severity === 'abusive' ? 'badge-danger' : 'badge-info';
+            var description = formatActivityDescription(log);
+            var username = escapeHtmlText(log.username || 'Unknown user');
             return '<div class="activity-item">' +
                 '<div class="d-flex justify-content-between align-items-start">' +
-                '<div><strong>' + log.username + '</strong> - ' + log.type.replace(/_/g, ' ') + '<br>' +
-                '<small class="text-muted">' + new Date(log.createdAt).toLocaleString() + '</small>' +
-                (log.bookTitle ? '<br><small>Book: ' + log.bookTitle + '</small>' : '') + '</div>' +
-                '<span class="badge ' + severityClass + '">' + log.severity + '</span>' +
+                '<div><strong>' + username + '</strong> &mdash; ' + description + '<br>' +
+                '<small class="text-muted">' + new Date(log.createdAt).toLocaleString() + '</small></div>' +
+                '<span class="badge ' + severityClass + '">' + (log.severity || 'neutral') + '</span>' +
                 '</div></div>';
         }).join('');
     } catch (error) {
