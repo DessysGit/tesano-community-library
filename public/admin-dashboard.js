@@ -617,18 +617,33 @@ async function loadAdminUsers() {
         if (!response.ok) throw new Error('Failed to fetch users');
         var users = await response.json();
         if (users.length === 0) { container.innerHTML = '<p class="text-center text-muted">No users found</p>'; return; }
+
+        var isSeedAdmin = window.currentAdminUser && window.currentAdminUser.username === 'admin';
         
         container.innerHTML = users.map(function(user) {
             var suspendBtn = (user.role === 'suspended' ? 'Unsuspend' : 'Suspend');
+            var buttons = '<button class="btn btn-info btn-action" onclick="viewUserActivity(' + user.id + ')">Activity</button>' +
+                '<button class="btn btn-warning btn-action" onclick="toggleUserStatus(' + user.id + ", '" + user.role + "')" + '">' + suspendBtn + '</button>';
+
+            // Seed admin-only controls (Grant/Revoke/Delete)
+            if (isSeedAdmin && user.username !== 'admin') {
+                if (user.role !== 'admin') {
+                    buttons += '<button class="btn btn-success btn-action" onclick="grantAdminRole(' + user.id + ')">Grant Admin</button>';
+                } else {
+                    buttons += '<button class="btn btn-revoke btn-action" onclick="revokeAdminRole(' + user.id + ')">Revoke Admin</button>';
+                }
+                buttons += '<button class="btn btn-danger btn-action" onclick="deleteAdminUser(' + user.id + ", '" + user.username.replace(/'/g, "\\'") + "')" + '">Delete</button>';
+            } else if (isSeedAdmin && user.username === 'admin') {
+                buttons += '<span class="badge badge-success ml-2">Protected</span>';
+            }
+            
             return '<div class="management-item">' +
                 '<div class="d-flex justify-content-between align-items-start">' +
                 '<div><strong>' + user.username + '</strong> (' + user.email + ')<br>' +
                 '<small>Role: ' + user.role + '</small> | <small>Joined: ' + new Date(user.created_at).toLocaleDateString() + '</small><br>' +
                 '<small>Borrows: ' + (user.total_borrows || 0) + ' | Reviews: ' + (user.total_reviews || 0) + ' | Reservations: ' + (user.total_reservations || 0) + '</small><br>' +
                 '<small class="text-muted">Last activity: ' + (user.last_activity ? new Date(user.last_activity).toLocaleString() : 'Never') + '</small></div>' +
-                '<div class="action-buttons">' +
-                '<button class="btn btn-info btn-action" onclick="viewUserActivity(' + user.id + ')">Activity</button>' +
-                '<button class="btn btn-warning btn-action" onclick="toggleUserStatus(' + user.id + ", '" + user.role + "')" + '">' + suspendBtn + '</button>' +
+                '<div class="action-buttons">' + buttons +
                 '</div></div></div>';
         }).join('');
     } catch (error) {
@@ -711,21 +726,179 @@ function getTimeAgo(date) {
     return 'just now';
 }
 
+// ─── View Switching ─────────────────────────────────────────────────────────
+function showAdminSection(sectionId, navEl) {
+    // Hide all top-level sections
+    var sections = ['stats-section', 'charts-section', 'lists-section', 'activity-section', 'add-book-section', 'management-section'];
+    sections.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    // Show requested section
+    var target = document.getElementById(sectionId);
+    if (target) target.style.display = 'block';
+
+    // Update sidebar active state
+    if (navEl) {
+        document.querySelectorAll('.sidebar-nav a').forEach(function(a) { a.classList.remove('active'); });
+        navEl.classList.add('active');
+    }
+
+    // Load section-specific data
+    if (sectionId === 'management-section') {
+        // Default to first tab when entering console
+        switchManagementTab('reservations');
+        loadConsoleSummary();
+    }
+    if (sectionId === 'add-book-section') {
+        // Reset form when entering
+        clearAddBookFields();
+    }
+
+    // Close sidebar on mobile
+    document.getElementById('adminSidebar').classList.remove('sidebar-open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Add Book ───────────────────────────────────────────────────────────────
+var addBookCoverFile = null;
+var addBookPdfFile = null;
+
+function updateAddBookUploadLabel(inputId, labelId, areaId) {
+    var input = document.getElementById(inputId);
+    var labelText = document.getElementById(labelId);
+    var area = document.getElementById(areaId);
+    if (!input || !labelText) return;
+
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        var sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        var sizeStr = sizeMB >= 1 ? sizeMB + ' MB' : (file.size / 1024).toFixed(0) + ' KB';
+        labelText.innerHTML = file.name + ' <span style="color:#888;font-size:.8em;">(' + sizeStr + ')</span>';
+        labelText.style.color = '#fff';
+        if (area) { area.style.borderColor = '#1DB954'; area.style.background = 'rgba(29,185,84,0.08)'; }
+    } else {
+        var isImage = inputId === 'add-book-cover';
+        labelText.textContent = isImage ? 'Click to choose an image…' : 'Click to choose a PDF…';
+        labelText.style.color = '';
+        if (area) { area.style.borderColor = ''; area.style.background = ''; }
+    }
+}
+
+function clearAddBookFields() {
+    ['add-title', 'add-author', 'add-description', 'add-genres', 'add-book-cover', 'add-book-file', 'add-physical-copies'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    updateAddBookUploadLabel('add-book-cover', 'add-cover-label-text', 'add-cover-upload-area');
+    updateAddBookUploadLabel('add-book-file', 'add-pdf-label-text', 'add-pdf-upload-area');
+    var msgBox = document.getElementById('add-book-messages');
+    if (msgBox) msgBox.innerHTML = '';
+}
+
+async function submitAddBook() {
+    var title = document.getElementById('add-title').value.trim();
+    var author = document.getElementById('add-author').value.trim();
+    var description = document.getElementById('add-description').value.trim();
+    var genres = document.getElementById('add-genres').value.trim();
+    var physicalCopies = Math.max(0, parseInt(document.getElementById('add-physical-copies').value) || 1);
+    var coverInput = document.getElementById('add-book-cover');
+    var pdfInput = document.getElementById('add-book-file');
+    var msgBox = document.getElementById('add-book-messages');
+    var addBtn = document.getElementById('add-book-btn');
+
+    // Validation
+    var errors = [];
+    if (!title) errors.push('Book title is required.');
+    if (!author) errors.push('Author name is required.');
+    if (!pdfInput.files || !pdfInput.files[0]) errors.push('A PDF book file is required.');
+    if (errors.length > 0) {
+        msgBox.innerHTML = '<div class="alert alert-danger">' + errors.join('<br>') + '</div>';
+        return;
+    }
+
+    // Show loading
+    addBtn.disabled = true;
+    addBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading…';
+    msgBox.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Uploading… Please wait.</div>';
+
+    try {
+        var formData = new FormData();
+        formData.append('title', title);
+        formData.append('author', author);
+        formData.append('description', description);
+        formData.append('genres', JSON.stringify(genres.split(',').map(function(g) { return g.trim(); }).filter(Boolean)));
+        formData.append('physicalCopies', physicalCopies);
+        if (coverInput.files[0]) formData.append('cover', coverInput.files[0]);
+        formData.append('bookFile', pdfInput.files[0]);
+
+        var response = await fetch(API_BASE_URL + '/books', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+
+        var data = await response.json().catch(function() { return { error: 'Unknown error' }; });
+
+        if (response.ok) {
+            msgBox.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> <strong>"' + (data.book?.title || title) + '"</strong> added successfully!</div>';
+            clearAddBookFields();
+        } else {
+            msgBox.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> ' + (data.error || 'Failed to add book.') + '</div>';
+        }
+    } catch (error) {
+        msgBox.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Network error. Please try again.</div>';
+    } finally {
+        addBtn.disabled = false;
+        addBtn.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Add Book';
+    }
+}
+
+// ─── User Management (Seed Admin) ─────────────────────────────────────────
+async function grantAdminRole(userId) {
+    if (!confirm('Grant admin role to this user?')) return;
+    try {
+        var response = await fetch(API_BASE_URL + '/users/' + userId + '/grant-admin', { method: 'POST', credentials: 'include' });
+        if (response.ok) { alert('Admin role granted.'); loadAdminUsers(); }
+        else { alert('Failed: ' + await response.text()); }
+    } catch (error) { alert('Network error.'); }
+}
+
+async function revokeAdminRole(userId) {
+    if (!confirm('Revoke admin role from this user?')) return;
+    try {
+        var response = await fetch(API_BASE_URL + '/users/' + userId + '/revoke-admin', { method: 'POST', credentials: 'include' });
+        if (response.ok) { alert('Admin role revoked.'); loadAdminUsers(); }
+        else { alert('Failed: ' + await response.text()); }
+    } catch (error) { alert('Network error.'); }
+}
+
+async function deleteAdminUser(userId, username) {
+    if (!confirm('Delete user "' + username + '"? This cannot be undone.')) return;
+    try {
+        var response = await fetch(API_BASE_URL + '/users/' + userId, { method: 'DELETE', credentials: 'include' });
+        if (response.ok) { alert('User deleted.'); loadAdminUsers(); }
+        else { alert('Failed: ' + await response.text()); }
+    } catch (error) { alert('Network error.'); }
+}
+
 // ─── Initialize Dashboard ───────────────────────────────────────────────────
 async function initDashboard() {
     var isAdmin = await checkAdminAccess();
     if (!isAdmin) return;
-    
-    loadStats();
-    loadGenreChart();
-    loadGrowthChart();
-    loadRatingChart();
-    loadReviewTrendChart();
-    loadPopularBooks();
-    loadRecentActivity();
-    loadTopReviewers();
-    loadBooksWithoutReviews();
-    loadFlaggedActivities();
+
+    // Store current user info for seed-admin checks
+    try {
+        var userRes = await fetch(API_BASE_URL + '/current-user', { credentials: 'include' });
+        if (userRes.ok) window.currentAdminUser = await userRes.json();
+    } catch (e) { window.currentAdminUser = null; }
+
+    // Show overview by default
+    showAdminSection('stats-section', document.querySelector('.sidebar-nav a.active'));
 }
 
 document.addEventListener('DOMContentLoaded', initDashboard);

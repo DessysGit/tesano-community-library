@@ -56,38 +56,6 @@ router.post('/fines/:id/waive', isAdmin, async (req, res) => {
   }
 });
 
-// Adjust fine amount
-router.post('/fines/:id/adjust', isAdmin, async (req, res) => {
-  const fineId = req.params.id;
-  const { amount } = req.body;
-  const adminId = req.user.id;
-
-  if (typeof amount !== 'number' || amount < 0) {
-    return res.status(400).json({ error: 'Valid amount is required' });
-  }
-
-  try {
-    const result = await pool.query(
-      'UPDATE fines SET amount = $1 WHERE id = $2 RETURNING *',
-      [amount, fineId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Fine not found' });
-    }
-
-    await logActivity(adminId, ActivityTypes.ADJUST_FINE, {
-      fineId,
-      newAmount: amount
-    }, SeverityLevels.NEUTRAL);
-
-    res.json({ message: 'Fine adjusted successfully', fine: result.rows[0] });
-  } catch (error) {
-    console.error('Error adjusting fine:', error);
-    res.status(500).json({ error: 'Failed to adjust fine' });
-  }
-});
-
 // ==================== RESERVATION MANAGEMENT ====================
 
 // Get all reservations

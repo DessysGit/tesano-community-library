@@ -9,19 +9,23 @@ router.post('/:bookId', isAuthenticated, async (req, res) => {
   const bookId = parseInt(req.params.bookId);
 
   try {
-    // Check if book exists
-    const bookResult = await pool.query('SELECT id, title FROM books WHERE id = $1', [bookId]);
+    // Check if book exists and get copy count
+    const bookResult = await pool.query('SELECT id, title, "physicalCopies" FROM books WHERE id = $1', [bookId]);
     if (bookResult.rows.length === 0) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
-    // Check if book is currently borrowed
+    const totalCopies = bookResult.rows[0].physicalCopies || 1;
+
+    // Check how many copies are currently borrowed
     const activeBorrow = await pool.query(
-      'SELECT id FROM borrowed_books WHERE "bookId" = $1 AND status = $2',
+      'SELECT COUNT(*) AS count FROM borrowed_books WHERE "bookId" = $1 AND status = $2',
       [bookId, 'borrowed']
     );
-    if (activeBorrow.rows.length > 0) {
-      return res.status(400).json({ error: 'This book is currently checked out by another member' });
+    const activeCount = parseInt(activeBorrow.rows[0].count) || 0;
+
+    if (activeCount >= totalCopies) {
+      return res.status(400).json({ error: 'All copies of this book are currently checked out. Please reserve a copy instead.' });
     }
 
     // Check borrowing limit (max 3 books at a time)
