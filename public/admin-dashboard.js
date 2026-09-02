@@ -610,13 +610,32 @@ async function returnAdminBook(borrowId) {
         try {
             var response = await fetch(API_BASE_URL + '/admin/borrowing/' + borrowId + '/return', { method: 'POST', credentials: 'include' });
             var data = await response.json();
-            if (response.ok) { showToast('Book marked as returned', 'success'); loadAdminBorrowing(); }
+            if (response.ok) { showToast('Book marked as returned', 'success'); loadAdminBorrowing(); if (isInventoryVisible()) loadInventory(); }
             else { showToast('Failed to mark as returned: ' + data.error, 'error'); }
         } catch (error) { showToast('Network error. Please try again.', 'error'); }
     }, 'Return');
 }
 
 // ─── Book Inventory ─────────────────────────────────────────────────────────
+var inventoryRefreshTimer = null;
+
+function isInventoryVisible() {
+    var section = document.getElementById('inventory-section');
+    return section && section.style.display !== 'none';
+}
+
+function startInventoryAutoRefresh() {
+    stopInventoryAutoRefresh();
+    // Poll every 10s so borrowed/returned copies reflect live while viewing
+    inventoryRefreshTimer = setInterval(function() {
+        if (isInventoryVisible() && !document.hidden) loadInventory();
+    }, 10000);
+}
+
+function stopInventoryAutoRefresh() {
+    if (inventoryRefreshTimer) { clearInterval(inventoryRefreshTimer); inventoryRefreshTimer = null; }
+}
+
 async function loadInventory() {
     var container = document.getElementById('inventory-list');
     container.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading inventory...</div>';
@@ -966,6 +985,9 @@ function showAdminSection(sectionId, navEl) {
     }
     if (sectionId === 'inventory-section') {
         loadInventory();
+        startInventoryAutoRefresh();
+    } else {
+        stopInventoryAutoRefresh();
     }
     if (sectionId === 'management-section') {
         // Default to first tab when entering console
