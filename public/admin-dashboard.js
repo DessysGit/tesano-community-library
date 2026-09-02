@@ -45,6 +45,53 @@ var ratingChart = null;
 var reviewTrendChart = null;
 var currentTimeFilter = 'all';
 
+// ─── Toast & Confirm Helpers (self-contained for this page) ─────────────────
+function showToast(message, type = 'info', duration = 3500) {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var toast = document.createElement('div');
+    toast.className = 'toast-msg ' + type;
+    toast.innerHTML = message;
+    container.appendChild(toast);
+    requestAnimationFrame(function() { requestAnimationFrame(function() { toast.classList.add('show'); }); });
+    setTimeout(function() {
+        toast.classList.remove('show');
+        setTimeout(function() { toast.remove(); }, 300);
+    }, duration);
+}
+
+function showConfirmModal(message, onConfirm, dangerLabel) {
+    var overlay = document.getElementById('confirm-modal-overlay');
+    var msgEl = document.getElementById('confirm-modal-message');
+    var okBtn = document.getElementById('confirm-modal-ok');
+    var cancelBtn = document.getElementById('confirm-modal-cancel');
+    if (!overlay || !msgEl || !okBtn || !cancelBtn) {
+        if (window.confirm(message)) onConfirm();
+        return;
+    }
+
+    msgEl.textContent = message;
+    if (dangerLabel) okBtn.textContent = dangerLabel;
+
+    var newOk = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOk, okBtn);
+    var newCancel = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    newOk.addEventListener('click', function() {
+        overlay.classList.remove('active');
+        onConfirm();
+    });
+    newCancel.addEventListener('click', function() {
+        overlay.classList.remove('active');
+    });
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.classList.remove('active');
+    }, { once: true });
+
+    overlay.classList.add('active');
+}
+
 // ─── Admin Access Check ─────────────────────────────────────────────────────
 async function checkAdminAccess() {
     try {
@@ -492,19 +539,20 @@ async function fulfillReservation(reservationId) {
     try {
         var response = await fetch(API_BASE_URL + '/admin/reservations/' + reservationId + '/fulfill', { method: 'POST', credentials: 'include' });
         var data = await response.json();
-        if (response.ok) { alert('Reservation marked as fulfilled'); loadAdminReservations(); }
-        else { alert('Failed to fulfill reservation: ' + data.error); }
-    } catch (error) { alert('Network error. Please try again.'); }
+        if (response.ok) { showToast('Reservation marked as fulfilled', 'success'); loadAdminReservations(); }
+        else { showToast('Failed to fulfill reservation: ' + data.error, 'error'); }
+    } catch (error) { showToast('Network error. Please try again.', 'error'); }
 }
 
 async function cancelAdminReservation(reservationId) {
-    if (!confirm('Are you sure you want to cancel this reservation?')) return;
-    try {
-        var response = await fetch(API_BASE_URL + '/admin/reservations/' + reservationId, { method: 'DELETE', credentials: 'include' });
-        var data = await response.json();
-        if (response.ok) { alert('Reservation cancelled'); loadAdminReservations(); }
-        else { alert('Failed to cancel reservation: ' + data.error); }
-    } catch (error) { alert('Network error. Please try again.'); }
+    showConfirmModal('Are you sure you want to cancel this reservation?', async function() {
+        try {
+            var response = await fetch(API_BASE_URL + '/admin/reservations/' + reservationId, { method: 'DELETE', credentials: 'include' });
+            var data = await response.json();
+            if (response.ok) { showToast('Reservation cancelled', 'success'); loadAdminReservations(); }
+            else { showToast('Failed to cancel reservation: ' + data.error, 'error'); }
+        } catch (error) { showToast('Network error. Please try again.', 'error'); }
+    }, 'Cancel');
 }
 
 // ─── Borrowing Management ───────────────────────────────────────────────────
@@ -558,13 +606,14 @@ async function loadOverdueBooks() {
 }
 
 async function returnAdminBook(borrowId) {
-    if (!confirm('Mark this book as returned?')) return;
-    try {
-        var response = await fetch(API_BASE_URL + '/admin/borrowing/' + borrowId + '/return', { method: 'POST', credentials: 'include' });
-        var data = await response.json();
-        if (response.ok) { alert('Book marked as returned'); loadAdminBorrowing(); }
-        else { alert('Failed to mark as returned: ' + data.error); }
-    } catch (error) { alert('Network error. Please try again.'); }
+    showConfirmModal('Mark this book as returned?', async function() {
+        try {
+            var response = await fetch(API_BASE_URL + '/admin/borrowing/' + borrowId + '/return', { method: 'POST', credentials: 'include' });
+            var data = await response.json();
+            if (response.ok) { showToast('Book marked as returned', 'success'); loadAdminBorrowing(); }
+            else { showToast('Failed to mark as returned: ' + data.error, 'error'); }
+        } catch (error) { showToast('Network error. Please try again.', 'error'); }
+    }, 'Return');
 }
 
 // ─── Fine Management ────────────────────────────────────────────────────────
@@ -599,13 +648,14 @@ async function loadAdminFines() {
 }
 
 async function waiveFine(fineId) {
-    if (!confirm('Are you sure you want to waive this fine?')) return;
-    try {
-        var response = await fetch(API_BASE_URL + '/admin/fines/' + fineId + '/waive', { method: 'POST', credentials: 'include' });
-        var data = await response.json();
-        if (response.ok) { alert('Fine waived successfully'); loadAdminFines(); }
-        else { alert('Failed to waive fine: ' + data.error); }
-    } catch (error) { alert('Network error. Please try again.'); }
+    showConfirmModal('Are you sure you want to waive this fine?', async function() {
+        try {
+            var response = await fetch(API_BASE_URL + '/admin/fines/' + fineId + '/waive', { method: 'POST', credentials: 'include' });
+            var data = await response.json();
+            if (response.ok) { showToast('Fine waived successfully', 'success'); loadAdminFines(); }
+            else { showToast('Failed to waive fine: ' + data.error, 'error'); }
+        } catch (error) { showToast('Network error. Please try again.', 'error'); }
+    }, 'Waive');
 }
 
 // ─── User Management ────────────────────────────────────────────────────────
@@ -663,20 +713,27 @@ async function loadAdminUsers() {
 
 async function toggleUserStatus(userId, currentRole) {
     var action = currentRole === 'suspended' ? 'unsuspend' : 'suspend';
-    if (!confirm('Are you sure you want to ' + action + ' this user?')) return;
-    try {
-        var response = await fetch(API_BASE_URL + '/admin/users/' + userId + '/suspend', { method: 'POST', credentials: 'include' });
-        var data = await response.json();
-        if (response.ok) { alert('User ' + action + 'ed successfully'); loadAdminUsers(); }
-        else { alert('Failed: ' + data.error); }
-    } catch (error) { alert('Network error. Please try again.'); }
+    showConfirmModal('Are you sure you want to ' + action + ' this user?', async function() {
+        try {
+            var response = await fetch(API_BASE_URL + '/admin/users/' + userId + '/suspend', { method: 'POST', credentials: 'include' });
+            var data = await response.json();
+            if (response.ok) { showToast('User ' + action + 'ed successfully', 'success'); loadAdminUsers(); }
+            else { showToast('Failed: ' + data.error, 'error'); }
+        } catch (error) { showToast('Network error. Please try again.', 'error'); }
+    }, currentRole === 'suspended' ? 'Unsuspend' : 'Suspend');
 }
 
 async function viewUserActivity(userId) {
-    var response = await fetch(API_BASE_URL + '/admin/users/' + userId + '/activity', { credentials: 'include' });
-    var activity = await response.json().catch(function() { return []; });
-    var lines = activity.map(function(a) { return '[' + new Date(a.createdAt).toLocaleString() + '] ' + a.type + ': ' + (a.bookTitle || a.text || ''); });
-    alert('User Activity (Last 100 actions):\n\n' + (lines.join('\n') || 'No activity found'));
+    try {
+        var response = await fetch(API_BASE_URL + '/admin/users/' + userId + '/activity', { credentials: 'include' });
+        var activity = await response.json().catch(function() { return []; });
+        if (!activity || activity.length === 0) { showToast('No activity found for this user', 'info'); return; }
+        var lines = activity.map(function(a) { return '[' + new Date(a.createdAt).toLocaleString() + '] ' + a.type + ': ' + (a.bookTitle || a.text || ''); });
+        var escaped = lines.join('<br>').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        showToast('User Activity (Last 100 actions):<br>' + escaped, 'info', 7000);
+    } catch (error) {
+        showToast('Failed to load activity: ' + (error && error.message ? error.message : 'unknown error'), 'error');
+    }
 }
 
 // ─── Activity Logs ──────────────────────────────────────────────────────────
@@ -888,30 +945,33 @@ async function submitAddBook() {
 
 // ─── User Management (Seed Admin) ─────────────────────────────────────────
 async function grantAdminRole(userId) {
-    if (!confirm('Grant admin role to this user?')) return;
-    try {
-        var response = await fetch(API_BASE_URL + '/users/' + userId + '/grant-admin', { method: 'POST', credentials: 'include' });
-        if (response.ok) { alert('Admin role granted.'); loadAdminUsers(); }
-        else { alert('Failed: ' + await response.text()); }
-    } catch (error) { alert('Network error.'); }
+    showConfirmModal('Grant admin role to this user?', async function() {
+        try {
+            var response = await fetch(API_BASE_URL + '/users/' + userId + '/grant-admin', { method: 'POST', credentials: 'include' });
+            if (response.ok) { showToast('Admin role granted.', 'success'); loadAdminUsers(); }
+            else { showToast('Failed: ' + await response.text(), 'error'); }
+        } catch (error) { showToast('Network error.', 'error'); }
+    }, 'Grant');
 }
 
 async function revokeAdminRole(userId) {
-    if (!confirm('Revoke admin role from this user?')) return;
-    try {
-        var response = await fetch(API_BASE_URL + '/users/' + userId + '/revoke-admin', { method: 'POST', credentials: 'include' });
-        if (response.ok) { alert('Admin role revoked.'); loadAdminUsers(); }
-        else { alert('Failed: ' + await response.text()); }
-    } catch (error) { alert('Network error.'); }
+    showConfirmModal('Revoke admin role from this user?', async function() {
+        try {
+            var response = await fetch(API_BASE_URL + '/users/' + userId + '/revoke-admin', { method: 'POST', credentials: 'include' });
+            if (response.ok) { showToast('Admin role revoked.', 'success'); loadAdminUsers(); }
+            else { showToast('Failed: ' + await response.text(), 'error'); }
+        } catch (error) { showToast('Network error.', 'error'); }
+    }, 'Revoke');
 }
 
 async function deleteAdminUser(userId, username) {
-    if (!confirm('Delete user "' + username + '"? This cannot be undone.')) return;
-    try {
-        var response = await fetch(API_BASE_URL + '/users/' + userId, { method: 'DELETE', credentials: 'include' });
-        if (response.ok) { alert('User deleted.'); loadAdminUsers(); }
-        else { alert('Failed: ' + await response.text()); }
-    } catch (error) { alert('Network error.'); }
+    showConfirmModal('Delete user "' + username + '"? This cannot be undone.', async function() {
+        try {
+            var response = await fetch(API_BASE_URL + '/users/' + userId, { method: 'DELETE', credentials: 'include' });
+            if (response.ok) { showToast('User deleted.', 'success'); loadAdminUsers(); }
+            else { showToast('Failed: ' + await response.text(), 'error'); }
+        } catch (error) { showToast('Network error.', 'error'); }
+    }, 'Delete');
 }
 
 // ─── Initialize Dashboard ───────────────────────────────────────────────────

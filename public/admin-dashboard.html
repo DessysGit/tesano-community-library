@@ -217,6 +217,70 @@
             border-radius: 8px; margin-bottom: 10px;
             transition: all .2s ease; background: rgba(40,40,40,0.4);
         }
+
+        /* ── Toast Notifications ─────────────────────────────────── */
+        #toast-container {
+            position: fixed;
+            top: 18px; right: 18px;
+            z-index: 3000;
+            display: flex; flex-direction: column;
+            gap: 10px;
+            max-width: 340px;
+            pointer-events: none;
+        }
+        .toast-msg {
+            background: #1e1e1e;
+            color: #eee;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-left: 4px solid #3b82f6;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: .85rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity .3s ease, transform .3s ease;
+            max-height: 50vh;
+            overflow-y: auto;
+            word-break: break-word;
+        }
+        .toast-msg.show { opacity: 1; transform: translateX(0); }
+        .toast-msg.success { border-left-color: #1DB954; }
+        .toast-msg.error   { border-left-color: #dc3545; }
+        .toast-msg.info    { border-left-color: #3b82f6; }
+
+        /* ── Confirm Modal ───────────────────────────────────────── */
+        #confirm-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(3px);
+            z-index: 2900;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #confirm-modal-overlay.active { display: flex; }
+        #confirm-modal {
+            background: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #dc3545;
+            border-radius: 14px;
+            padding: 24px 26px;
+            width: 100%;
+            max-width: 400px;
+            color: #eee;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            transform: scale(0.95);
+            transition: transform .2s ease;
+        }
+        #confirm-modal-overlay.active #confirm-modal { transform: scale(1); }
+        #confirm-modal h4 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+        #confirm-modal p  { font-size: .9rem; color: #bbb; margin-bottom: 20px; }
+        #confirm-modal .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        #confirm-modal .btn { font-size: .85rem; padding: 8px 18px; border-radius: 8px; }
+
         .book-card:hover {
             box-shadow: 0 3px 12px rgba(29,185,84,0.15);
             transform: translateX(3px); background: rgba(50,50,50,0.6);
@@ -775,5 +839,18 @@
             loadConsoleSummary();
         };
     </script>
+
+    <!-- Toast + confirm modal (used by showToast / showConfirmModal helpers) -->
+    <div id="toast-container"></div>
+    <div id="confirm-modal-overlay">
+        <div id="confirm-modal">
+            <h4><i class="fas fa-exclamation-triangle" style="color:#dc3545;"></i> Confirm Action</h4>
+            <p id="confirm-modal-message"></p>
+            <div class="modal-buttons">
+                <button id="confirm-modal-ok" class="btn btn-danger">Delete</button>
+                <button id="confirm-modal-cancel" class="btn btn-outline-light">Cancel</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
