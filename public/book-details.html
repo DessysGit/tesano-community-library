@@ -860,14 +860,27 @@
       }
     }
 
+    let renderTask = null;        // in-flight pdf.js render task
+    let renderSeq = 0;            // sequence guard: ignore stale renders
+
     async function renderPage(pageNum) {
       if (!pdfDoc) return;
+
+      // Cancel any in-flight render so the canvas is never double-rendered
+      if (renderTask) {
+        try { renderTask.cancel(); } catch (e) { /* noop */ }
+        renderTask = null;
+      }
+      const seq = ++renderSeq;
 
       try {
         document.getElementById('reader-loading').style.display = 'flex';
         document.getElementById('reader-canvas-container').style.display = 'none';
 
         const page = await pdfDoc.getPage(pageNum);
+        // A newer render was requested while waiting - skip this one
+        if (seq !== renderSeq) return;
+
         const canvas = document.getElementById('reader-canvas');
         const ctx = canvas.getContext('2d');
 
@@ -875,17 +888,27 @@
 
         // Handle high DPI displays
         const dpr = window.devicePixelRatio || 1;
-        canvas.width = viewport.width * dpr;
-        canvas.height = viewport.height * dpr;
+        canvas.width = Math.floor(viewport.width * dpr);
+        canvas.height = Math.floor(viewport.height * dpr);
         canvas.style.width = viewport.width + 'px';
         canvas.style.height = viewport.height + 'px';
 
+        // Clear + white-fill the canvas before rendering (prevents shadowed/leftover content)
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.scale(dpr, dpr);
 
-        await page.render({
+        renderTask = page.render({
           canvasContext: ctx,
           viewport: viewport
-        }).promise;
+        });
+        await renderTask.promise;
+        renderTask = null;
+
+        // Stale render finished late - do not touch the UI
+        if (seq !== renderSeq) return;
 
         // Update UI
         document.getElementById('reader-page-info').textContent = `Page ${pageNum} of ${totalPages}`;
@@ -898,9 +921,14 @@
         saveProgress();
 
       } catch (err) {
+        renderTask = null;
+        // Cancelled renders are expected when zooming/paging quickly
+        if (err && (err.name === 'RenderingCancelledException' || /cancel/i.test(err.message || ''))) return;
         console.error('Render error:', err);
-        document.getElementById('reader-loading').innerHTML =
-          '<i class="fas fa-exclamation-triangle" style="color:#dc3545;"></i><p>Failed to render page.</p>';
+        if (seq === renderSeq) {
+          document.getElementById('reader-loading').innerHTML =
+            '<i class="fas fa-exclamation-triangle" style="color:#dc3545;"></i><p>Failed to render page.</p>';
+        }
       }
     }
 
@@ -933,6 +961,8 @@
     }
 
     function closeReader() {
+      if (renderTask) { try { renderTask.cancel(); } catch (e) {} renderTask = null; }
+      renderSeq++;
       document.getElementById('book-reader-modal').classList.remove('active');
       document.body.style.overflow = '';
       pdfDoc = null;
