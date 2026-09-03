@@ -19,7 +19,7 @@ const API_BASE_URL = (() => {
 // â”€â”€â”€ JWT Auto-Inject & 401 Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Intercept every fetch() call. If the request targets our Render backend,
 // automatically attach the stored JWT as an Authorization header.
-// Also handles 401 responses globally â€” if the token is expired/invalid,
+// Also handles 401 responses globally — if the token is expired/invalid,
 // clear it and redirect to auth page.
 let _sessionExpiredRedirecting = false; // prevents parallel 401s from each triggering a redirect
 (function injectJwtOnBackendRequests() {
@@ -586,7 +586,7 @@ async function logout() {
     showSection('search-books');
 
     // Confirm logout
-    showToast("You've been signed out â€” browsing as a guest.", 'info');
+    showToast("You've been signed out — browsing as a guest.", 'info');
 }
 
 function closeMenuOnClickOutside(event) {
@@ -807,11 +807,11 @@ async function fetchBooks(query = '', page = 1) {
                         </div>
                     <div class="like-dislike-ratings">
                         <div class="like-dislike-buttons">
-                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">ðŸ‘ ${book.likes || 0}</button>
-                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">ðŸ‘Ž ${book.dislikes || 0}</button>
+                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')"><i class="fas fa-thumbs-up"></i> ${book.likes || 0}</button>
+                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')"><i class="fas fa-thumbs-down"></i> ${book.dislikes || 0}</button>
                         </div>
-                        ${book.hasPhysicalCopy ? (book.isAvailable === false ? `
-                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out â€” join the reservation queue">
+                        ${book.hasPhysicalCopy ? (book.availableCopies === 0 ? `
+                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out — join the reservation queue">
                                 <i class="fas fa-clock"></i> Reserve
                             </button>
                         ` : `
@@ -865,8 +865,8 @@ async function fetchBooks(query = '', page = 1) {
 function updateLikeDislikeUI(bookId, likes, dislikes, action) {
     const likeButton    = document.querySelector(`#book-${bookId} .like-button`);
     const dislikeButton = document.querySelector(`#book-${bookId} .dislike-button`);
-    if (likeButton)    { likeButton.innerHTML    = `ðŸ‘ ${likes}`;    likeButton.classList.toggle('active', action === 'like'); }
-    if (dislikeButton) { dislikeButton.innerHTML = `ðŸ‘Ž ${dislikes}`; dislikeButton.classList.toggle('active', action === 'dislike'); }
+    if (likeButton)    { likeButton.innerHTML    = `<i class="fas fa-thumbs-up"></i> ${likes}`;    likeButton.classList.toggle('active', action === 'like'); }
+    if (dislikeButton) { dislikeButton.innerHTML = `<i class="fas fa-thumbs-down"></i> ${dislikes}`; dislikeButton.classList.toggle('active', action === 'dislike'); }
 }
 
 function getUserAction(bookId) { return localStorage.getItem(`book-${bookId}-reaction`); }
@@ -1077,7 +1077,7 @@ function updateUploadLabel(inputId, labelId, areaId) {
         if (area) { area.style.borderColor = '#1DB954'; area.style.background = 'rgba(29,185,84,0.08)'; }
         const msgBox = document.getElementById('add-book-messages');
         if (msgBox && inputId === 'book-file' && file.size > 10 * 1024 * 1024) {
-            displayMessage('add-book-messages', `âš ï¸ Large file detected (${sizeMB} MB). Upload will take longer â€” please be patient and don't close the tab.`, 'info');
+            displayMessage('add-book-messages', `âš ï¸ Large file detected (${sizeMB} MB). Upload will take longer — please be patient and don't close the tab.`, 'info');
         } else if (msgBox && inputId === 'book-file') {
             msgBox.innerHTML = '';
         }
@@ -1271,7 +1271,7 @@ const profilePictureInput = document.getElementById('profile-picture-input');
 if (profilePictureInput) profilePictureInput.addEventListener('change', uploadProfilePicture);
 
 async function refreshProfilePicture() {
-    const defaultImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23444" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="32" font-family="Arial"%3EðŸ‘¤%3C/text%3E%3C/svg%3E';
+    const defaultImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23444" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="32" font-family="Arial"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
     try {
         const response = await fetch(`${API_BASE_URL}/users/profile`, { credentials: 'include' });
         if (response.ok) {
@@ -1289,7 +1289,7 @@ async function refreshProfilePicture() {
 }
 
 function setDefaultProfilePictures() {
-    const d = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23444" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="32" font-family="Arial"%3EðŸ‘¤%3C/text%3E%3C/svg%3E';
+    const d = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23444" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="32" font-family="Arial"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
     const p = document.getElementById('profile-picture');       if (p) p.src = d;
     const b = document.getElementById('burger-profile-picture'); if (b) b.src = d;
 }
@@ -1415,8 +1415,8 @@ async function handleLikeDislike(bookId, action) {
 function syncLikeDislikeAcrossPages(bookId, likes, dislikes, action) {
     const likeButton    = document.querySelector(`#book-${bookId} .like-button`);
     const dislikeButton = document.querySelector(`#book-${bookId} .dislike-button`);
-    if (likeButton)    { likeButton.innerHTML    = `ðŸ‘ ${likes}`;    likeButton.classList.toggle('active',    action === 'like'); }
-    if (dislikeButton) { dislikeButton.innerHTML = `ðŸ‘Ž ${dislikes}`; dislikeButton.classList.toggle('active', action === 'dislike'); }
+    if (likeButton)    { likeButton.innerHTML    = `<i class="fas fa-thumbs-up"></i> ${likes}`;    likeButton.classList.toggle('active',    action === 'like'); }
+    if (dislikeButton) { dislikeButton.innerHTML = `<i class="fas fa-thumbs-down"></i> ${dislikes}`; dislikeButton.classList.toggle('active', action === 'dislike'); }
 }
 
 function showBookDetails(bookId) {
@@ -1424,7 +1424,7 @@ function showBookDetails(bookId) {
     window.location.href = `book-details.html?bookId=${bookId}`;
 }
 
-// Stubs â€” real versions live as inline scripts in book-details.html
+// Stubs — real versions live as inline scripts in book-details.html
 function saveBookDetails()   {}
 function editBookDetails()   {}
 function deleteBookDetails() {}
@@ -1625,7 +1625,7 @@ function updateFavoritesCount(genres, authors, books) {
 }
 
 function setDefaultProfilePicture() {
-    const d = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23444" width="150" height="150"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="60" font-family="Arial"%3EðŸ‘¤%3C/text%3E%3C/svg%3E';
+    const d = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23444" width="150" height="150"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23fff" font-size="60" font-family="Arial"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
     const p = document.getElementById('profile-picture'); if (p) p.src = d;
 }
 
@@ -1647,9 +1647,9 @@ async function loadUserActivity() {
         activityList.innerHTML = activities.map(item => {
             const timeAgo  = getTimeAgo(new Date(item.createdAt));
             const bookLink = `<a href="book-details.html?bookId=${item.bookId}" style="color:#1DB954;">${item.bookTitle}</a>`;
-            if (item.type === 'review')   return `<div class="activity-item"><div><strong>ðŸ“ Reviewed:</strong> ${bookLink}</div><div style="color:#ffd700;margin-top:4px;">${'â­'.repeat(item.rating)} ${item.rating}/5</div><div class="activity-item-time">${timeAgo}</div></div>`;
-            if (item.type === 'like')     return `<div class="activity-item" style="border-left-color:#1DB954;"><div><strong>ðŸ‘ Liked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
-            if (item.type === 'dislike')  return `<div class="activity-item" style="border-left-color:#dc3545;"><div><strong>ðŸ‘Ž Disliked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
+            if (item.type === 'review')   return `<div class="activity-item"><div><strong>&#128221; Reviewed:</strong> ${bookLink}</div><div style="color:#ffd700;margin-top:4px;">${'â­'.repeat(item.rating)} ${item.rating}/5</div><div class="activity-item-time">${timeAgo}</div></div>`;
+            if (item.type === 'like')     return `<div class="activity-item" style="border-left-color:#1DB954;"><div><strong>&#128077; Liked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
+            if (item.type === 'dislike')  return `<div class="activity-item" style="border-left-color:#dc3545;"><div><strong>&#128078; Disliked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
             return '';
         }).join('');
     } catch (error) {
@@ -1777,11 +1777,11 @@ function displayQuickSearchResults(books) {
                     </div></div>
                     <div class="like-dislike-ratings">
                         <div class="like-dislike-buttons">
-                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')">ðŸ‘ ${book.likes || 0}</button>
-                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')">ðŸ‘Ž ${book.dislikes || 0}</button>
+                            <button class="like-button" onclick="handleLikeDislike(${book.id}, 'like')"><i class="fas fa-thumbs-up"></i> ${book.likes || 0}</button>
+                            <button class="dislike-button" onclick="handleLikeDislike(${book.id}, 'dislike')"><i class="fas fa-thumbs-down"></i> ${book.dislikes || 0}</button>
                         </div>
-                        ${book.hasPhysicalCopy ? (book.isAvailable === false ? `
-                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out â€” join the reservation queue">
+                        ${book.hasPhysicalCopy ? (book.availableCopies === 0 ? `
+                            <button class="btn btn-warning btn-sm reserve-btn" onclick="reserveBook(${book.id})" title="This copy is checked out — join the reservation queue">
                                 <i class="fas fa-clock"></i> Reserve
                             </button>
                         ` : `
@@ -1948,7 +1948,7 @@ async function loadChallenges() {
                     const pct = Math.round((uc.booksRead / uc.goalBooks) * 100);
                     return `<div class="p-3 mb-2 rounded" style="border-left:4px solid ${uc.completedAt ? '#28a745' : '#f0ad4e'};background:#1e1e1e;">
                         <div class="d-flex justify-content-between"><div><strong>${uc.title}</strong><div class="progress mt-2" style="height:10px;"><div class="progress-bar ${uc.completedAt ? 'bg-success' : 'bg-warning'}" style="width:${Math.min(pct,100)}%">${Math.min(pct,100)}%</div></div><small>${uc.booksRead}/${uc.goalBooks} books read</small></div>
-                        <div>${uc.completedAt ? '<span class="badge badge-success">ðŸŽ‰ Done!</span>' : `<button class="btn btn-sm btn-success" onclick="updateChallengeProgress(${uc.challengeId})"><i class="fas fa-book"></i> Log Book</button>`}</div></div></div>`;
+                        <div>${uc.completedAt ? '<span class="badge badge-success">&#127881; Done!</span>' : `<button class="btn btn-sm btn-success" onclick="updateChallengeProgress(${uc.challengeId})"><i class="fas fa-book"></i> Log Book</button>`}</div></div></div>`;
                 }).join('');
             }
         }
@@ -1958,14 +1958,14 @@ async function loadChallenges() {
             const badges = await response.json();
             if (badges.length === 0) { badgesDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No badges yet. Complete challenges!</p></div>'; }
             else {
-                badgesDiv.innerHTML = badges.map(b => `<div class="text-center p-2 m-1 d-inline-block" style="background:#2a2a2a;border-radius:8px;min-width:100px;"><div style="font-size:2rem;">${b.icon || 'ðŸ†'}</div><strong><small>${b.name}</small></strong></div>`).join('');
+                badgesDiv.innerHTML = badges.map(b => `<div class="text-center p-2 m-1 d-inline-block" style="background:#2a2a2a;border-radius:8px;min-width:100px;"><div style="font-size:2rem;">${b.icon || '&#127942;'}</div><strong><small>${b.name}</small></strong></div>`).join('');
             }
         }
         // Leaderboard
         if (leaderboardDiv) {
             const response = await fetch(`${API_BASE_URL}/challenges/leaderboard`, { headers: getAuthHeaders() });
             const leaders = await response.json();
-            const medals = ['ðŸ¥‡','ðŸ¥ˆ','ðŸ¥‰'];
+            const medals = ['&#129351;','&#129352;','&#129353;'];
             if (leaders.length === 0) { leaderboardDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No data.</p></div>'; }
             else {
                 leaderboardDiv.innerHTML = leaders.map((l,i) => `<div class="p-2 mb-1 rounded d-flex justify-content-between" style="background:#1e1e1e;"><span>${medals[i] || `${i+1}.`} <strong>${l.username}</strong></span><span>${l.booksBorrowed} books | ${l.badges} badges</span></div>`).join('');
@@ -2066,7 +2066,7 @@ async function loadBorrowedBooks() {
             // Fine for this book: prefer the official unpaid fine record; otherwise
             // show the live daily accrual (GHS 1.00/day) for overdue books
             const matchingFine = unpaidFines.find(f => f.bookTitle === borrow.title);
-            let fineCell = '<span class="text-muted">â€”</span>';
+            let fineCell = '<span class="text-muted">—</span>';
             if (matchingFine) {
                 fineCell = `
                     <span class="text-danger"><strong>GHS ${parseFloat(matchingFine.amount).toFixed(2)}</strong></span><br>
