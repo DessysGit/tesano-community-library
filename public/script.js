@@ -820,7 +820,7 @@ async function fetchBooks(query = '', page = 1) {
                             </button>
                         `) : ''}
                         ${book.hasDigitalCopy ? `
-                            <button class="btn btn-info btn-sm read-btn" onclick="showBookDetails(${book.id})" title="Read on site">
+                            <button class="btn btn-success btn-sm read-btn" onclick="showBookDetails(${book.id})" title="Read on site">
                                 <i class="fas fa-book-open"></i> Read
                             </button>
                         ` : ''}
@@ -1790,7 +1790,7 @@ function displayQuickSearchResults(books) {
                             </button>
                         `) : ''}
                         ${book.hasDigitalCopy ? `
-                            <button class="btn btn-info btn-sm read-btn" onclick="showBookDetails(${book.id})" title="Read on site">
+                            <button class="btn btn-success btn-sm read-btn" onclick="showBookDetails(${book.id})" title="Read on site">
                                 <i class="fas fa-book-open"></i> Read
                             </button>
                         ` : ''}

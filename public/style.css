@@ -1020,10 +1020,10 @@ body {
 }
 
 .book-item .like-dislike-buttons button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.4);
     border-radius: 4px;
-    color: #e0e0e0;
+    color: #FFD700;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
@@ -1033,16 +1033,34 @@ body {
 }
 
 .book-item .like-dislike-buttons button.active {
-    background: rgba(29, 185, 84, 0.2);
-    border-color: #1DB954;
-    color: #1DB954;
+    background: rgba(255, 215, 0, 0.15);
+    border-color: #FFD700;
+    color: #FFD700;
+    font-weight: 600;
 }
 
 .book-item .like-dislike-buttons button:hover {
-    background: rgba(29, 185, 84, 0.15);
-    border-color: rgba(29, 185, 84, 0.5);
-    color: #1DB954;
+    background: rgba(255, 215, 0, 0.12);
+    border-color: #FFD700;
+    color: #FFD700;
     transform: translateY(-1px);
+}
+
+/* Gold RESERVE button (checked-out books) — matches original design */
+.book-item .reserve-btn {
+    background-color: #FFD700 !important;
+    border-color: #FFD700 !important;
+    color: #111 !important;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    min-width: 110px;
+}
+.book-item .reserve-btn:hover {
+    background-color: #E6C200 !important;
+    border-color: #E6C200 !important;
+    color: #111 !important;
+    box-shadow: 0 3px 10px rgba(255, 215, 0, 0.35);
 }
 
 .book-item .like-dislike-ratings .btn {
