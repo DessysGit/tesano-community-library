@@ -1,0 +1,19 @@
+[
+  {
+    "origin": [
+      "https://strong-paletas-464b32.netlify.app",
+      "http://localhost:3000"
+    ],
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "responseHeader": [
+      "Content-Type",
+      "Content-Length",
+      "Content-Range",
+      "Accept-Ranges"
+    ],
+    "maxAgeSeconds": 86400
+  }
+]
