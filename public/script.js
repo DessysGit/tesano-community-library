@@ -1964,7 +1964,9 @@ async function loadChallenges() {
         // Leaderboard
         if (leaderboardDiv) {
             const response = await fetch(`${API_BASE_URL}/challenges/leaderboard`, { headers: getAuthHeaders() });
+            if (!response.ok) throw new Error('Failed to fetch leaderboard');
             const leaders = await response.json();
+            if (!Array.isArray(leaders)) throw new Error('Unexpected leaderboard response');
             const medals = ['&#129351;','&#129352;','&#129353;'];
             if (leaders.length === 0) { leaderboardDiv.innerHTML = '<div class="text-center py-4"><p class="text-muted">No data.</p></div>'; }
             else {
