@@ -1074,10 +1074,10 @@
       grid.classList.add('recommendations-grid');
       grid.id = 'skeleton-loader';
       
-      // Show 10 skeleton cards
-      for (let i = 0; i < 10; i++) {
+      // Show 5 skeleton cards (5th hidden on mobile via CSS)
+      for (let i = 0; i < 5; i++) {
         grid.innerHTML += `
-          <div class="recommendation-card-compact skeleton-card">
+          <div class="recommendation-card-compact skeleton-card${i === 4 ? ' skeleton-hide-mobile' : ''}">
             <div class="skeleton skeleton-img"></div>
             <div class="card-body p-2">
               <div class="skeleton skeleton-title"></div>

@@ -3969,19 +3969,19 @@ a:focus,
 }
 
 .skeleton-img {
-    height: 250px;
+    height: 140px;
     width: 100%;
     border-radius: 4px 4px 0 0;
 }
 
 .skeleton-title {
-    height: 20px;
+    height: 14px;
     width: 80%;
     margin-bottom: 10px;
 }
 
 .skeleton-text {
-    height: 14px;
+    height: 12px;
     width: 100%;
     margin-bottom: 8px;
 }
@@ -3991,7 +3991,7 @@ a:focus,
 }
 
 .skeleton-button {
-    height: 35px;
+    height: 30px;
     width: 100%;
     margin-top: 10px;
     border-radius: 4px;
@@ -4100,7 +4100,12 @@ a:focus,
     }
     
     .skeleton-img {
-        height: 200px;
+        height: 110px;
+    }
+
+    /* 4 skeleton cards on mobile, 5 on desktop */
+    .skeleton-hide-mobile {
+        display: none;
     }
 }
 
