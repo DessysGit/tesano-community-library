@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    IMPORTS & FONTS
 ======================================== */
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
@@ -151,7 +151,7 @@ body.guest-mode .hamburger {
         gap: 8px;
     }
 
-    /* Banner stacks taller on mobile — push hamburger further down */
+    /* Banner stacks taller on mobile â€” push hamburger further down */
     body.guest-mode .hamburger {
         top: 92px;
     }
@@ -1046,7 +1046,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* Gold RESERVE button (checked-out books) — matches original design */
+/* Gold RESERVE button (checked-out books) â€” matches original design */
 .book-item .reserve-btn {
     background-color: #FFD700 !important;
     border-color: #FFD700 !important;
@@ -1400,7 +1400,7 @@ body {
     padding: 2rem;
 }
 
-/* Review Display Cards — dark theme to match the rest of the app */
+/* Review Display Cards â€” dark theme to match the rest of the app */
 .reviews-container .review-card {
     background: #343a40;
     border: 1px solid rgba(40, 167, 69, 0.25);
@@ -4103,7 +4103,7 @@ a:focus,
         height: 110px;
     }
 
-    /* 4 skeleton cards on mobile, 5 on desktop */
+    /* 4 skeleton cards on mobile, 6 on desktop */
     .skeleton-hide-mobile {
         display: none;
     }
