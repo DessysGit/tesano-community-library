@@ -151,7 +151,7 @@ body.guest-mode .hamburger {
         gap: 8px;
     }
 
-    /* Banner stacks taller on mobile â€” push hamburger further down */
+    /* Banner stacks taller on mobile — push hamburger further down */
     body.guest-mode .hamburger {
         top: 92px;
     }
@@ -1046,7 +1046,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* Gold RESERVE button (checked-out books) â€” matches original design */
+/* Gold RESERVE button (checked-out books) — matches original design */
 .book-item .reserve-btn {
     background-color: #FFD700 !important;
     border-color: #FFD700 !important;
@@ -1400,7 +1400,7 @@ body {
     padding: 2rem;
 }
 
-/* Review Display Cards â€” dark theme to match the rest of the app */
+/* Review Display Cards — dark theme to match the rest of the app */
 .reviews-container .review-card {
     background: #343a40;
     border: 1px solid rgba(40, 167, 69, 0.25);
@@ -1524,84 +1524,6 @@ body {
     margin: 1rem 0;
 }
 
-/* Desktop Layout */
-@media (min-width: 768px) {
-    #recommendations-container .row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-    
-    #recommendations-container .col-md-3 {
-        flex: 0 0 calc(25% - 0.75rem);
-        max-width: calc(25% - 0.75rem);
-    }
-}
-
-/* Mobile Horizontal Scroll Layout */
-@media (max-width: 767px) {
-    #recommendations-container .row {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        gap: 1rem;
-        padding: 10px 0 20px 0;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    #recommendations-container .col-md-3 {
-        flex: 0 0 280px;
-        min-width: 280px;
-        max-width: 280px;
-    }
-    
-    #recommendations-container .row::-webkit-scrollbar {
-        height: 6px;
-    }
-    
-    #recommendations-container .row::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-    }
-    
-    #recommendations-container .row::-webkit-scrollbar-thumb {
-        background: #1DB954;
-        border-radius: 3px;
-    }
-    
-    #recommendations-container .row::-webkit-scrollbar-thumb:hover {
-        background: #17a647;
-    }
-}
-
-/* Recommendation Cards */
-#recommendations-container .card {
-    background-color: #1e1e1e;
-    border: 1px solid rgba(29, 185, 84, 0.2);
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    overflow: hidden;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-#recommendations-container .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(29, 185, 84, 0.4);
-    border-color: rgba(29, 185, 84, 0.5);
-}
-
-#recommendations-container .card-img-top {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-    border-radius: 0;
-}
-
 #recommendations-container .card-body {
     padding: 0.75rem;
     display: flex;
@@ -1624,20 +1546,6 @@ body {
     text-overflow: ellipsis;
 }
 
-#recommendations-container .card-text {
-    font-size: 0.85rem;
-    color: #aaa;
-    margin-bottom: 0.5rem;
-    flex-grow: 1;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.4;
-}
-
 #recommendations-container .btn {
     margin-top: auto;
     padding: 0.5rem 0.875rem;
@@ -1658,63 +1566,6 @@ body {
     box-shadow: 0 4px 12px rgba(29, 185, 84, 0.4);
     color: white;
     text-decoration: none;
-}
-
-/* Loading & Empty States */
-#recommendations-container .loading-recommendations {
-    text-align: center;
-    padding: 2rem;
-    color: #1DB954;
-    font-size: 1.1rem;
-}
-
-#recommendations-container .loading-recommendations::after {
-    content: '';
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid rgba(29, 185, 84, 0.3);
-    border-top: 2px solid #1DB954;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-left: 10px;
-}
-
-#recommendations-container .no-recommendations {
-    text-align: center;
-    padding: 2rem;
-    color: #aaa;
-    font-style: italic;
-}
-
-/* Small Screen Optimization for Recommendations */
-@media (max-width: 480px) {
-    #recommendations-container .col-md-3 {
-        flex: 0 0 250px;
-        min-width: 250px;
-        max-width: 250px;
-    }
-    
-    #recommendations-container .card-img-top {
-        height: 150px;
-    }
-    
-    #recommendations-container .card-body {
-        padding: 0.7rem;
-    }
-    
-    #recommendations-container .card-title {
-        font-size: 0.95rem;
-    }
-    
-    #recommendations-container .card-text {
-        font-size: 0.78rem;
-    }
-    
-    #recommendations-container .btn {
-        min-height: 44px;
-        font-size: 0.9rem;
-    }
 }
 
 /* ========================================

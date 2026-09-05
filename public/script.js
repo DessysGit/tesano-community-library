@@ -16,7 +16,7 @@ const API_BASE_URL = (() => {
   }
 })();
 
-// â”€â”€â”€ JWT Auto-Inject & 401 Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── JWT Auto-Inject & 401 Handler ─────────────────────────────────────────
 // Intercept every fetch() call. If the request targets our Render backend,
 // automatically attach the stored JWT as an Authorization header.
 // Also handles 401 responses globally — if the token is expired/invalid,
@@ -71,7 +71,7 @@ let userRole = "";
 // Guest modal callback - stores action to perform after login
 let guestActionCallback = null;
 
-// â”€â”€ Guest Modal Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Guest Modal Functions ──────────────────────────────────────────────────
 function showGuestModal(message, callback) {
     const modal = document.getElementById('guest-access-modal');
     const messageEl = document.getElementById('guest-modal-message');
@@ -525,7 +525,7 @@ async function resendVerification() {
             document.getElementById('resend-email').value = '';
             setTimeout(() => {
                 displayMessage('resend-messages',
-                    data.message + '<br><br><strong>Remember:</strong><br>â€¢ Check your spam folder<br>â€¢ The link expires in 24 hours',
+                    data.message + '<br><br><strong>Remember:</strong><br>• Check your spam folder<br>• The link expires in 24 hours',
                     'success');
             }, 2000);
             setTimeout(() => {
@@ -635,7 +635,7 @@ async function subscribeNewsletter(event) {
             body: JSON.stringify({ email })
         });
         if (response.ok) {
-            displayMessage(msgBox, 'âœ… Subscribed successfully! Check your inbox.', 'success');
+            displayMessage(msgBox, '✅ Subscribed successfully! Check your inbox.', 'success');
             emailInput.value = '';
         } else {
             const errorMessage = await response.text();
@@ -892,7 +892,7 @@ function hideLoadingSpinner() {
     if (spinner) spinner.style.display = 'none';
 }
 
-// â”€â”€ Toast Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Toast Notifications ──────────────────────────────────────────────────────
 function showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -907,7 +907,7 @@ function showToast(message, type = 'info', duration = 3500) {
     }, duration);
 }
 
-// â”€â”€ Confirm Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Confirm Modal ─────────────────────────────────────────────────────────────
 function showConfirmModal(message, onConfirm, dangerLabel = 'Delete') {
     const overlay   = document.getElementById('confirm-modal-overlay');
     const msgEl     = document.getElementById('confirm-modal-message');
@@ -928,7 +928,7 @@ function showConfirmModal(message, onConfirm, dangerLabel = 'Delete') {
     overlay.classList.add('active');
 }
 
-// â”€â”€ displayMessage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── displayMessage ─────────────────────────────────────────────────────────────
 function displayMessage(elementId, message, type = 'error') {
     const messageElement = document.getElementById(elementId);
     if (messageElement) {
@@ -983,19 +983,19 @@ async function fetchUsers() {
 
 async function grantAdmin(userId) {
     const response = await fetch(`${API_BASE_URL}/users/${userId}/grant-admin`, { method: 'POST', credentials: 'include' });
-    if (response.ok) { showToast('âœ… Admin role granted.', 'success'); fetchUsers(); }
+    if (response.ok) { showToast('✅ Admin role granted.', 'success'); fetchUsers(); }
     else { showToast('Failed to grant admin: ' + await response.text(), 'error'); }
 }
 
 async function revokeAdmin(userId) {
     const response = await fetch(`${API_BASE_URL}/users/${userId}/revoke-admin`, { method: 'POST', credentials: 'include' });
-    if (response.ok) { showToast('âœ… Admin role revoked.', 'success'); fetchUsers(); }
+    if (response.ok) { showToast('✅ Admin role revoked.', 'success'); fetchUsers(); }
     else { showToast('Failed to revoke admin: ' + await response.text(), 'error'); }
 }
 
 async function deleteUser(userId) {
     const response = await fetch(`${API_BASE_URL}/users/${userId}`, { method: 'DELETE', credentials: 'include' });
-    if (response.ok) { showToast('âœ… User deleted.', 'success'); fetchUsers(); }
+    if (response.ok) { showToast('✅ User deleted.', 'success'); fetchUsers(); }
     else { showToast('Failed to delete user: ' + await response.text(), 'error'); }
 }
 
@@ -1032,7 +1032,7 @@ async function addBook() {
     document.getElementById(msgBox).innerHTML = '';
     showButtonSpinner(addBtn, '<i class="fas fa-plus-circle mr-2"></i>Add Book');
     displayMessage(msgBox,
-        '<i class="fas fa-spinner fa-spin mr-2"></i>Uploadingâ€¦ Please wait, this may take a moment for large files.',
+        '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading… Please wait, this may take a moment for large files.',
         'info'
     );
 
@@ -1049,7 +1049,7 @@ async function addBook() {
         const response = await fetch(`${API_BASE_URL}/books`, { method: 'POST', body: formData, credentials: 'include' });
         const data = await response.json().catch(() => null);
         if (response.ok) {
-            displayMessage(msgBox, `âœ… <strong>"${data?.book?.title || title}"</strong> added successfully!`, 'success');
+            displayMessage(msgBox, `✅ <strong>"${data?.book?.title || title}"</strong> added successfully!`, 'success');
             clearAddBookFields();
             setTimeout(() => showSection('search-books'), 1800);
         } else {
@@ -1077,13 +1077,13 @@ function updateUploadLabel(inputId, labelId, areaId) {
         if (area) { area.style.borderColor = '#1DB954'; area.style.background = 'rgba(29,185,84,0.08)'; }
         const msgBox = document.getElementById('add-book-messages');
         if (msgBox && inputId === 'book-file' && file.size > 10 * 1024 * 1024) {
-            displayMessage('add-book-messages', `âš ï¸ Large file detected (${sizeMB} MB). Upload will take longer — please be patient and don't close the tab.`, 'info');
+            displayMessage('add-book-messages', `⚠️ Large file detected (${sizeMB} MB). Upload will take longer — please be patient and don't close the tab.`, 'info');
         } else if (msgBox && inputId === 'book-file') {
             msgBox.innerHTML = '';
         }
     } else {
         const isImage = inputId === 'book-cover';
-        labelText.textContent = isImage ? 'Click to choose an imageâ€¦' : 'Click to choose a PDFâ€¦';
+        labelText.textContent = isImage ? 'Click to choose an image…' : 'Click to choose a PDF…';
         labelText.style.color = '';
         if (area) { area.style.borderColor = ''; area.style.background = ''; }
     }
@@ -1101,7 +1101,7 @@ function editBook(bookId) { window.location.href = `book-details.html?bookId=${b
 
 async function deleteBook(bookId) {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}`, { method: 'DELETE', credentials: 'include' });
-    if (response.ok) { showToast('âœ… Book deleted.', 'success'); fetchBooks(); }
+    if (response.ok) { showToast('✅ Book deleted.', 'success'); fetchBooks(); }
     else { showToast('Failed to delete book: ' + await response.text(), 'error'); }
 }
 
@@ -1255,7 +1255,7 @@ async function uploadProfilePicture() {
                 const ts = '?timestamp=' + new Date().getTime();
                 document.getElementById('profile-picture').src = url + ts;
                 document.getElementById('burger-profile-picture').src = url + ts;
-                showToast('âœ… Profile picture updated!', 'success');
+                showToast('✅ Profile picture updated!', 'success');
             } else {
                 showToast('Failed to upload profile picture: ' + await response.text(), 'error');
             }
@@ -1460,7 +1460,7 @@ async function requestPasswordReset() {
         if (response.ok) {
             displayMessage('forgot-password-messages', data.message, 'success');
             document.getElementById('forgot-password-email').value = '';
-            setTimeout(() => { displayMessage('forgot-password-messages', data.message + '<br><br>â€¢ Check your inbox (and spam)<br>â€¢ Click the reset link within 1 hour', 'success'); }, 1500);
+            setTimeout(() => { displayMessage('forgot-password-messages', data.message + '<br><br>• Check your inbox (and spam)<br>• Click the reset link within 1 hour', 'success'); }, 1500);
             setTimeout(() => { hideForgotPasswordForm(); displayMessage('login-messages', 'Password reset email sent! Please check your email.', 'info'); }, 6000);
         } else { displayMessage('forgot-password-messages', data.message || data.error || 'Failed to send reset email', 'error'); }
     } catch (error) { displayMessage('forgot-password-messages', 'Network error. Please try again.', 'error'); }
@@ -1488,7 +1488,7 @@ async function initializeChatbot() {
 
 document.addEventListener('DOMContentLoaded', () => { setupOutsideClickListener(); });
 
-// â”€â”€ Profile tab functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Profile tab functions ────────────────────────────────────────────────────
 function switchProfileTab(tabName) {
     document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
@@ -1532,7 +1532,7 @@ async function savePreferences() {
             ['profile-genres','profile-authors','profile-books'].forEach(id => { document.getElementById(id).disabled = true; });
             document.getElementById('edit-preferences-btn').style.display = 'block';
             document.getElementById('preferences-actions').style.display = 'none';
-            displayMessage('preferences-messages', 'âœ… Preferences saved!', 'success');
+            displayMessage('preferences-messages', '✅ Preferences saved!', 'success');
             updateFavoritesCount(favoriteGenres, favoriteAuthors, favoriteBooks);
             setTimeout(() => { const m = document.getElementById('preferences-messages'); if (m) m.innerHTML = ''; }, 3000);
         } else {
@@ -1567,7 +1567,7 @@ async function changePassword() {
             body: JSON.stringify({ password: newPassword, currentPassword })
         });
         if (response.ok) {
-            displayMessage(msgBox, 'âœ… Password updated successfully!', 'success');
+            displayMessage(msgBox, '✅ Password updated successfully!', 'success');
             ['current-password','new-password','confirm-new-password'].forEach(id => { document.getElementById(id).value = ''; });
             setTimeout(() => { const m = document.getElementById(msgBox); if (m) m.innerHTML = ''; }, 4000);
         } else {
@@ -1647,7 +1647,7 @@ async function loadUserActivity() {
         activityList.innerHTML = activities.map(item => {
             const timeAgo  = getTimeAgo(new Date(item.createdAt));
             const bookLink = `<a href="book-details.html?bookId=${item.bookId}" style="color:#1DB954;">${item.bookTitle}</a>`;
-            if (item.type === 'review')   return `<div class="activity-item"><div><strong>&#128221; Reviewed:</strong> ${bookLink}</div><div style="color:#ffd700;margin-top:4px;">${'â­'.repeat(item.rating)} ${item.rating}/5</div><div class="activity-item-time">${timeAgo}</div></div>`;
+            if (item.type === 'review')   return `<div class="activity-item"><div><strong>&#128221; Reviewed:</strong> ${bookLink}</div><div style="color:#ffd700;margin-top:4px;">${'⭐'.repeat(item.rating)} ${item.rating}/5</div><div class="activity-item-time">${timeAgo}</div></div>`;
             if (item.type === 'like')     return `<div class="activity-item" style="border-left-color:#1DB954;"><div><strong>&#128077; Liked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
             if (item.type === 'dislike')  return `<div class="activity-item" style="border-left-color:#dc3545;"><div><strong>&#128078; Disliked:</strong> ${bookLink}</div><div class="activity-item-time">${timeAgo}</div></div>`;
             return '';
@@ -1686,10 +1686,10 @@ async function loadUserReviews() {
         }
 
         reviewsList.innerHTML = reviews.map(r => {
-            const stars    = 'â­'.repeat(r.rating);
+            const stars    = '⭐'.repeat(r.rating);
             const timeAgo  = getTimeAgo(new Date(r.createdAt));
             const bookLink = `<a href="book-details.html?bookId=${r.bookId}" style="color:#1DB954;">${r.bookTitle}</a>`;
-            const preview  = r.text.length > 120 ? r.text.slice(0, 120) + 'â€¦' : r.text;
+            const preview  = r.text.length > 120 ? r.text.slice(0, 120) + '…' : r.text;
             return `<div class="review-item"><div><strong>${stars} ${bookLink}</strong><small style="color:#888;"> by ${r.author}</small></div><div style="color:#ccc;margin-top:.5rem;font-size:.9rem;">${preview}</div><div class="review-item-time">${timeAgo}</div></div>`;
         }).join('');
     } catch (error) {
@@ -1711,7 +1711,7 @@ async function loadUserReviews() {
     });
 })();
 
-// â”€â”€ Hero search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Hero search ──────────────────────────────────────────────────────────────
 function toggleAdvancedSearch() {
     const advancedFilters = document.getElementById('advanced-filters');
     const toggleBtn       = document.getElementById('advanced-toggle');
@@ -1853,7 +1853,7 @@ function clearFilters() {
         setTimeout(() => clearMsg.remove(), 2000);
     }
 }
-// â”€â”€â”€ Book Reservation Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Book Reservation Functions ──────────────────────────────────────────
 async function reserveBook(bookId) {
     if (!isUserLoggedIn()) {
         showGuestModal('Please log in or create an account to reserve books.', () => reserveBook(bookId));
@@ -1899,7 +1899,7 @@ async function cancelReservation(id) {
     } catch (error) { showToast('Network error.', 'error'); }
 }
 
-// â”€â”€â”€ Fine Management Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Fine Management Functions ───────────────────────────────────────────
 // Fines are managed inline within "My Borrowed Books" (see loadBorrowedBooks)
 async function payFine(id) {
     try {
@@ -1920,7 +1920,7 @@ async function payAllFines() {
     } catch (error) { showToast('Network error.', 'error'); }
 }
 
-// â”€â”€â”€ Reading Challenge Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Reading Challenge Functions ─────────────────────────────────────────
 async function loadChallenges() {
     const listDiv = document.getElementById('challenges-list');
     const myDiv = document.getElementById('my-challenges');
@@ -2007,7 +2007,7 @@ function switchChallengeTab(tab) {
     loadChallenges();
 }
 
-// â”€â”€â”€ Borrowing Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Borrowing Functions ──────────────────────────────────────────────────
 async function loadBorrowedBooks() {
     const statusDiv = document.getElementById('borrowing-status');
     const listDiv = document.getElementById('borrowed-books-list');

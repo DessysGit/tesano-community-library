@@ -3,7 +3,7 @@
  * 
  * Setup:
  * 1. Sign up at https://www.brevo.com/
- * 2. Go to SMTP & API â†’ API Keys
+ * 2. Go to SMTP & API → API Keys
  * 3. Create new API key
  * 4. npm install @getbrevo/brevo
  * 5. Set BREVO_API_KEY and EMAIL_FROM in .env
@@ -193,8 +193,8 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
 async function sendVerificationEmail(email, token, username = 'User') {
   const verificationUrl = `${BACKEND_URL}/verify-email?token=${token}`;
   
-  console.log(`ðŸ“§ Sending verification email to ${email} via Brevo`);
-  console.log(`ðŸ”— Verification URL: ${verificationUrl}`);
+  console.log(`📧 Sending verification email to ${email} via Brevo`);
+  console.log(`🔗 Verification URL: ${verificationUrl}`);
   
   const sendSmtpEmail = new brevo.SendSmtpEmail();
   sendSmtpEmail.sender = { 
@@ -208,10 +208,10 @@ async function sendVerificationEmail(email, token, username = 'User') {
 
   try {
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('âœ… Verification email sent successfully via Brevo:', data.messageId);
+    console.log('✅ Verification email sent successfully via Brevo:', data.messageId);
     return true;
   } catch (error) {
-    console.error('âŒ Brevo error:', error);
+    console.error('❌ Brevo error:', error);
     return false;
   }
 }
@@ -220,8 +220,8 @@ async function sendVerificationEmail(email, token, username = 'User') {
 async function sendPasswordResetEmail(email, token, username = 'User') {
   const resetUrl = `${FRONTEND_URL}/reset-password.html?token=${token}`;
   
-  console.log(`ðŸ“§ Sending password reset email to ${email} via Brevo`);
-  console.log(`ðŸ”— Reset URL: ${resetUrl}`);
+  console.log(`📧 Sending password reset email to ${email} via Brevo`);
+  console.log(`🔗 Reset URL: ${resetUrl}`);
   
   const sendSmtpEmail = new brevo.SendSmtpEmail();
   sendSmtpEmail.sender = { 
@@ -235,10 +235,10 @@ async function sendPasswordResetEmail(email, token, username = 'User') {
 
   try {
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('âœ… Password reset email sent successfully via Brevo:', data.messageId);
+    console.log('✅ Password reset email sent successfully via Brevo:', data.messageId);
     return true;
   } catch (error) {
-    console.error('âŒ Brevo error:', error);
+    console.error('❌ Brevo error:', error);
     return false;
   }
 }

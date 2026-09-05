@@ -178,8 +178,8 @@ function createPasswordResetEmailTemplate(resetUrl, username = 'User') {
 async function sendVerificationEmail(email, token, username = 'User') {
   const verificationUrl = `${BACKEND_URL}/verify-email?token=${token}`;
   
-  console.log(`ðŸ“§ Sending verification email to ${email}`);
-  console.log(`ðŸ”— Verification URL: ${verificationUrl}`);
+  console.log(`📧 Sending verification email to ${email}`);
+  console.log(`🔗 Verification URL: ${verificationUrl}`);
   
   const msg = {
     to: email,
@@ -195,10 +195,10 @@ async function sendVerificationEmail(email, token, username = 'User') {
 
   try {
     const response = await sgMail.send(msg);
-    console.log('âœ… Verification email sent successfully:', response[0].statusCode);
+    console.log('✅ Verification email sent successfully:', response[0].statusCode);
     return true;
   } catch (error) {
-    console.error('âŒ SendGrid error:', error);
+    console.error('❌ SendGrid error:', error);
     if (error.response) {
       console.error('SendGrid response body:', error.response.body);
     }
@@ -210,8 +210,8 @@ async function sendVerificationEmail(email, token, username = 'User') {
 async function sendPasswordResetEmail(email, token, username = 'User') {
   const resetUrl = `${FRONTEND_URL}/reset-password.html?token=${token}`;
   
-  console.log(`ðŸ“§ Sending password reset email to ${email}`);
-  console.log(`ðŸ”— Reset URL: ${resetUrl}`);
+  console.log(`📧 Sending password reset email to ${email}`);
+  console.log(`🔗 Reset URL: ${resetUrl}`);
   
   const msg = {
     to: email,
@@ -227,10 +227,10 @@ async function sendPasswordResetEmail(email, token, username = 'User') {
 
   try {
     const response = await sgMail.send(msg);
-    console.log('âœ… Password reset email sent successfully:', response[0].statusCode);
+    console.log('✅ Password reset email sent successfully:', response[0].statusCode);
     return true;
   } catch (error) {
-    console.error('âŒ SendGrid error:', error);
+    console.error('❌ SendGrid error:', error);
     if (error.response) {
       console.error('SendGrid response body:', error.response.body);
     }
